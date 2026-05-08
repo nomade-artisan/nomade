@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+body {
+  font-family: "Inter", system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply text-stone-900 bg-stone-50 font-light;
+  }
+}
