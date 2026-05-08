@@ -18,6 +18,9 @@ export async function POST(req: NextRequest) {
       mode: "payment",
       success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/cart`,
+      shipping_address_collection: {
+        allowed_countries: ["FR", "BE", "LU", "CH"],
+      },
       line_items: items.map((item: any) => ({
         price_data: {
           currency: "eur",
@@ -30,7 +33,6 @@ export async function POST(req: NextRequest) {
         quantity: item.quantity,
       })),
       metadata: {
-        // Pour le webhook, on passe les IDs des produits
         product_ids: items.map((item: any) => item.id).join(","),
         quantities: items.map((item: any) => item.quantity).join(","),
       },
