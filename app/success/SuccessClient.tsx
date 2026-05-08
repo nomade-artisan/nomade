@@ -5,19 +5,19 @@ import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useCart } from "@/components/CartContext";
 
 function SuccessClient() {
-  const { clearCart } = useCart();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
 
   useEffect(() => {
-    // On ne vide que si on a un session_id (preuve que le paiement a été initié)
+    // Vider le panier ET le localStorage dès l'arrivée
     if (sessionId) {
-      clearCart();
+      console.log("✓ Paiement confirmé - sessionId:", sessionId);
+      localStorage.removeItem("nomade-cart");
+      console.log("✓ Panier vidé du localStorage");
     }
-  }, [sessionId, clearCart]);
+  }, [sessionId]);
 
   return (
     <motion.div
