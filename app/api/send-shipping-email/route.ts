@@ -71,11 +71,13 @@ export async function POST(req: NextRequest) {
 
     // Mettre à jour le statut et le tracking
     await supabase
-      .from("orders")
-      .update({ status: "expédiée", tracking_number: trackingNumber })
-      .eq("id", orderId);
-
-    return NextResponse.json({ success: true });
+        .from("orders")
+        .update({ 
+            status: "expédiée", 
+            tracking_number: trackingNumber,
+            carrier: carrier 
+        })
+        .eq("id", orderId);
   } catch (error) {
     return NextResponse.json({ error: "Erreur" }, { status: 500 });
   }
