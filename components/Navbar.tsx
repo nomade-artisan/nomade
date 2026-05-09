@@ -25,15 +25,17 @@ function Navbar() {
       transition={{ duration: 0.6, ease: "easeOut" }}
       className="w-full bg-white/90 backdrop-blur-md sticky top-0 z-50 border-b border-stone-100"
     >
-      <div className="max-w-7xl mx-auto px-6 md:px-10 py-5">
+      <div className="max-w-7xl mx-auto px-4 md:px-10 py-4 md:py-5">
         <div className="flex items-center justify-between">
+          {/* Logo */}
           <Link
             href="/"
-            className="text-xl md:text-2xl tracking-[0.25em] font-light text-stone-800 hover:text-stone-600 transition-colors"
+            className="text-lg md:text-2xl tracking-[0.2em] md:tracking-[0.25em] font-light text-stone-800 hover:text-stone-600 transition-colors flex-shrink-0"
           >
             NOMADE
           </Link>
 
+          {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-8">
             {links.map((link) => (
               <Link
@@ -50,13 +52,15 @@ function Navbar() {
             ))}
           </div>
 
-          <div className="flex items-center gap-5">
+          {/* Actions */}
+          <div className="flex items-center gap-3 md:gap-5">
             <Link
               href="/cart"
-              className="relative flex items-center gap-2 text-stone-600 hover:text-stone-900 transition-colors group"
+              className="relative flex items-center text-stone-600 hover:text-stone-900 transition-colors"
+              aria-label="Panier"
             >
               <svg
-                className="w-4 h-4"
+                className="w-5 h-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -73,26 +77,28 @@ function Navbar() {
                   key={cartCount}
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className="absolute -top-2 -right-2 w-5 h-5 bg-stone-800 text-white text-[10px] rounded-full flex items-center justify-center font-medium"
+                  className="absolute -top-2 -right-2 w-4 h-4 md:w-5 md:h-5 bg-stone-800 text-white text-[10px] rounded-full flex items-center justify-center font-medium"
                 >
                   {cartCount}
                 </motion.span>
               )}
             </Link>
 
+            {/* Mobile menu button */}
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="md:hidden flex items-center gap-2 text-stone-600 hover:text-stone-900 transition-colors"
+              className="md:hidden flex items-center gap-1.5 text-stone-600 hover:text-stone-900 transition-colors flex-shrink-0"
               aria-label="Menu"
             >
-              <span className="text-xs tracking-[0.15em] uppercase font-light">
+              <span className="text-[10px] tracking-[0.15em] uppercase font-light">
                 {menuOpen ? "Fermer" : "Menu"}
               </span>
-              <span className="text-lg">{menuOpen ? "✕" : "☰"}</span>
+              <span className="text-base">{menuOpen ? "✕" : "☰"}</span>
             </button>
           </div>
         </div>
 
+        {/* Mobile menu */}
         <AnimatePresence>
           {menuOpen && (
             <motion.div
@@ -102,13 +108,13 @@ function Navbar() {
               transition={{ duration: 0.35, ease: "easeInOut" }}
               className="md:hidden overflow-hidden"
             >
-              <div className="flex flex-col pt-8 pb-6 border-t border-stone-100 mt-5">
+              <div className="flex flex-col pt-6 pb-4 border-t border-stone-100 mt-4">
                 {links.map((link) => (
                   <Link
                     key={link.to}
                     href={link.to}
                     onClick={() => setMenuOpen(false)}
-                    className={`py-4 text-lg tracking-wider font-light transition-colors ${
+                    className={`py-3 text-base tracking-wider font-light transition-colors ${
                       pathname === link.to
                         ? "text-stone-800"
                         : "text-stone-400 hover:text-stone-700"
