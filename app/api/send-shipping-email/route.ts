@@ -69,15 +69,16 @@ export async function POST(req: NextRequest) {
       `,
     });
 
-    // Mettre à jour le statut et le tracking
     await supabase
-        .from("orders")
-        .update({ 
-            status: "expédiée", 
-            tracking_number: trackingNumber,
-            carrier: carrier 
-        })
-        .eq("id", orderId);
+      .from("orders")
+      .update({
+        status: "expédiée",
+        tracking_number: trackingNumber,
+        carrier: carrier,
+      })
+      .eq("id", orderId);
+
+    return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: "Erreur" }, { status: 500 });
   }
