@@ -6,9 +6,13 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useCart } from "@/components/CartContext";
 
 function SuccessClient() {
+  const { clearCart } = useCart();
+
   const searchParams = useSearchParams();
+
   const sessionId =
     searchParams.get("session_id");
 
@@ -20,22 +24,26 @@ function SuccessClient() {
       localStorage.removeItem(
         "nomade-cart"
       );
+
+      clearCart();
     }
 
     const timer = setTimeout(
       () => setLoading(false),
-      900
+      850
     );
 
     return () =>
       clearTimeout(timer);
-  }, [sessionId]);
+  }, [sessionId, clearCart]);
+
+  // NO SESSION
 
   if (!sessionId) {
     return (
       <div className="min-h-screen bg-stone-50 flex items-center justify-center px-6">
 
-        <div className="text-center">
+        <div className="text-center max-w-sm">
 
           <p className="text-5xl font-thin text-stone-300 mb-5">
             .
@@ -45,15 +53,16 @@ function SuccessClient() {
             Page introuvable
           </h1>
 
-          <p className="text-stone-500 font-light text-sm mb-8">
-            Aucune commande en cours.
+          <p className="text-stone-500 font-light text-sm leading-relaxed mb-8">
+            Aucune commande active
+            n’a été trouvée.
           </p>
 
           <Link
             href="/boutique"
             className="inline-flex items-center justify-center bg-stone-900 text-white px-7 py-3.5 rounded-full text-[11px] uppercase tracking-[0.18em] font-light hover:bg-stone-800 transition-colors"
           >
-            Voir la boutique
+            Retour boutique
           </Link>
 
         </div>
@@ -65,15 +74,17 @@ function SuccessClient() {
   return (
     <div className="min-h-screen bg-stone-50 pt-[64px] overflow-hidden">
 
+      {/* LOADING */}
+
       {loading ? (
 
         <div className="min-h-screen flex items-center justify-center">
 
           <div className="relative">
 
-            <div className="w-9 h-9 border border-stone-200 rounded-full" />
+            <div className="w-8 h-8 border border-stone-200 rounded-full" />
 
-            <div className="absolute inset-0 w-9 h-9 border border-transparent border-t-stone-700 rounded-full animate-spin" />
+            <div className="absolute inset-0 w-8 h-8 border border-transparent border-t-stone-700 rounded-full animate-spin" />
 
           </div>
 
@@ -81,7 +92,7 @@ function SuccessClient() {
 
       ) : (
 
-        <div className="max-w-5xl mx-auto px-6 md:px-10 py-10 md:py-14">
+        <div className="max-w-4xl mx-auto px-6 md:px-10 py-12 md:py-16">
 
           {/* HERO */}
 
@@ -95,16 +106,16 @@ function SuccessClient() {
               y: 0,
             }}
             transition={{
-              duration: 0.4,
+              duration: 0.45,
             }}
             className="text-center mb-14 md:mb-16"
           >
 
-            {/* CHECK */}
+            {/* ICON */}
 
             <motion.div
               initial={{
-                scale: 0.9,
+                scale: 0.92,
                 opacity: 0,
               }}
               animate={{
@@ -141,7 +152,7 @@ function SuccessClient() {
               Commande confirmée
             </p>
 
-            <h1 className="text-3xl md:text-5xl font-light tracking-tight leading-[0.95] mb-5">
+            <h1 className="text-3xl md:text-4xl font-light tracking-tight leading-[0.95] mb-5">
               Merci pour
               <br />
               votre confiance.
@@ -167,9 +178,9 @@ function SuccessClient() {
             }}
             transition={{
               delay: 0.08,
-              duration: 0.4,
+              duration: 0.45,
             }}
-            className="grid md:grid-cols-3 gap-4 mb-12"
+            className="grid md:grid-cols-3 gap-3 md:gap-4 mb-14"
           >
 
             {[
@@ -197,14 +208,14 @@ function SuccessClient() {
 
               <div
                 key={step.number}
-                className="bg-white/70 backdrop-blur-sm border border-stone-200/60 rounded-[28px] p-5 md:p-6"
+                className="bg-white/70 backdrop-blur-sm border border-stone-200/60 rounded-[24px] p-5"
               >
 
                 <p className="text-[10px] uppercase tracking-[0.22em] text-stone-400 font-light mb-5">
                   {step.number}
                 </p>
 
-                <h2 className="text-base font-light tracking-tight text-stone-900 mb-3">
+                <h2 className="text-[15px] font-light tracking-tight text-stone-900 mb-3">
                   {step.title}
                 </h2>
 
@@ -229,14 +240,13 @@ function SuccessClient() {
             }}
             transition={{
               delay: 0.16,
-              duration: 0.4,
+              duration: 0.45,
             }}
             className="text-center mb-12"
           >
 
             <p className="text-stone-400 text-sm md:text-base font-light italic leading-relaxed">
-              “ On ne possède vraiment
-              que ce que l’on porte avec soi. ”
+              “ Merci de faire un bout de route avec nous. ”
             </p>
 
           </motion.div>
@@ -254,9 +264,9 @@ function SuccessClient() {
             }}
             transition={{
               delay: 0.22,
-              duration: 0.4,
+              duration: 0.45,
             }}
-            className="flex flex-wrap justify-center gap-4"
+            className="flex flex-wrap justify-center gap-3"
           >
 
             <Link
@@ -286,7 +296,7 @@ function SuccessClient() {
             }}
             transition={{
               delay: 0.28,
-              duration: 0.4,
+              duration: 0.45,
             }}
             className="text-center mt-10"
           >
