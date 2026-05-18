@@ -1,4 +1,5 @@
 // app/success/SuccessClient.tsx
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -8,160 +9,299 @@ import Link from "next/link";
 
 function SuccessClient() {
   const searchParams = useSearchParams();
-  const sessionId = searchParams.get("session_id");
-  const [loading, setLoading] = useState(true);
+  const sessionId =
+    searchParams.get("session_id");
+
+  const [loading, setLoading] =
+    useState(true);
 
   useEffect(() => {
     if (sessionId) {
-      localStorage.removeItem("nomade-cart");
+      localStorage.removeItem(
+        "nomade-cart"
+      );
     }
-    const timer = setTimeout(() => setLoading(false), 1200);
-    return () => clearTimeout(timer);
+
+    const timer = setTimeout(
+      () => setLoading(false),
+      900
+    );
+
+    return () =>
+      clearTimeout(timer);
   }, [sessionId]);
 
   if (!sessionId) {
     return (
       <div className="min-h-screen bg-stone-50 flex items-center justify-center px-6">
+
         <div className="text-center">
-          <p className="text-6xl font-thin text-stone-300 mb-4">.</p>
-          <h1 className="text-2xl font-light mb-3">Page introuvable</h1>
+
+          <p className="text-5xl font-thin text-stone-300 mb-5">
+            .
+          </p>
+
+          <h1 className="text-2xl font-light tracking-tight mb-3">
+            Page introuvable
+          </h1>
+
           <p className="text-stone-500 font-light text-sm mb-8">
             Aucune commande en cours.
           </p>
+
           <Link
             href="/boutique"
-            className="inline-block bg-stone-900 text-white px-6 py-3 rounded-full text-sm tracking-wider font-light hover:bg-stone-800 transition-colors"
+            className="inline-flex items-center justify-center bg-stone-900 text-white px-7 py-3.5 rounded-full text-[11px] uppercase tracking-[0.18em] font-light hover:bg-stone-800 transition-colors"
           >
             Voir la boutique
           </Link>
+
         </div>
+
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-stone-50">
+    <div className="min-h-screen bg-stone-50 pt-[64px] overflow-hidden">
+
       {loading ? (
+
         <div className="min-h-screen flex items-center justify-center">
-          <div className="w-12 h-12 border-2 border-stone-300 border-t-stone-800 rounded-full animate-spin" />
+
+          <div className="relative">
+
+            <div className="w-9 h-9 border border-stone-200 rounded-full" />
+
+            <div className="absolute inset-0 w-9 h-9 border border-transparent border-t-stone-700 rounded-full animate-spin" />
+
+          </div>
+
         </div>
+
       ) : (
-        <div className="max-w-3xl mx-auto px-6 py-16 md:py-24">
-          {/* Check + Titre */}
+
+        <div className="max-w-5xl mx-auto px-6 md:px-10 py-10 md:py-14">
+
+          {/* HERO */}
+
           <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-center mb-10"
+            initial={{
+              opacity: 0,
+              y: 8,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            transition={{
+              duration: 0.4,
+            }}
+            className="text-center mb-14 md:mb-16"
           >
+
+            {/* CHECK */}
+
             <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 200 }}
-              className="w-14 h-14 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-5"
+              initial={{
+                scale: 0.9,
+                opacity: 0,
+              }}
+              animate={{
+                scale: 1,
+                opacity: 1,
+              }}
+              transition={{
+                duration: 0.35,
+              }}
+              className="w-14 h-14 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center mx-auto mb-6"
             >
+
               <svg
-                className="w-7 h-7 text-emerald-600"
+                className="w-6 h-6 text-emerald-600"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
                 strokeWidth={1.5}
               >
+
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   d="M4.5 12.75l6 6 9-13.5"
                 />
+
               </svg>
+
             </motion.div>
-            <h1 className="text-2xl md:text-3xl font-light tracking-wide mb-2">
-              Merci pour votre confiance
-            </h1>
-            <p className="text-stone-500 font-light text-sm max-w-sm mx-auto">
-              Votre commande est confirmée. Nous la préparons avec soin.
+
+            {/* TEXT */}
+
+            <p className="text-[10px] uppercase tracking-[0.32em] text-stone-400 font-light mb-5">
+              Commande confirmée
             </p>
+
+            <h1 className="text-3xl md:text-5xl font-light tracking-tight leading-[0.95] mb-5">
+              Merci pour
+              <br />
+              votre confiance.
+            </h1>
+
+            <p className="text-stone-500 font-light leading-relaxed text-base md:text-lg max-w-md mx-auto">
+              Votre commande est confirmée.
+              Nous la préparons avec soin.
+            </p>
+
           </motion.div>
 
-          {/* Étapes — compactes, en largeur */}
+          {/* STEPS */}
+
           <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10"
+            initial={{
+              opacity: 0,
+              y: 8,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            transition={{
+              delay: 0.08,
+              duration: 0.4,
+            }}
+            className="grid md:grid-cols-3 gap-4 mb-12"
           >
+
             {[
               {
+                number: "01",
                 title: "Confirmation",
-                desc: "Email dans quelques minutes",
+                text:
+                  "Un email de confirmation arrive dans quelques minutes.",
               },
+
               {
+                number: "02",
                 title: "Préparation",
-                desc: "Votre sac est cousu à la main",
+                text:
+                  "Votre pièce est préparée et vérifiée à la main.",
               },
+
               {
+                number: "03",
                 title: "Expédition",
-                desc: "3-5 jours, suivi par email",
+                text:
+                  "Livraison sous 3 à 5 jours avec suivi par email.",
               },
-            ].map((step, index) => (
+            ].map((step) => (
+
               <div
-                key={step.title}
-                className="bg-white rounded-xl p-5 border border-stone-100 text-center"
+                key={step.number}
+                className="bg-white/70 backdrop-blur-sm border border-stone-200/60 rounded-[28px] p-5 md:p-6"
               >
-                <p className="text-xs text-stone-400 uppercase tracking-wider mb-2">
-                  Étape {index + 1}
+
+                <p className="text-[10px] uppercase tracking-[0.22em] text-stone-400 font-light mb-5">
+                  {step.number}
                 </p>
-                <h3 className="text-sm font-medium text-stone-800 mb-1">
+
+                <h2 className="text-base font-light tracking-tight text-stone-900 mb-3">
                   {step.title}
-                </h3>
-                <p className="text-stone-500 text-xs font-light">
-                  {step.desc}
+                </h2>
+
+                <p className="text-stone-500 text-sm font-light leading-relaxed">
+                  {step.text}
                 </p>
+
               </div>
+
             ))}
+
           </motion.div>
 
-          {/* Rappel */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.7 }}
-            className="text-center text-stone-400 text-xs font-light italic mb-8"
-          >
-            On ne possède que ce qu&apos;on porte. Votre sac arrive bientôt.
-          </motion.p>
+          {/* QUOTE */}
 
-          {/* Boutons */}
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.9 }}
-            className="flex flex-wrap justify-center gap-3"
+            initial={{
+              opacity: 0,
+            }}
+            animate={{
+              opacity: 1,
+            }}
+            transition={{
+              delay: 0.16,
+              duration: 0.4,
+            }}
+            className="text-center mb-12"
           >
+
+            <p className="text-stone-400 text-sm md:text-base font-light italic leading-relaxed">
+              “ On ne possède vraiment
+              que ce que l’on porte avec soi. ”
+            </p>
+
+          </motion.div>
+
+          {/* BUTTONS */}
+
+          <motion.div
+            initial={{
+              opacity: 0,
+              y: 8,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            transition={{
+              delay: 0.22,
+              duration: 0.4,
+            }}
+            className="flex flex-wrap justify-center gap-4"
+          >
+
             <Link
               href="/boutique"
-              className="inline-block bg-stone-900 text-white px-6 py-3 rounded-full text-sm tracking-wider font-light hover:bg-stone-800 transition-colors"
+              className="inline-flex items-center justify-center bg-stone-900 text-white px-8 py-3.5 rounded-full text-[11px] uppercase tracking-[0.18em] font-light hover:bg-stone-800 transition-colors"
             >
-              Continuer mes achats
+              Continuer
             </Link>
+
             <Link
               href="/contact"
-              className="inline-block border border-stone-200 text-stone-600 px-6 py-3 rounded-full text-sm tracking-wider font-light hover:border-stone-400 transition-colors"
+              className="inline-flex items-center justify-center border border-stone-200 text-stone-600 px-8 py-3.5 rounded-full text-[11px] uppercase tracking-[0.18em] font-light hover:border-stone-400 hover:text-stone-900 transition-colors"
             >
-              Une question ?
+              Une question
             </Link>
+
           </motion.div>
 
-          {/* Référence */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.2 }}
-            className="text-center mt-8 text-[10px] text-stone-300 font-light"
+          {/* REF */}
+
+          <motion.div
+            initial={{
+              opacity: 0,
+            }}
+            animate={{
+              opacity: 1,
+            }}
+            transition={{
+              delay: 0.28,
+              duration: 0.4,
+            }}
+            className="text-center mt-10"
           >
-            Réf. {sessionId.slice(-12)}
-          </motion.p>
+
+            <p className="text-[10px] uppercase tracking-[0.18em] text-stone-300 font-light">
+              Réf.{" "}
+              {sessionId.slice(-12)}
+            </p>
+
+          </motion.div>
+
         </div>
+
       )}
+
     </div>
   );
 }
