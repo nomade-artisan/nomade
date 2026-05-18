@@ -15,9 +15,10 @@ function Footer() {
   ];
 
   const legalLinks = [
-    { label: "Mentions légales", to: "/mentions-legales" },
-    { label: "CGV", to: "/cgv" },
-  ];
+  { label: "Mentions légales", to: "/mentions-legales" },
+  { label: "CGV", to: "/cgv" },
+  { label: "Confidentialité", to: "/confidentialite" },
+];
 
   return (
     <footer className="bg-stone-900 text-white">

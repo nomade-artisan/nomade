@@ -1,6 +1,11 @@
 // app/api/contact/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/db";
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+const NOREPLY_EMAIL = process.env.NOREPLY_EMAIL;
+const CONTACT_EMAIL = process.env.CONTACT_EMAIL?.split(",").map((e) => e.trim()) || [];
 
 export async function POST(req: NextRequest) {
   try {
@@ -33,6 +38,34 @@ export async function POST(req: NextRequest) {
         { status: 500 }
       );
     }
+
+    // Notification par email
+    await resend.emails.send({
+      from: `Nomade <${NOREPLY_EMAIL}>`,
+      to: CONTACT_EMAIL,
+      replyTo: email,
+      subject: `Message de ${name}`,
+      html: `
+        <div style="font-family: Inter, system-ui, sans-serif; max-width: 500px; margin: auto; padding: 30px; background: #fafaf9; border-radius: 12px;">
+          <h2 style="font-weight: 400; color: #1c1917; font-size: 20px; margin-bottom: 16px;">
+            Nouveau message
+          </h2>
+          <p style="color: #78716c; font-size: 14px; margin-bottom: 4px;">
+            <strong>De :</strong> ${name}
+          </p>
+          <p style="color: #78716c; font-size: 14px; margin-bottom: 20px;">
+            <strong>Email :</strong> ${email}
+          </p>
+          <hr style="border: none; border-top: 1px solid #e7e5e4; margin: 20px 0;" />
+          <p style="color: #44403c; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">
+            ${message}
+          </p>
+          <p style="color: #a8a29e; font-size: 12px; margin-top: 24px; text-align: center;">
+            Nomade — L&apos;essentiel est à l&apos;intérieur
+          </p>
+        </div>
+      `,
+    });
 
     return NextResponse.json({
       success: true,

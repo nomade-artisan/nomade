@@ -1,4 +1,5 @@
 // app/histoire/HistoireClient.tsx
+
 "use client";
 
 import { motion } from "framer-motion";
@@ -10,177 +11,318 @@ function HistoireClient() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="bg-stone-50 min-h-screen"
+      className="bg-stone-50 text-stone-900 overflow-hidden"
     >
-      {/* Hero */}
-      <section className="relative h-[50vh] md:h-[60vh] overflow-hidden">
+
+      {/* HERO */}
+
+      <section className="relative h-[75vh] md:h-[92vh] overflow-hidden">
+
         <img
           src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1"
           alt=""
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-stone-900/40" />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-4xl md:text-6xl font-light text-white tracking-wide"
-          >
-            Notre histoire
-          </motion.h1>
+
+        <div className="absolute inset-0 bg-black/45" />
+
+        <div className="absolute inset-0 flex items-end">
+
+          <div className="max-w-7xl mx-auto px-6 md:px-10 w-full pb-20 md:pb-28">
+
+            <motion.div
+              initial={{ opacity: 0, y: 25 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="max-w-3xl"
+            >
+
+              <p className="text-white/40 uppercase tracking-[0.35em] text-xs mb-6">
+                Notre histoire
+              </p>
+
+              <h1 className="text-white text-5xl md:text-7xl font-light leading-none tracking-wide mb-8">
+                Certaines routes
+                <br />
+                obligent à
+                <br />
+                 changer de direction
+              </h1>
+
+              <p className="text-white/65 text-lg md:text-xl font-light leading-relaxed max-w-xl">
+                Nomade est né d'une période où tout changeait.
+              </p>
+
+            </motion.div>
+
+          </div>
+
         </div>
+
       </section>
 
-      {/* Le début */}
-      <section className="py-20 md:py-28">
+      {/* INTRO */}
+
+      <section className="py-24 md:py-36">
+
         <div className="max-w-3xl mx-auto px-6 md:px-10">
+
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
           >
-            <p className="text-stone-400 text-xs tracking-[0.3em] uppercase mb-6">
+
+            <p className="text-stone-400 uppercase tracking-[0.3em] text-xs mb-8">
               Là où tout commence
             </p>
-            <h2 className="text-3xl md:text-4xl font-light mb-8 tracking-wide leading-tight">
-              Chaque sac a une histoire.
-              <br />
-              La nôtre commence sur la route.
-            </h2>
-            <div className="space-y-6 text-stone-600 font-light leading-relaxed text-base">
+
+            <div className="space-y-8 text-stone-600 font-light leading-relaxed text-lg md:text-xl">
+
               <p>
-                Nomade est né d&apos;un chemin. Celui qu&apos;on emprunte quand on
-                quitte une terre pour une autre. Quand on apprend à vivre avec
-                peu, mais avec tout ce qui compte.
+                Il y a des périodes où les choses ne suivent plus
+                le chemin prévu.
               </p>
+
               <p>
-                Il y a des voyages qu&apos;on ne choisit pas. Des départs qui
-                s&apos;imposent. Des frontières qui se dressent. Mais il y a
-                aussi des mains qui se tendent. Des inconnus qui deviennent
-                des frères. Des gens qui croient en vous avant même que vous
-                n&apos;ayez commencé.
+                Alors on avance autrement.
+                Plus lentement.
+                Plus discrètement.
               </p>
+
               <p>
-                Cette marque est née de cette traversée. Elle est la preuve
-                que quand on porte l&apos;essentiel en soi, on peut traverser
-                n&apos;importe quel désert.
+                On apprend à vivre avec moins.
+                À garder seulement ce qui compte.
               </p>
+
+              <p>
+                C’est dans ce moment-là que Nomade est apparu.
+              </p>
+
             </div>
+
           </motion.div>
+
         </div>
+
       </section>
 
-      {/* Image pleine largeur */}
-      <section className="h-[50vh] overflow-hidden">
+      {/* IMAGE */}
+
+      <section className="relative h-[55vh] overflow-hidden">
+
         <img
           src="https://images.unsplash.com/photo-1533130061792-64b345e4a833"
           alt=""
           className="w-full h-full object-cover"
         />
+
+        <div className="absolute inset-0 bg-black/25" />
+
+        <div className="absolute inset-0 flex items-center justify-center px-6">
+
+          <blockquote className="text-white text-3xl md:text-5xl font-light text-center leading-tight max-w-4xl">
+            Certains objets
+            <br />
+            restent longtemps
+            <br />
+            et marque l'esprit.
+          </blockquote>
+
+        </div>
+
       </section>
 
-      {/* Les valeurs */}
-      <section className="py-20 md:py-28">
-        <div className="max-w-3xl mx-auto px-6 md:px-10">
+      {/* STORY */}
+
+      <section className="py-24 md:py-36 bg-white">
+
+        <div className="max-w-4xl mx-auto px-6 md:px-10">
+
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
           >
-            <p className="text-stone-400 text-xs tracking-[0.3em] uppercase mb-6">
-              Ce qui nous tient
+
+            <p className="text-stone-400 uppercase tracking-[0.3em] text-xs mb-8">
+              Pourquoi des sacs
             </p>
-            <h2 className="text-3xl md:text-4xl font-light mb-10 tracking-wide leading-tight">
-              Trois choses nous portent
-            </h2>
 
-            <div className="space-y-12">
-              <div>
-                <h3 className="text-xl font-light mb-3 tracking-wide">
-                  L&apos;artisanat
-                </h3>
-                <p className="text-stone-600 font-light leading-relaxed">
-                  Chaque sac est cousu une à une, à la main, dans un petit
-                  atelier. Pas de chaîne, pas de machine qui remplace le geste.
-                  Juste des doigts qui savent que le temps fait bien les choses.
-                </p>
-              </div>
+            <div className="space-y-8 text-stone-600 font-light leading-relaxed text-lg md:text-xl">
 
-              <div>
-                <h3 className="text-xl font-light mb-3 tracking-wide">
-                  La résilience
-                </h3>
-                <p className="text-stone-600 font-light leading-relaxed">
-                  On ne choisit pas toujours d&apos;où on part. Mais on choisit
-                  ce qu&apos;on emporte. Nos sacs sont conçus pour durer, pour
-                  traverser les épreuves, pour se bonifier avec les kilomètres.
-                </p>
-              </div>
+              <p>
+                Parce qu’un sac accompagne ce qui bouge.
+              </p>
 
-              <div>
-                <h3 className="text-xl font-light mb-3 tracking-wide">
-                  La gratitude
-                </h3>
-                <p className="text-stone-600 font-light leading-relaxed">
-                  Cette marque n&apos;existerait pas sans celles et ceux qui ont
-                  cru en nous. Des gens qui ont tendu la main sans rien attendre
-                  en retour. Chaque sac est un hommage silencieux à ces
-                  rencontres.
-                </p>
-              </div>
+              <p>
+                Les départs
+                Les nouvelles habitudes
+                Les villes qu’on traverse
+              </p>
+
+              <p>
+                Avec le temps,
+                certains objets cessent d’être de simples objets.
+              </p>
+
+              <p>
+                Ils deviennent des repères nostalgiques.
+              </p>
+
             </div>
+
           </motion.div>
+
         </div>
+
       </section>
 
-      {/* Citation */}
-      <section className="py-20 md:py-28 bg-stone-900 text-white">
-        <div className="max-w-3xl mx-auto px-6 md:px-10 text-center">
-          <motion.blockquote
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="text-2xl md:text-3xl font-light italic leading-relaxed text-white/80"
-          >
-            &ldquo;On ne possède que ce qu&apos;on porte. Le reste, on l&apos;a
-            déjà en nous.&rdquo;
-          </motion.blockquote>
-          <p className="text-white/40 text-sm mt-8 font-light">
-            — L&apos;esprit Nomade
-          </p>
-        </div>
-      </section>
+      {/* VALUES */}
 
-      {/* Pour finir */}
-      <section className="py-20 md:py-28">
-        <div className="max-w-2xl mx-auto px-6 md:px-10 text-center">
+      <section className="py-24 md:py-36">
+
+        <div className="max-w-6xl mx-auto px-6 md:px-10">
+
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
           >
-            <h2 className="text-3xl md:text-4xl font-light mb-8 tracking-wide">
-              Et maintenant
-            </h2>
-            <p className="text-stone-500 font-light text-lg leading-relaxed mb-10">
-              Aujourd&apos;hui, Nomade grandit. Mais l&apos;esprit reste le
-              même : créer des sacs qui portent l&apos;essentiel. Pour ceux qui
-              savent que le voyage est plus important que la destination.
+
+            <div className="text-center mb-20">
+
+              <p className="text-stone-400 uppercase tracking-[0.3em] text-xs mb-8">
+                Ce qui reste
+              </p>
+
+              <h2 className="text-4xl md:text-5xl font-light leading-tight">
+                Faire peu.
+                <br />
+                Garder longtemps.
+              </h2>
+
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-14 md:gap-16">
+
+              <div>
+
+                <h3 className="text-2xl font-light mb-5 tracking-wide">
+                  Le temps
+                </h3>
+
+                <p className="text-stone-600 leading-relaxed font-light text-lg">
+                  Certaines choses demandent du temps
+                  pour trouver leur forme.
+                </p>
+
+              </div>
+
+              <div>
+
+                <h3 className="text-2xl font-light mb-5 tracking-wide">
+                  La matière
+                </h3>
+
+                <p className="text-stone-600 leading-relaxed font-light text-lg">
+                  Nous aimons les objets
+                  qui portent les traces d’une vie.
+                </p>
+
+              </div>
+
+              <div>
+
+                <h3 className="text-2xl font-light mb-5 tracking-wide">
+                  L’essentiel
+                </h3>
+
+                <p className="text-stone-600 leading-relaxed font-light text-lg">
+                  Garder moins.
+                  Mais garder mieux.
+                </p>
+
+              </div>
+
+            </div>
+
+          </motion.div>
+
+        </div>
+
+      </section>
+
+      {/* QUOTE */}
+
+      <section className="py-28 md:py-40 bg-stone-900 text-white">
+
+        <div className="max-w-5xl mx-auto px-6 md:px-10 text-center">
+
+          <motion.blockquote
+            initial={{ opacity: 0, y: 25 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="text-4xl md:text-6xl font-light italic leading-relaxed text-white/85"
+          >
+            “Parfois,
+            <br />
+            perdre une direction
+            <br />
+            permet d’en trouver une autre.”
+          </motion.blockquote>
+
+        </div>
+
+      </section>
+
+      {/* END */}
+
+      <section className="py-24 md:py-36">
+
+        <div className="max-w-3xl mx-auto px-6 md:px-10 text-center">
+
+          <motion.div
+            initial={{ opacity: 0, y: 25 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+          >
+
+            <p className="text-stone-400 uppercase tracking-[0.3em] text-xs mb-8">
+              Aujourd’hui
             </p>
+
+            <h2 className="text-4xl md:text-5xl font-light leading-tight mb-10">
+              Continuer la route.
+            </h2>
+
+            <p className="text-stone-500 text-lg md:text-xl leading-relaxed font-light mb-14 max-w-2xl mx-auto">
+              Nomade continue d’avancer doucement.
+              <br />
+              Avec la même idée depuis le début :
+              créer des objets simples,
+              durables,
+              et utiles.
+            </p>
+
             <Link
               href="/boutique"
-              className="inline-block bg-stone-900 text-white px-10 py-4 rounded-full text-sm tracking-wider font-light hover:bg-stone-800 transition-colors"
+              className="inline-flex items-center justify-center bg-stone-900 text-white px-10 py-4 rounded-full text-sm tracking-[0.18em] uppercase hover:bg-stone-800 transition-colors"
             >
               Découvrir la collection
             </Link>
+
           </motion.div>
+
         </div>
+
       </section>
+
     </motion.div>
   );
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { CartProvider } from "@/components/CartContext";
 import Navbar from "@/components/Navbar";
+import MaintenanceBanner from "@/components/MaintenanceBanner";
 import Footer from "@/components/Footer";
 import "./globals.css";
 
@@ -21,6 +22,7 @@ export default function RootLayout({
         <CartProvider>
           <div className="flex flex-col min-h-screen">
             <Navbar />
+            <MaintenanceBanner />
             <main className="flex-1">{children}</main>
             <Footer />
           </div>

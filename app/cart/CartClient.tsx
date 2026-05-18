@@ -1,4 +1,5 @@
 // app/cart/CartClient.tsx
+
 "use client";
 
 import { useState } from "react";
@@ -6,8 +7,17 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/components/CartContext";
 
+const isMaintenance =
+  process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "true";
+
 function CartClient() {
-  const { cart, removeFromCart, updateQuantity, clearCart } = useCart();
+  const {
+    cart,
+    removeFromCart,
+    updateQuantity,
+    clearCart,
+  } = useCart();
+
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
   const [promoDiscount, setPromoDiscount] = useState(0);
@@ -15,9 +25,12 @@ function CartClient() {
 
   const handleStripeCheckout = async () => {
     setCheckoutLoading(true);
+
     const res = await fetch("/api/checkout", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         items: cart.map((item) => ({
           id: item.id,
@@ -28,106 +41,142 @@ function CartClient() {
         })),
       }),
     });
+
     const data = await res.json();
+
     if (data.url) {
       window.location.href = data.url;
     } else {
-      alert(data.error || "Erreur lors de la création du paiement");
+      alert(data.error || "Erreur lors du paiement");
       setCheckoutLoading(false);
     }
   };
 
-  const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const subtotal = cart.reduce(
+    (acc, item) => acc + item.price * item.quantity,
+    0
+  );
+
   const shipping = subtotal > 150 ? 0 : 9.9;
   const total = subtotal + shipping - promoDiscount;
 
   const handleApplyPromo = (e: React.FormEvent) => {
     e.preventDefault();
-    if (promoCode.toUpperCase() === "NOMADE10" && !promoApplied) {
+
+    if (
+      promoCode.toUpperCase() === "NOMADE10" &&
+      !promoApplied
+    ) {
       setPromoDiscount(10);
       setPromoApplied(true);
     }
   };
 
   const cartItemVariants = {
-    hidden: { opacity: 0, x: -20 },
+    hidden: {
+      opacity: 0,
+      y: 8,
+    },
     visible: (i: number) => ({
       opacity: 1,
-      x: 0,
-      transition: { delay: i * 0.1, duration: 0.4, ease: "easeOut" as const },
+      y: 0,
+      transition: {
+        delay: i * 0.04,
+        duration: 0.35,
+      },
     }),
-    exit: { opacity: 0, x: -50, transition: { duration: 0.3, ease: "easeOut" as const } },
+    exit: {
+      opacity: 0,
+      y: -8,
+      transition: {
+        duration: 0.2,
+      },
+    },
   };
 
-  // Panier vide
+  // EMPTY CART
+
   if (cart.length === 0) {
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="bg-stone-50 min-h-[60vh] flex items-center justify-center px-6"
-    >
-      <div className="text-center max-w-sm">
-        <motion.p
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="text-5xl font-thin text-stone-300 mb-4"
-        >
-          .
-        </motion.p>
-        <motion.h1
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="text-2xl font-light tracking-wide mb-2"
-        >
-          Votre panier est vide
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="text-stone-500 text-sm font-light mb-6"
-        >
-          Un sac Nomade vous attend. L&apos;essentiel n&apos;est jamais loin.
-        </motion.p>
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <Link
-            href="/boutique"
-            className="inline-block bg-stone-900 text-white px-6 py-3 rounded-full text-sm tracking-wider font-light hover:bg-stone-800 transition-colors"
+    return (
+      <div className="bg-stone-50 min-h-screen pt-20 flex items-center justify-center px-6">
+
+        <div className="text-center max-w-md">
+
+          <div className="w-12 h-px bg-stone-300 mx-auto mb-8" />
+
+          <motion.h1
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="text-3xl md:text-5xl font-light tracking-tight mb-4"
           >
-            Découvrir la collection
-          </Link>
-        </motion.div>
+            Panier vide
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05, duration: 0.4 }}
+            className="text-stone-500 text-lg leading-relaxed font-light mb-10"
+          >
+            L’essentiel n’est jamais loin.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.4 }}
+          >
+
+            <Link
+              href="/boutique"
+              className="inline-flex items-center justify-center bg-stone-900 text-white px-8 py-4 rounded-full text-[11px] tracking-[0.18em] uppercase font-light hover:bg-stone-800 transition-all duration-300"
+            >
+              Découvrir la collection
+            </Link>
+
+          </motion.div>
+
+        </div>
+
       </div>
-    </motion.div>
-  );
-}
+    );
+  }
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="bg-stone-50 min-h-screen"
-    >
-      <div className="max-w-7xl mx-auto px-6 md:px-10 py-10 md:py-16">
-        {/* En-tête compact */}
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-light tracking-wide mb-1">Votre panier</h1>
-          <p className="text-stone-500 font-light text-sm">{cart.length} article{cart.length > 1 ? "s" : ""}</p>
+    <div className="bg-stone-50 min-h-screen pt-20">
+
+      <div className="max-w-7xl mx-auto px-6 md:px-10 py-10 md:py-14">
+
+        {/* HEADER */}
+
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35 }}
+          className="mb-10"
+        >
+
+          <h1 className="text-3xl md:text-5xl font-light tracking-tight mb-2">
+            Panier
+          </h1>
+
+          <p className="text-stone-400 font-light text-sm tracking-wide">
+            {cart.length} article{cart.length > 1 ? "s" : ""}
+          </p>
+
         </motion.div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Liste */}
-          <div className="flex-1 space-y-3">
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-14">
+
+          {/* PRODUCTS */}
+
+          <div className="flex-1 space-y-4">
+
             <AnimatePresence mode="popLayout">
+
               {cart.map((item, index) => (
+
                 <motion.div
                   key={item.id}
                   custom={index}
@@ -136,162 +185,379 @@ function CartClient() {
                   animate="visible"
                   exit="exit"
                   layout
-                  className="bg-white rounded-xl p-4 md:p-5 shadow-sm"
+                  className="bg-white/75 backdrop-blur-sm border border-stone-200/60 rounded-2xl p-4 md:p-5"
                 >
-                  <div className="flex gap-4">
-                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden bg-stone-100 flex-shrink-0">
-                      <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+
+                  <div className="flex gap-4 md:gap-5">
+
+                    {/* IMAGE */}
+
+                    <div className="w-20 h-20 md:w-24 md:h-24 rounded-xl overflow-hidden bg-stone-100 flex-shrink-0">
+
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                      />
+
                     </div>
+
+                    {/* CONTENT */}
+
                     <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-start">
+
+                      <div className="flex items-start justify-between gap-4">
+
                         <div>
-                          <Link href={`/boutique/${item.id}`} className="text-sm font-light hover:text-stone-600 transition-colors">
+
+                          <Link
+                            href={`/boutique/${item.id}`}
+                            className="text-base md:text-lg font-light hover:text-stone-600 transition-colors"
+                          >
                             {item.name}
                           </Link>
-                          <div className="flex items-center gap-2 mt-2">
+
+                          {/* QUANTITY */}
+
+                          <div className="flex items-center gap-3 mt-5">
+
                             <button
-                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                              onClick={() =>
+                                updateQuantity(
+                                  item.id,
+                                  item.quantity - 1
+                                )
+                              }
                               disabled={item.quantity <= 1}
-                              className="w-6 h-6 rounded-full border border-stone-200 flex items-center justify-center text-stone-400 hover:border-stone-400 hover:text-stone-600 disabled:opacity-30 disabled:cursor-not-allowed text-xs"
+                              className="w-7 h-7 rounded-full border border-stone-200 flex items-center justify-center text-stone-400 hover:border-stone-400 hover:text-stone-700 transition-colors disabled:opacity-30"
                             >
                               −
                             </button>
-                            <span className="w-5 text-center text-xs font-light">{item.quantity}</span>
+
+                            <span className="text-sm font-light w-4 text-center">
+                              {item.quantity}
+                            </span>
+
                             <button
-                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                              disabled={item.quantity >= (item.stock || 10)}
-                              className="w-6 h-6 rounded-full border border-stone-200 flex items-center justify-center text-stone-400 hover:border-stone-400 hover:text-stone-600 disabled:opacity-30 disabled:cursor-not-allowed text-xs"
+                              onClick={() =>
+                                updateQuantity(
+                                  item.id,
+                                  item.quantity + 1
+                                )
+                              }
+                              disabled={
+                                item.quantity >=
+                                (item.stock || 10)
+                              }
+                              className="w-7 h-7 rounded-full border border-stone-200 flex items-center justify-center text-stone-400 hover:border-stone-400 hover:text-stone-700 transition-colors disabled:opacity-30"
                             >
                               +
                             </button>
+
                           </div>
+
                         </div>
+
+                        {/* PRICE */}
+
                         <div className="text-right">
-                          <p className="text-sm font-light">
-                            {(item.price * item.quantity).toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €
+
+                          <p className="text-base md:text-lg font-light">
+                            {(
+                              item.price * item.quantity
+                            ).toLocaleString("fr-FR", {
+                              minimumFractionDigits: 2,
+                            })} €
                           </p>
+
                           {item.quantity > 1 && (
-                            <p className="text-xs text-stone-400 font-light mt-0.5">
-                              {item.price.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} € / u.
+                            <p className="text-xs text-stone-400 font-light mt-1">
+                              {item.price.toLocaleString("fr-FR", {
+                                minimumFractionDigits: 2,
+                              })} € / unité
                             </p>
                           )}
+
                         </div>
+
                       </div>
+
+                      {/* REMOVE */}
+
                       <button
                         onClick={() => removeFromCart(item.id)}
-                        className="text-xs text-stone-400 hover:text-red-500 transition-colors font-light mt-2"
+                        className="text-xs text-stone-400 hover:text-red-500 transition-colors font-light mt-5"
                       >
                         Supprimer
                       </button>
+
                     </div>
+
                   </div>
+
                 </motion.div>
+
               ))}
+
             </AnimatePresence>
+
+            {/* CLEAR */}
 
             <button
               onClick={clearCart}
-              className="text-xs text-stone-400 hover:text-red-500 transition-colors font-light underline underline-offset-4"
+              className="text-xs text-stone-400 hover:text-red-500 transition-colors font-light underline underline-offset-4 mt-3"
             >
               Vider le panier
             </button>
+
           </div>
 
-          {/* Résumé */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
-            className="lg:w-80"
-          >
-            <div className="bg-white rounded-xl p-5 md:p-6 shadow-sm sticky top-24">
-              <h2 className="text-base font-light mb-4">Récapitulatif</h2>
+          {/* SUMMARY */}
 
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between font-light">
-                  <span className="text-stone-500">Sous-total</span>
-                  <span>{subtotal.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €</span>
+          <motion.div
+            initial={{ opacity: 0, x: 8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.08, duration: 0.35 }}
+            className="lg:w-[350px]"
+          >
+
+            <div className="bg-white/80 backdrop-blur-sm border border-stone-200/60 rounded-3xl p-6 md:p-7 sticky top-24">
+
+              <h2 className="text-lg font-light mb-8">
+                Récapitulatif
+              </h2>
+
+              <div className="space-y-4">
+
+                <div className="flex justify-between text-sm font-light">
+
+                  <span className="text-stone-500">
+                    Sous-total
+                  </span>
+
+                  <span>
+                    {subtotal.toLocaleString("fr-FR", {
+                      minimumFractionDigits: 2,
+                    })} €
+                  </span>
+
                 </div>
-                <div className="flex justify-between font-light">
-                  <span className="text-stone-500">Livraison</span>
-                  <span>{shipping === 0 ? <span className="text-emerald-600">Offerte</span> : `${shipping.toFixed(2)} €`}</span>
+
+                <div className="flex justify-between text-sm font-light">
+
+                  <span className="text-stone-500">
+                    Livraison
+                  </span>
+
+                  <span>
+                    {shipping === 0 ? (
+                      <span className="text-emerald-700">
+                        Offerte
+                      </span>
+                    ) : (
+                      `${shipping.toFixed(2)} €`
+                    )}
+                  </span>
+
                 </div>
+
+                {/* PROMO */}
 
                 {!promoApplied ? (
-                  <form onSubmit={handleApplyPromo} className="pt-2">
+
+                  <form
+                    onSubmit={handleApplyPromo}
+                    className="pt-3"
+                  >
+
                     <div className="flex gap-2">
+
                       <input
                         type="text"
                         value={promoCode}
-                        onChange={(e) => setPromoCode(e.target.value)}
+                        onChange={(e) =>
+                          setPromoCode(e.target.value)
+                        }
                         placeholder="Code promo"
-                        className="flex-1 border border-stone-200 rounded-lg px-3 py-2 text-xs font-light focus:outline-none focus:border-stone-400"
+                        className="flex-1 border border-stone-200 rounded-xl px-4 py-3 text-sm font-light bg-transparent focus:outline-none focus:border-stone-400 transition-colors"
                       />
-                      <button type="submit" disabled={!promoCode.trim()} className="bg-stone-900 text-white text-xs px-3 py-2 rounded-lg font-light hover:bg-stone-800 disabled:opacity-40">
+
+                      <button
+                        type="submit"
+                        disabled={!promoCode.trim()}
+                        className="bg-stone-900 text-white px-4 rounded-xl text-xs tracking-wide uppercase font-light hover:bg-stone-800 transition-colors disabled:opacity-40"
+                      >
                         OK
                       </button>
+
                     </div>
-                    <p className="text-[10px] text-stone-400 mt-1 font-light">Essayez NOMADE10</p>
+
                   </form>
+
                 ) : (
-                  <div className="flex justify-between text-xs font-light text-emerald-700 bg-emerald-50 -mx-2 px-2 py-1.5 rounded-lg">
+
+                  <div className="flex justify-between text-sm font-light text-emerald-700 bg-emerald-50 rounded-xl px-4 py-3">
+
                     <span>Réduction</span>
-                    <span>-{promoDiscount.toFixed(2)} €</span>
+
+                    <span>
+                      -{promoDiscount.toFixed(2)} €
+                    </span>
+
                   </div>
+
                 )}
+
+                {/* FREE SHIPPING */}
 
                 {subtotal < 150 && (
-                  <div className="bg-amber-50 border border-amber-100 rounded-lg p-3">
-                    <p className="text-[10px] text-amber-800 font-light mb-1.5">
-                      Plus que {(150 - subtotal).toLocaleString("fr-FR", { minimumFractionDigits: 2 })} € pour la livraison offerte
+
+                  <div className="bg-stone-100/70 rounded-2xl p-4 mt-3">
+
+                    <p className="text-xs text-stone-500 font-light mb-3 leading-relaxed">
+                      Plus que{" "}
+                      {(150 - subtotal).toLocaleString("fr-FR", {
+                        minimumFractionDigits: 2,
+                      })} €
+                      pour la livraison offerte.
                     </p>
-                    <div className="h-1 bg-amber-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-amber-500 rounded-full transition-all" style={{ width: `${Math.min((subtotal / 150) * 100, 100)}%` }} />
+
+                    <div className="h-[3px] bg-stone-200 rounded-full overflow-hidden">
+
+                      <div
+                        className="h-full bg-stone-900 rounded-full transition-all duration-500"
+                        style={{
+                          width: `${Math.min(
+                            (subtotal / 150) * 100,
+                            100
+                          )}%`,
+                        }}
+                      />
+
                     </div>
+
                   </div>
+
                 )}
+
               </div>
 
-              <div className="border-t border-stone-100 my-4 pt-4">
-                <div className="flex justify-between items-baseline">
-                  <span className="text-base font-light">Total</span>
-                  <span className="text-xl font-light">{total.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €</span>
+              {/* TOTAL */}
+
+              <div className="border-t border-stone-200/70 mt-8 pt-6">
+
+                <div className="flex justify-between items-end">
+
+                  <span className="text-base font-light">
+                    Total
+                  </span>
+
+                  <span className="text-2xl font-light tracking-tight">
+                    {total.toLocaleString("fr-FR", {
+                      minimumFractionDigits: 2,
+                    })} €
+                  </span>
+
                 </div>
-                <p className="text-[10px] text-stone-400 mt-1 font-light">Taxes incluses</p>
+
+                <p className="text-[11px] text-stone-400 font-light mt-2">
+                  Taxes incluses
+                </p>
+
               </div>
 
-              <button
-                onClick={handleStripeCheckout}
-                disabled={checkoutLoading}
-                className="w-full py-3 bg-stone-900 text-white rounded-full text-xs tracking-[0.15em] uppercase font-light hover:bg-stone-800 transition-colors disabled:opacity-50"
-              >
-                {checkoutLoading ? "Redirection..." : "Procéder au paiement"}
-              </button>
+              {/* CHECKOUT */}
 
-              <p className="text-center text-[10px] text-stone-400 font-light mt-3">
-                Paiement 100 % sécurisé
-              </p>
+              <div className="mt-8">
+
+                {isMaintenance ? (
+
+                  <div className="space-y-3">
+
+                    <button
+                      disabled
+                      className="w-full py-4 bg-stone-200 text-stone-400 rounded-full text-[11px] tracking-[0.18em] uppercase font-light cursor-not-allowed"
+                    >
+                      Indisponible
+                    </button>
+
+                    <p className="text-[11px] text-stone-400 text-center font-light">
+                      Notre boutique ouvrira bientôt.
+                    </p>
+
+                  </div>
+
+                ) : (
+
+                  <>
+                    <button
+                      onClick={handleStripeCheckout}
+                      disabled={checkoutLoading}
+                      className="w-full py-4 bg-stone-900 text-white rounded-full text-[11px] tracking-[0.18em] uppercase font-light hover:bg-stone-800 transition-all duration-300 disabled:opacity-50"
+                    >
+                      {checkoutLoading
+                        ? "Redirection..."
+                        : "Procéder au paiement"}
+                    </button>
+
+                    {/* SECURITY */}
+
+                    <div className="mt-5 space-y-2 text-center">
+
+                      <p className="text-[11px] text-stone-400 font-light">
+                        Paiement sécurisé via Stripe
+                      </p>
+
+                      <div className="flex items-center justify-center gap-3 text-[10px] text-stone-300 font-light">
+
+                        <span>Visa</span>
+                        <span>·</span>
+                        <span>Mastercard</span>
+                        <span>·</span>
+                        <span>Apple Pay</span>
+
+                      </div>
+
+                    </div>
+
+                  </>
+
+                )}
+
+              </div>
+
             </div>
+
           </motion.div>
+
         </div>
 
-        {/* Suggestions */}
+        {/* BACK */}
+
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="mt-12 text-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.15, duration: 0.35 }}
+          className="mt-14 text-center"
         >
+
           <Link
             href="/boutique"
-            className="text-sm text-stone-400 hover:text-stone-600 font-light tracking-wide transition-colors inline-flex items-center gap-1 group"
+            className="text-sm text-stone-400 hover:text-stone-700 font-light tracking-wide transition-colors inline-flex items-center gap-2 group"
           >
-            Ajouter d&apos;autres sacs
-            <span className="group-hover:translate-x-1 transition-transform">→</span>
+            Continuer la sélection
+
+            <span className="group-hover:translate-x-1 transition-transform">
+              →
+            </span>
+
           </Link>
+
         </motion.div>
+
       </div>
-    </motion.div>
+
+    </div>
   );
 }
 

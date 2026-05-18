@@ -4,6 +4,7 @@ import { supabase } from "@/lib/db";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+const noreplyEmail = process.env.NOREPLY_EMAIL;
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,7 +21,7 @@ export async function POST(req: NextRequest) {
     }
 
     await resend.emails.send({
-      from: "onboarding@resend.dev",
+      from: `Nomade <${noreplyEmail}>`,
       to: order.customer_email,
       subject: "Votre commande Nomade est en préparation",
       html: `

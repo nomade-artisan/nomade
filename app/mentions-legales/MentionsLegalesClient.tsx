@@ -1,219 +1,312 @@
 // app/mentions-legales/MentionsLegalesClient.tsx
+
 "use client";
 
 import { motion } from "framer-motion";
 
 function MentionsLegalesClient() {
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="bg-stone-50 min-h-screen"
-    >
-      <div className="max-w-3xl mx-auto px-6 md:px-10 py-16 md:py-24">
+    <div className="bg-stone-50 min-h-screen pt-[64px]">
+
+      <div className="max-w-5xl mx-auto px-6 md:px-10 py-8 md:py-12">
+
+        {/* HERO */}
+
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mb-16"
+          initial={{
+            opacity: 0,
+            y: 6,
+          }}
+          animate={{
+            opacity: 1,
+            y: 0,
+          }}
+          transition={{
+            duration: 0.35,
+          }}
+          className="mb-14 md:mb-16"
         >
-          <p className="text-stone-400 text-xs tracking-[0.3em] uppercase mb-4">
-            Informations légales
-          </p>
 
-          <h1 className="text-4xl md:text-5xl font-light tracking-wide mb-4 text-stone-900">
-            Mentions légales
-          </h1>
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
 
-          <p className="text-stone-500 font-light leading-8">
-            Conformément aux dispositions des articles 6-III et 19 de la Loi
-            n°2004-575 du 21 juin 2004 pour la Confiance dans l&apos;Économie
-            Numérique (LCEN).
-          </p>
+            <div>
+
+              <p className="text-[10px] uppercase tracking-[0.32em] text-stone-400 font-light mb-4">
+                Informations légales
+              </p>
+
+              <h1 className="text-3xl md:text-5xl font-light tracking-tight leading-[0.95]">
+                Mentions légales
+              </h1>
+
+            </div>
+
+            <p className="text-stone-500 font-light leading-relaxed text-base md:text-lg max-w-sm">
+              Les informations essentielles
+              concernant Nomade et son fonctionnement.
+            </p>
+
+          </div>
+
         </motion.div>
 
-        <div className="space-y-14 text-stone-600 font-light leading-8">
-          {/* Éditeur */}
-          <section>
-            <h2 className="text-xl font-light text-stone-900 mb-5 tracking-wide">
-              Éditeur du site
-            </h2>
+        {/* CONTENT */}
 
-            <div className="space-y-3">
-              <p>
-                <strong>Nom de la marque :</strong> NOMADE
-              </p>
+        <div className="space-y-5">
 
-              <p>
-                <strong>Entreprise :</strong> [Ton nom complet]
-              </p>
+          {/* ÉDITEUR */}
 
-              <p>
-                <strong>Statut :</strong> Entrepreneur individuel / Micro-entreprise
-              </p>
+          <LegalBlock
+            title="Éditeur du site"
+          >
 
-              <p>
-                <strong>Adresse :</strong> [Ton adresse professionnelle]
-              </p>
+            <Info
+              label="Marque"
+              value="NOMADE"
+            />
 
-              <p>
-                <strong>Email :</strong> bonjour@nomade.fr
-              </p>
+            <Info
+              label="Entreprise"
+              value="[Ton nom complet]"
+            />
 
-              <p>
-                <strong>Téléphone :</strong> [Ton numéro]
-              </p>
+            <Info
+              label="Statut"
+              value="Entrepreneur individuel / Micro-entreprise"
+            />
 
-              <p>
-                <strong>SIRET :</strong> [À compléter]
-              </p>
+            <Info
+              label="Adresse"
+              value="[Ton adresse professionnelle]"
+            />
 
-              <p>
-                <strong>TVA intracommunautaire :</strong> [À compléter]
-              </p>
+            <Info
+              label="Email"
+              value="bonjour@nomade.fr"
+            />
 
-              <p>
-                <strong>Code APE :</strong> [À compléter]
-              </p>
+            <Info
+              label="Téléphone"
+              value="[Ton numéro]"
+            />
 
-              <p>
-                <strong>Directeur de la publication :</strong> [Ton nom complet]
-              </p>
-            </div>
-          </section>
+            <Info
+              label="SIRET"
+              value="[À compléter]"
+            />
 
-          {/* Hébergement */}
-          <section>
-            <h2 className="text-xl font-light text-stone-900 mb-5 tracking-wide">
-              Hébergement
-            </h2>
+            <Info
+              label="TVA"
+              value="[À compléter]"
+            />
 
-            <div className="space-y-3">
-              <p>
-                <strong>Hébergeur :</strong> Vercel Inc.
-              </p>
+            <Info
+              label="Code APE"
+              value="[À compléter]"
+            />
 
-              <p>
-                <strong>Adresse :</strong> 340 S Lemon Ave #4133,
-                Walnut, CA 91789, États-Unis
-              </p>
+            <Info
+              label="Directeur de publication"
+              value="[Ton nom complet]"
+            />
 
-              <p>
-                <strong>Site web :</strong> https://vercel.com
-              </p>
-            </div>
-          </section>
+          </LegalBlock>
 
-          {/* Propriété intellectuelle */}
-          <section>
-            <h2 className="text-xl font-light text-stone-900 mb-5 tracking-wide">
-              Propriété intellectuelle
-            </h2>
+          {/* HÉBERGEMENT */}
 
-            <p>
-              L&apos;ensemble du contenu présent sur le site NOMADE,
-              incluant de manière non limitative les textes, images,
-              photographies, vidéos, logos, éléments graphiques,
-              design, identité visuelle et contenus éditoriaux,
-              est protégé par les dispositions du Code de la propriété
-              intellectuelle.
+          <LegalBlock
+            title="Hébergement"
+          >
+
+            <Info
+              label="Hébergeur"
+              value="Vercel Inc."
+            />
+
+            <Info
+              label="Adresse"
+              value="340 S Lemon Ave #4133, Walnut, CA 91789, États-Unis"
+            />
+
+            <Info
+              label="Site web"
+              value="https://vercel.com"
+            />
+
+          </LegalBlock>
+
+          {/* PROPRIÉTÉ */}
+
+          <LegalBlock
+            title="Propriété intellectuelle"
+          >
+
+            <p className="text-stone-500 font-light leading-relaxed">
+              L’ensemble des contenus présents sur le site NOMADE
+              — textes, images, photographies, logos,
+              éléments graphiques et identité visuelle —
+              est protégé par le Code de la propriété intellectuelle.
             </p>
 
-            <p className="mt-4">
-              Toute reproduction, représentation, modification,
-              publication ou adaptation, totale ou partielle,
-              des éléments du site, quel que soit le moyen ou
-              le procédé utilisé, est interdite sans autorisation
-              écrite préalable.
-            </p>
-          </section>
-
-          {/* Données personnelles */}
-          <section>
-            <h2 className="text-xl font-light text-stone-900 mb-5 tracking-wide">
-              Données personnelles
-            </h2>
-
-            <p>
-              Les données personnelles collectées sur le site sont
-              exclusivement utilisées dans le cadre de la relation
-              commerciale avec le client : traitement des commandes,
-              livraison, service client et communication liée aux achats.
+            <p className="text-stone-500 font-light leading-relaxed mt-4">
+              Toute reproduction, représentation,
+              modification ou adaptation,
+              totale ou partielle,
+              est interdite sans autorisation écrite préalable.
             </p>
 
-            <p className="mt-4">
-              Conformément au Règlement Général sur la Protection
-              des Données (RGPD) et à la loi Informatique et Libertés,
-              vous disposez d&apos;un droit d&apos;accès, de rectification,
-              de suppression et d&apos;opposition concernant vos données
-              personnelles.
+          </LegalBlock>
+
+          {/* DONNÉES */}
+
+          <LegalBlock
+            title="Données personnelles"
+          >
+
+            <p className="text-stone-500 font-light leading-relaxed">
+              Les données collectées sont utilisées uniquement
+              dans le cadre de la relation commerciale :
+              commandes, livraison,
+              service client et échanges liés aux achats.
             </p>
 
-            <p className="mt-4">
-              Pour exercer ces droits, vous pouvez contacter :
-              bonjour@nomade.fr
-            </p>
-          </section>
-
-          {/* Cookies */}
-          <section>
-            <h2 className="text-xl font-light text-stone-900 mb-5 tracking-wide">
-              Cookies
-            </h2>
-
-            <p>
-              Le site NOMADE peut utiliser des cookies nécessaires
-              à son bon fonctionnement, notamment pour la gestion
-              du panier, de la navigation et des sessions utilisateurs.
+            <p className="text-stone-500 font-light leading-relaxed mt-4">
+              Conformément au RGPD,
+              vous disposez d’un droit d’accès,
+              de rectification et de suppression
+              de vos données personnelles.
             </p>
 
-            <p className="mt-4">
-              Aucun cookie publicitaire ou de suivi marketing
-              n&apos;est déposé sans le consentement préalable
-              de l&apos;utilisateur.
-            </p>
-          </section>
-
-          {/* Responsabilité */}
-          <section>
-            <h2 className="text-xl font-light text-stone-900 mb-5 tracking-wide">
-              Responsabilité
-            </h2>
-
-            <p>
-              L&apos;éditeur du site s&apos;efforce de fournir des
-              informations aussi précises que possible. Toutefois,
-              il ne pourra être tenu responsable des omissions,
-              inexactitudes ou carences dans la mise à jour
-              des contenus.
+            <p className="text-stone-500 font-light leading-relaxed mt-4">
+              Contact :
+              {" "}
+              <span className="text-stone-700">
+                bonjour@nomade.fr
+              </span>
             </p>
 
-            <p className="mt-4">
-              L&apos;utilisateur reconnaît utiliser les informations
-              présentes sur le site sous sa responsabilité exclusive.
-            </p>
-          </section>
+          </LegalBlock>
 
-          {/* Droit applicable */}
-          <section>
-            <h2 className="text-xl font-light text-stone-900 mb-5 tracking-wide">
-              Droit applicable
-            </h2>
+          {/* COOKIES */}
 
-            <p>
-              Les présentes mentions légales sont soumises au droit français.
+          <LegalBlock
+            title="Cookies"
+          >
+
+            <p className="text-stone-500 font-light leading-relaxed">
+              Le site peut utiliser des cookies nécessaires
+              à son bon fonctionnement,
+              notamment pour la gestion du panier,
+              des sessions utilisateurs et de la navigation.
             </p>
 
-            <p className="mt-4">
-              En cas de litige et à défaut de résolution amiable,
-              les tribunaux français seront seuls compétents.
+            <p className="text-stone-500 font-light leading-relaxed mt-4">
+              Aucun cookie publicitaire n’est déposé
+              sans consentement préalable.
             </p>
-          </section>
+
+          </LegalBlock>
+
+          {/* RESPONSABILITÉ */}
+
+          <LegalBlock
+            title="Responsabilité"
+          >
+
+            <p className="text-stone-500 font-light leading-relaxed">
+              Malgré le soin apporté au contenu du site,
+              l’éditeur ne pourra être tenu responsable
+              des éventuelles omissions,
+              inexactitudes ou défauts de mise à jour.
+            </p>
+
+          </LegalBlock>
+
+          {/* DROIT */}
+
+          <LegalBlock
+            title="Droit applicable"
+          >
+
+            <p className="text-stone-500 font-light leading-relaxed">
+              Les présentes mentions légales
+              sont soumises au droit français.
+            </p>
+
+            <p className="text-stone-500 font-light leading-relaxed mt-4">
+              En cas de litige,
+              les tribunaux français seront compétents.
+            </p>
+
+          </LegalBlock>
+
         </div>
+
       </div>
-    </motion.div>
+
+    </div>
   );
 }
 
 export default MentionsLegalesClient;
+
+/* ========================= */
+
+function LegalBlock({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <motion.section
+      initial={{
+        opacity: 0,
+        y: 6,
+      }}
+      animate={{
+        opacity: 1,
+        y: 0,
+      }}
+      transition={{
+        duration: 0.35,
+      }}
+      className="bg-white/70 backdrop-blur-sm border border-stone-200/60 rounded-[30px] p-5 md:p-7"
+    >
+
+      <h2 className="text-lg md:text-xl font-light tracking-tight text-stone-900 mb-6">
+        {title}
+      </h2>
+
+      <div className="space-y-4">
+        {children}
+      </div>
+
+    </motion.section>
+  );
+}
+
+/* ========================= */
+
+function Info({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="grid grid-cols-[140px_1fr] gap-5 items-start">
+
+      <p className="text-[10px] uppercase tracking-[0.22em] text-stone-400 font-light pt-1">
+        {label}
+      </p>
+
+      <p className="text-stone-600 font-light leading-relaxed break-words">
+        {value}
+      </p>
+
+    </div>
+  );
+}

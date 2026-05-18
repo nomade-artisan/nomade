@@ -6,6 +6,8 @@ import { Resend } from "resend";
 import Stripe from "stripe";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+const NOREPLY_EMAIL = process.env.NOREPLY_EMAIL;
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -49,13 +51,11 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 2. Récupérer les produits + adresse de livraison
-    const { data: lineItems } = await stripe.checkout.sessions.listLineItems(
-      session.id
-    );
+    // 2. Récupérer les produits + adresse
+    const { data: lineItems } = await stripe.checkout.sessions.listLineItems(session.id);
     const shipping = session.shipping_details || session.customer_details;
 
-    // 3. Enregistrer la commande avec adresse
+    // 3. Enregistrer la commande
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .insert([
@@ -74,96 +74,111 @@ export async function POST(req: NextRequest) {
                 country: shipping.address.country,
               }
             : null,
+          payment_intent_id: session.payment_intent,
         },
       ])
       .select("id")
       .single();
 
-    // 4. Email de confirmation enrichi
-    if (session.customer_details?.email) {
-      const itemsList = lineItems
-        ?.map(
-          (item: any) =>
-            `<tr>
-              <td style="padding: 8px 0; color: #44403c; font-size: 14px;">${item.description}</td>
-              <td style="padding: 8px 0; color: #78716c; font-size: 14px; text-align: center;">x${item.quantity}</td>
-              <td style="padding: 8px 0; color: #44403c; font-size: 14px; text-align: right;">${(item.amount_total / 100).toFixed(2)} €</td>
-            </tr>`
-        )
-        .join("");
+    // 4. Facture Stripe
+    const invoice = await stripe.invoices.retrieve(session.invoice as string);
+    const invoiceUrl = invoice.hosted_invoice_url;
 
-      const shippingAddress = shipping?.address
-        ? `${shipping.address.line1 || ""}, ${shipping.address.postal_code || ""} ${shipping.address.city || ""}, ${shipping.address.country || ""}`
-        : session.customer_details?.address
-        ? `${session.customer_details.address.line1 || ""}, ${session.customer_details.address.postal_code || ""} ${session.customer_details.address.city || ""}`
-        : "Adresse communiquée";
-              // Récupérer la facture
-      const invoice = await stripe.invoices.retrieve(
-        session.invoice as string
-      );
+    // 5. Contenu commun pour les emails
+    const itemsList = lineItems
+      ?.map(
+        (item: any) =>
+          `<tr>
+            <td style="padding: 8px 0; color: #44403c; font-size: 14px;">${item.description}</td>
+            <td style="padding: 8px 0; color: #78716c; font-size: 14px; text-align: center;">x${item.quantity}</td>
+            <td style="padding: 8px 0; color: #44403c; font-size: 14px; text-align: right;">${(item.amount_total / 100).toFixed(2)} €</td>
+          </tr>`
+      )
+      .join("");
 
-      // Ajouter le lien dans l'email
-      const invoiceUrl = invoice.hosted_invoice_url;
-      const invoicePdf = invoice.invoice_pdf;
+    const shippingAddress = shipping?.address
+      ? `${shipping.address.line1 || ""}, ${shipping.address.postal_code || ""} ${shipping.address.city || ""}, ${shipping.address.country || ""}`
+      : session.customer_details?.address
+      ? `${session.customer_details.address.line1 || ""}, ${session.customer_details.address.postal_code || ""} ${session.customer_details.address.city || ""}`
+      : "Adresse communiquée";
+
+    const customerName = session.customer_details?.name || "";
+    const customerEmail = session.customer_details?.email || "";
+    const totalAmount = ((session.amount_total || 0) / 100).toFixed(2);
+
+    // ==================== EMAIL CLIENT ====================
+    if (customerEmail) {
       await resend.emails.send({
-        from: "onboarding@resend.dev",
-        to: session.customer_details.email,
+        from: `Nomade <${NOREPLY_EMAIL}>`,
+        to: customerEmail,
         subject: "Votre commande Nomade est confirmée",
         html: `
           <div style="font-family: Inter, system-ui, sans-serif; max-width: 520px; margin: auto; padding: 30px; background: #fafaf9; border-radius: 12px;">
-            
             <h2 style="font-weight: 400; color: #1c1917; font-size: 22px; margin-bottom: 8px;">
               Merci pour votre commande
             </h2>
             <p style="color: #78716c; font-size: 14px; margin-bottom: 24px;">
-              Bonjour ${session.customer_details?.name || ""},<br />
+              Bonjour ${customerName},<br />
               Votre commande est confirmée. Nous la préparons avec soin.
             </p>
-
             <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
-              <tbody>
-                ${itemsList}
-              </tbody>
+              <tbody>${itemsList}</tbody>
             </table>
-
             <div style="background: #f5f5f4; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
-              <p style="color: #44403c; font-size: 14px; margin: 0 0 4px 0; font-weight: 500;">
-                Livraison
-              </p>
-              <p style="color: #78716c; font-size: 13px; margin: 0;">
-                ${shippingAddress}
-              </p>
-              <p style="color: #78716c; font-size: 13px; margin: 4px 0 0 0;">
-                3 à 5 jours ouvrés
-              </p>
+              <p style="color: #44403c; font-size: 14px; margin: 0 0 4px 0; font-weight: 500;">Livraison</p>
+              <p style="color: #78716c; font-size: 13px; margin: 0;">${shippingAddress}</p>
+              <p style="color: #78716c; font-size: 13px; margin: 4px 0 0 0;">3 à 5 jours ouvrés</p>
             </div>
-
             <div style="border-top: 1px solid #e7e5e4; padding-top: 16px; margin-bottom: 16px;">
               <p style="color: #44403c; font-size: 16px; margin: 0; text-align: right;">
-                Total : <strong>${((session.amount_total || 0) / 100).toFixed(2)} €</strong>
+                Total : <strong>${totalAmount} €</strong>
               </p>
             </div>
-
+            <div style="text-align: center; margin: 20px 0;">
+              <a href="${invoiceUrl}" style="display: inline-block; background: #1c1917; color: white; padding: 10px 20px; border-radius: 24px; text-decoration: none; font-size: 13px;">
+                Voir ma facture
+              </a>
+            </div>
             <p style="color: #a8a29e; font-size: 12px; margin: 24px 0 0 0; text-align: center;">
               Nomade — L&apos;essentiel est à l&apos;intérieur
             </p>
           </div>
-          <div style="text-align: center; margin: 20px 0;">
-            <a href="${invoiceUrl}" style="
-              display: inline-block;
-              background: #1c1917;
-              color: white;
-              padding: 10px 20px;
-              border-radius: 24px;
-              text-decoration: none;
-              font-size: 13px;
-            ">
-              Voir ma facture
-            </a>
-          </div>
         `,
       });
     }
+
+    // ==================== EMAIL ADMIN ====================
+    await resend.emails.send({
+      from: `Nomade <${NOREPLY_EMAIL}>`,
+      to: `${ADMIN_EMAIL}`,
+      subject: `Nouvelle commande #${order?.id || "?"} — ${totalAmount} €`,
+      html: `
+        <div style="font-family: Inter, system-ui, sans-serif; max-width: 520px; margin: auto; padding: 30px; background: #fafaf9; border-radius: 12px;">
+          <h2 style="font-weight: 400; color: #1c1917; font-size: 20px; margin-bottom: 8px;">
+            Nouvelle commande reçue
+          </h2>
+          <div style="background: #1c1917; color: white; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px;">
+            <p style="margin: 0; font-size: 18px; font-weight: 400;">${totalAmount} €</p>
+            <p style="margin: 4px 0 0 0; font-size: 13px; opacity: 0.7;">Commande #${order?.id || "?"}</p>
+          </div>
+          <p style="color: #44403c; font-size: 14px; margin-bottom: 16px;">
+            <strong>${customerName}</strong><br />
+            ${customerEmail}
+          </p>
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px;">
+            <tbody>${itemsList}</tbody>
+          </table>
+          <div style="background: #f5f5f4; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+            <p style="color: #78716c; font-size: 13px; margin: 0;">
+              📍 ${shippingAddress}
+            </p>
+          </div>
+          <a href="${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/admin" style="display: inline-block; background: #1c1917; color: white; padding: 10px 20px; border-radius: 24px; text-decoration: none; font-size: 13px;">
+            Voir dans l'admin
+          </a>
+        </div>
+      `,
+    });
   }
 
   return NextResponse.json({ received: true });

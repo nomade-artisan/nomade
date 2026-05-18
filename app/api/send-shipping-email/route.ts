@@ -4,7 +4,7 @@ import { supabase } from "@/lib/db";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-
+const noreplyEmail = process.env.NOREPLY_EMAIL;
 const carrierNames: Record<string, string> = {
   laposte: "La Poste",
   chronopost: "Chronopost",
@@ -27,11 +27,11 @@ export async function POST(req: NextRequest) {
     if (error || !order) {
       return NextResponse.json({ error: "Commande introuvable" }, { status: 404 });
     }
-
+        
     const carrierName = carrierNames[carrier] || carrier;
 
     await resend.emails.send({
-      from: "onboarding@resend.dev",
+      from: `Nomade <${noreplyEmail}>`,
       to: order.customer_email,
       subject: "Votre commande Nomade est en route",
       html: `

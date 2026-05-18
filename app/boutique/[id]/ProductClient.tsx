@@ -1,10 +1,18 @@
 // app/boutique/[id]/ProductClient.tsx
+
 "use client";
 
 import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  Truck,
+  RotateCcw,
+  ShieldCheck,
+} from "lucide-react";
+
 import { useCart } from "@/components/CartContext";
+import Reviews from "@/components/Reviews";
 
 interface Product {
   id: number | string;
@@ -28,10 +36,18 @@ function ProductClient({
   relatedProducts: Product[];
 }) {
   const { addToCart } = useCart();
-  const [selectedImage, setSelectedImage] = useState(0);
-  const [quantity, setQuantity] = useState(1);
-  const [isAdded, setIsAdded] = useState(false);
-  const [activeTab, setActiveTab] = useState("description");
+
+  const [selectedImage, setSelectedImage] =
+    useState(0);
+
+  const [quantity, setQuantity] =
+    useState(1);
+
+  const [isAdded, setIsAdded] =
+    useState(false);
+
+  const [activeTab, setActiveTab] =
+    useState("description");
 
   const handleAddToCart = () => {
     addToCart(
@@ -44,347 +60,767 @@ function ProductClient({
       },
       quantity
     );
+
     setIsAdded(true);
-    setTimeout(() => setIsAdded(false), 2000);
+
+    setTimeout(() => {
+      setIsAdded(false);
+    }, 1800);
   };
 
+  const priceFormatted =
+    typeof product.price === "number"
+      ? product.price.toLocaleString(
+          "fr-FR",
+          {
+            minimumFractionDigits: 2,
+          }
+        )
+      : product.price;
+
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="bg-stone-50 min-h-screen"
-    >
-      <div className="max-w-7xl mx-auto px-6 md:px-10 py-8 md:py-16">
-        {/* Breadcrumb */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-2 text-sm font-light text-stone-400 mb-8"
-        >
-          <Link href="/" className="hover:text-stone-800 transition-colors">
-            Accueil
-          </Link>
-          <span>/</span>
-          <Link
-            href="/boutique"
-            className="hover:text-stone-800 transition-colors"
-          >
-            Boutique
-          </Link>
-          <span>/</span>
-          <span className="text-stone-700">{product.name}</span>
-        </motion.div>
+    <div className="bg-stone-50 pt-20 min-h-screen">
 
-        <div className="grid md:grid-cols-2 gap-10 lg:gap-16">
-          {/* Galerie images */}
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-            className="space-y-4"
-          >
-            {/* Image principale */}
-            <div className="relative overflow-hidden rounded-2xl bg-stone-100 aspect-square">
-              <AnimatePresence mode="wait">
-                <motion.img
-                  key={selectedImage}
-                  src={product.images[selectedImage]}
-                  alt={`${product.name} - Vue ${selectedImage + 1}`}
-                  className="w-full h-full object-cover"
-                  initial={{ opacity: 0, scale: 1.05 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.4 }}
-                />
-              </AnimatePresence>
+      <div className="max-w-6xl mx-auto px-6 md:px-10 py-10 md:py-16">
 
-              {product.isNew && (
-                <div className="absolute top-4 left-4">
-                  <span className="bg-stone-900 text-white text-xs px-3 py-1 rounded-full font-medium">
-                    Nouveau
-                  </span>
-                </div>
-              )}
+        {/* BREADCRUMB */}
 
-              {product.stock <= 3 && product.stock > 0 && (
-                <div className="absolute top-4 right-4">
-                  <span className="bg-amber-500 text-white text-xs px-3 py-1 rounded-full font-medium">
-                    Plus que {product.stock}
-                  </span>
-                </div>
-              )}
+        <Breadcrumb
+          productName={product.name}
+        />
 
-              {/* Indicateurs */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                {product.images.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedImage(index)}
-                    className={`w-2.5 h-2.5 rounded-full transition-all ${
-                      index === selectedImage
-                        ? "bg-stone-900 w-8"
-                        : "bg-stone-300 hover:bg-stone-400"
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
+        {/* MAIN */}
 
-            {/* Miniatures */}
-            <div className="grid grid-cols-4 gap-3">
-              {product.images.map((image, index) => (
-                <motion.button
-                  key={index}
-                  whileHover={{ y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setSelectedImage(index)}
-                  className={`rounded-xl overflow-hidden aspect-square bg-stone-100 border-2 transition-all ${
-                    index === selectedImage
-                      ? "border-stone-900"
-                      : "border-transparent hover:border-stone-300"
-                  }`}
-                >
-                  <img
-                    src={image}
-                    alt={`${product.name} miniature ${index + 1}`}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
-                </motion.button>
-              ))}
-            </div>
-          </motion.div>
+        <div className="grid md:grid-cols-2 gap-10 lg:gap-20 items-start">
 
-          {/* Infos produit */}
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="space-y-6"
-          >
-            {/* Catégorie + rating */}
-            <div className="flex items-center justify-between">
-              <span className="text-xs uppercase tracking-[0.2em] text-stone-400 font-medium">
-                {product.category}
-              </span>
-              <div className="flex items-center gap-1">
-                {[...Array(5)].map((_, i) => (
-                  <span
-                    key={i}
-                    className={`text-sm ${
-                      i < Math.floor(product.rating)
-                        ? "text-yellow-500"
-                        : "text-stone-200"
-                    }`}
-                  >
-                    ★
-                  </span>
-                ))}
-                <span className="text-sm text-stone-400 ml-2 font-light">
-                  ({product.reviews} avis)
-                </span>
-              </div>
-            </div>
+          <Gallery
+            images={product.images}
+            productName={product.name}
+            isNew={product.isNew}
+            stock={product.stock}
+            selectedImage={selectedImage}
+            setSelectedImage={
+              setSelectedImage
+            }
+          />
 
-            {/* Nom + prix */}
-            <div>
-              <h1 className="text-3xl md:text-4xl font-light tracking-wide mb-4">
-                {product.name}
-              </h1>
-              <div className="flex items-baseline gap-4">
-                <span className="text-3xl font-light">
-                  {typeof product.price === "number"
-                    ? product.price.toLocaleString("fr-FR", {
-                        minimumFractionDigits: 2,
-                      })
-                    : product.price}{" "}
-                  €
-                </span>
-                <span className="text-sm text-stone-400 font-light">
-                  Taxes incluses
-                </span>
-              </div>
-            </div>
+          <ProductInfo
+            product={product}
+            priceFormatted={
+              priceFormatted
+            }
+            quantity={quantity}
+            setQuantity={setQuantity}
+            isAdded={isAdded}
+            activeTab={activeTab}
+            setActiveTab={
+              setActiveTab
+            }
+            onAddToCart={
+              handleAddToCart
+            }
+          />
 
-            {/* Description */}
-            <p className="text-stone-600 font-light leading-relaxed text-base">
-              {product.description}
-            </p>
-
-            {/* Quantité + ajout panier */}
-            <div className="space-y-4 pt-2">
-              <div className="flex items-center gap-4">
-                <span className="text-sm font-light text-stone-500">
-                  Quantité :
-                </span>
-                <div className="flex items-center border border-stone-200 rounded-full">
-                  <button
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    disabled={quantity <= 1}
-                    className="w-10 h-10 flex items-center justify-center text-stone-500 hover:text-stone-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                  >
-                    −
-                  </button>
-                  <span className="w-10 text-center font-light text-sm">
-                    {quantity}
-                  </span>
-                  <button
-                    onClick={() =>
-                      setQuantity(Math.min(product.stock, quantity + 1))
-                    }
-                    disabled={quantity >= product.stock}
-                    className="w-10 h-10 flex items-center justify-center text-stone-500 hover:text-stone-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                  >
-                    +
-                  </button>
-                </div>
-                {product.stock <= 3 && (
-                  <span className="text-xs text-amber-600 font-light">
-                    Seulement {product.stock} en stock
-                  </span>
-                )}
-              </div>
-
-              <motion.button
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handleAddToCart}
-                disabled={product.stock === 0}
-                className={`w-full py-4 rounded-full text-sm tracking-[0.15em] uppercase font-light transition-all ${
-                  isAdded
-                    ? "bg-green-600 text-white"
-                    : product.stock === 0
-                    ? "bg-stone-300 text-stone-500 cursor-not-allowed"
-                    : "bg-stone-900 text-white hover:bg-stone-800"
-                }`}
-              >
-                {isAdded
-                  ? "✓ Ajouté au panier"
-                  : product.stock === 0
-                  ? "Rupture de stock"
-                  : "Ajouter au panier"}
-              </motion.button>
-            </div>
-
-            {/* Livraison */}
-            <div className="grid grid-cols-3 gap-4 py-6 border-t border-stone-200">
-              {[
-                { label: "Livraison 3-5 jours", icon: "📦" },
-                { label: "Retours gratuits", icon: "🔄" },
-                { label: "Paiement sécurisé", icon: "🔒" },
-              ].map((feature) => (
-                <div key={feature.label} className="text-center">
-                  <div className="text-lg mb-1">{feature.icon}</div>
-                  <p className="text-[11px] text-stone-500 font-light">
-                    {feature.label}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            {/* Tabs */}
-            <div className="pt-2">
-              <div className="flex border-b border-stone-200">
-                {[
-                  { key: "description", label: "Description" },
-                  { key: "details", label: "Détails" },
-                  { key: "livraison", label: "Livraison" },
-                ].map((tab) => (
-                  <button
-                    key={tab.key}
-                    onClick={() => setActiveTab(tab.key)}
-                    className={`px-5 py-3 text-xs tracking-wider uppercase font-light transition-all ${
-                      activeTab === tab.key
-                        ? "text-stone-900 border-b-2 border-stone-900"
-                        : "text-stone-400 hover:text-stone-700"
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-              <div className="py-6">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={activeTab}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="font-light text-stone-600 text-sm leading-relaxed"
-                  >
-                    {activeTab === "description" && (
-                      <p>{product.description}</p>
-                    )}
-                    {activeTab === "details" && (
-                      <ul className="space-y-2">
-                        {product.details.map((detail) => (
-                          <li
-                            key={detail}
-                            className="flex items-center gap-2"
-                          >
-                            <span className="text-stone-400">•</span>
-                            {detail}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                    {activeTab === "livraison" && (
-                      <div className="space-y-3">
-                        <p>Livraison standard : 3-5 jours ouvrés</p>
-                        <p>Livraison express : 1-2 jours ouvrés</p>
-                        <p className="text-emerald-700">
-                          Gratuite à partir de 150€
-                        </p>
-                      </div>
-                    )}
-                  </motion.div>
-                </AnimatePresence>
-              </div>
-            </div>
-          </motion.div>
         </div>
 
-        {/* Produits liés */}
-        {relatedProducts.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="mt-20"
-          >
-            <h2 className="text-2xl md:text-3xl font-light mb-8 text-center tracking-wide">
-              Vous pourriez aussi aimer
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-              {relatedProducts.map((related) => (
-                <Link
-                  key={related.id}
-                  href={`/boutique/${related.id}`}
-                  className="group"
-                >
-                  <div className="rounded-xl overflow-hidden bg-stone-100 aspect-square mb-3">
-                    <img
-                      src={related.images[0]}
-                      alt={related.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  </div>
-                  <h3 className="font-light text-sm">{related.name}</h3>
-                  <p className="text-stone-500 text-sm font-light">
-                    {typeof related.price === "number"
-                      ? related.price.toLocaleString("fr-FR")
-                      : related.price}{" "}
-                    €
-                  </p>
-                </Link>
-              ))}
-            </div>
-          </motion.div>
+        {/* RELATED */}
+
+        {relatedProducts.length >
+          0 && (
+          <RelatedProducts
+            products={
+              relatedProducts
+            }
+          />
         )}
+
+        {/* REVIEWS */}
+
+        <section className="mt-28 max-w-4xl mx-auto">
+
+          <div className="text-center mb-10">
+
+            <div className="w-10 h-px bg-stone-300 mx-auto mb-6" />
+
+            <h2 className="text-2xl md:text-3xl font-light tracking-tight">
+              Avis clients
+            </h2>
+
+          </div>
+
+          <Reviews
+            productId={product.id}
+          />
+
+        </section>
+
       </div>
-    </motion.div>
+
+    </div>
   );
 }
 
 export default ProductClient;
+
+/* ========================= */
+
+function Breadcrumb({
+  productName,
+}: {
+  productName: string;
+}) {
+  return (
+    <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-stone-400 font-light mb-10">
+
+      <Link
+        href="/"
+        className="hover:text-stone-700 transition-colors"
+      >
+        Accueil
+      </Link>
+
+      <span>/</span>
+
+      <Link
+        href="/boutique"
+        className="hover:text-stone-700 transition-colors"
+      >
+        Boutique
+      </Link>
+
+      <span>/</span>
+
+      <span className="text-stone-700 truncate">
+        {productName}
+      </span>
+
+    </div>
+  );
+}
+
+/* ========================= */
+
+function Gallery({
+  images,
+  productName,
+  isNew,
+  stock,
+  selectedImage,
+  setSelectedImage,
+}: {
+  images: string[];
+  productName: string;
+  isNew: boolean;
+  stock: number;
+  selectedImage: number;
+  setSelectedImage: (
+    i: number
+  ) => void;
+}) {
+  return (
+    <div className="space-y-5">
+
+      {/* MAIN IMAGE */}
+
+      <div className="relative overflow-hidden rounded-[28px] bg-stone-100 aspect-[4/5]">
+
+        <AnimatePresence mode="wait">
+
+          <motion.img
+            key={selectedImage}
+            src={
+              images[selectedImage]
+            }
+            alt={`${productName}`}
+            className="w-full h-full object-cover"
+            initial={{
+              opacity: 0,
+            }}
+            animate={{
+              opacity: 1,
+            }}
+            exit={{
+              opacity: 0,
+            }}
+            transition={{
+              duration: 0.25,
+            }}
+          />
+
+        </AnimatePresence>
+
+        {/* BADGES */}
+
+        <div className="absolute top-5 left-5 flex flex-col gap-2">
+
+          {isNew && (
+            <span className="bg-white/90 backdrop-blur-sm text-stone-900 text-[10px] uppercase tracking-[0.18em] px-3 py-1.5 rounded-full font-light">
+              Nouveau
+            </span>
+          )}
+
+          {stock <= 3 &&
+            stock > 0 && (
+              <span className="bg-stone-900 text-white text-[10px] uppercase tracking-[0.18em] px-3 py-1.5 rounded-full font-light">
+                Plus que {stock}
+              </span>
+            )}
+
+        </div>
+
+        {/* DOTS */}
+
+        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2">
+
+          {images.map((_, i) => (
+
+            <button
+              key={i}
+              onClick={() =>
+                setSelectedImage(i)
+              }
+              className={`h-2 rounded-full transition-all duration-300
+                ${
+                  i === selectedImage
+                    ? "w-8 bg-stone-900"
+                    : "w-2 bg-white/60 hover:bg-white"
+                }`}
+            />
+
+          ))}
+
+        </div>
+
+      </div>
+
+      {/* THUMBNAILS */}
+
+      <div className="grid grid-cols-4 gap-3">
+
+        {images.map((img, i) => (
+
+          <button
+            key={i}
+            onClick={() =>
+              setSelectedImage(i)
+            }
+            className={`rounded-2xl overflow-hidden aspect-square bg-stone-100 border transition-all duration-300
+              ${
+                i === selectedImage
+                  ? "border-stone-900"
+                  : "border-transparent hover:border-stone-300"
+              }`}
+          >
+
+            <img
+              src={img}
+              alt=""
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+
+          </button>
+
+        ))}
+
+      </div>
+
+    </div>
+  );
+}
+
+/* ========================= */
+
+function ProductInfo({
+  product,
+  priceFormatted,
+  quantity,
+  setQuantity,
+  isAdded,
+  activeTab,
+  setActiveTab,
+  onAddToCart,
+}: {
+  product: Product;
+  priceFormatted: string;
+  quantity: number;
+  setQuantity: (
+    q: number
+  ) => void;
+  isAdded: boolean;
+  activeTab: string;
+  setActiveTab: (
+    t: string
+  ) => void;
+  onAddToCart: () => void;
+}) {
+  return (
+    <div className="md:sticky md:top-28 space-y-8">
+
+      {/* CATEGORY */}
+
+      <div className="flex items-center justify-between gap-4">
+
+        <span className="text-[11px] uppercase tracking-[0.2em] text-stone-400 font-light">
+          {product.category}
+        </span>
+
+        <Stars
+          rating={product.rating}
+          reviews={product.reviews}
+        />
+
+      </div>
+
+      {/* TITLE */}
+
+      <div>
+
+        <h1 className="text-2xl md:text-4xl font-light tracking-tight leading-tight mb-5">
+          {product.name}
+        </h1>
+
+        <div className="flex items-end gap-4">
+
+          <span className="text-2xl md:text-3xl font-light tracking-tight">
+            {priceFormatted} €
+          </span>
+
+          <span className="text-xs text-stone-400 font-light mb-1">
+            Taxes incluses
+          </span>
+
+        </div>
+
+      </div>
+
+      {/* DESCRIPTION */}
+
+      <p className="text-stone-600 font-light leading-relaxed text-[15px] md:text-base max-w-lg">
+        {product.description}
+      </p>
+
+      {/* QUANTITY */}
+
+      <div className="space-y-5 pt-2">
+
+        <div className="flex items-center gap-5">
+
+          <span className="text-sm text-stone-500 font-light">
+            Quantité
+          </span>
+
+          <QuantitySelector
+            quantity={quantity}
+            max={product.stock}
+            onChange={setQuantity}
+          />
+
+        </div>
+
+        {/* ADD */}
+
+        <button
+          onClick={onAddToCart}
+          disabled={product.stock === 0}
+          className={`w-full py-4 rounded-full text-[11px] uppercase tracking-[0.18em] font-light transition-all duration-300
+            ${
+              isAdded
+                ? "bg-emerald-700 text-white"
+                : product.stock === 0
+                ? "bg-stone-200 text-stone-400 cursor-not-allowed"
+                : "bg-stone-900 text-white hover:bg-stone-800"
+            }`}
+        >
+
+          {isAdded
+            ? "Ajouté au panier"
+            : product.stock === 0
+            ? "Rupture de stock"
+            : "Ajouter au panier"}
+
+        </button>
+
+      </div>
+
+      {/* DELIVERY */}
+
+      <DeliveryInfo />
+
+      {/* TABS */}
+
+      <Tabs
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        product={product}
+      />
+
+    </div>
+  );
+}
+
+/* ========================= */
+
+function Stars({
+  rating,
+  reviews,
+}: {
+  rating: number;
+  reviews: number;
+}) {
+  return (
+    <div className="flex items-center gap-1">
+
+      {[...Array(5)].map(
+        (_, i) => (
+
+          <span
+            key={i}
+            className={`text-xs
+              ${
+                i <
+                Math.floor(
+                  rating
+                )
+                  ? "text-stone-900"
+                  : "text-stone-300"
+              }`}
+          >
+            ●
+          </span>
+
+        )
+      )}
+
+      <span className="text-xs text-stone-400 font-light ml-2">
+        {reviews} avis
+      </span>
+
+    </div>
+  );
+}
+
+/* ========================= */
+
+function QuantitySelector({
+  quantity,
+  max,
+  onChange,
+}: {
+  quantity: number;
+  max: number;
+  onChange: (
+    q: number
+  ) => void;
+}) {
+  return (
+    <div className="flex items-center border border-stone-200 rounded-full overflow-hidden">
+
+      <button
+        onClick={() =>
+          onChange(
+            Math.max(
+              1,
+              quantity - 1
+            )
+          )
+        }
+        disabled={quantity <= 1}
+        className="w-10 h-10 text-stone-400 hover:text-stone-700 transition-colors disabled:opacity-30"
+      >
+        −
+      </button>
+
+      <span className="w-10 text-center text-sm font-light">
+        {quantity}
+      </span>
+
+      <button
+        onClick={() =>
+          onChange(
+            Math.min(
+              max,
+              quantity + 1
+            )
+          )
+        }
+        disabled={quantity >= max}
+        className="w-10 h-10 text-stone-400 hover:text-stone-700 transition-colors disabled:opacity-30"
+      >
+        +
+      </button>
+
+    </div>
+  );
+}
+
+/* ========================= */
+
+function DeliveryInfo() {
+  const items = [
+    {
+      label:
+        "Livraison 3–5 jours",
+      icon: Truck,
+    },
+    {
+      label:
+        "Retours gratuits",
+      icon: RotateCcw,
+    },
+    {
+      label:
+        "Paiement sécurisé",
+      icon: ShieldCheck,
+    },
+  ];
+
+  return (
+    <div className="grid grid-cols-3 gap-5 pt-8 border-t border-stone-200/70">
+
+      {items.map((item) => {
+        const Icon = item.icon;
+
+        return (
+          <div
+            key={item.label}
+            className="text-center"
+          >
+
+            <div className="flex justify-center mb-3">
+
+              <Icon
+                size={16}
+                strokeWidth={1.5}
+                className="text-stone-500"
+              />
+
+            </div>
+
+            <p className="text-[11px] uppercase tracking-[0.15em] text-stone-400 font-light leading-relaxed">
+              {item.label}
+            </p>
+
+          </div>
+        );
+      })}
+
+    </div>
+  );
+}
+
+/* ========================= */
+
+function Tabs({
+  activeTab,
+  setActiveTab,
+  product,
+}: {
+  activeTab: string;
+  setActiveTab: (
+    t: string
+  ) => void;
+  product: Product;
+}) {
+  const tabs = [
+    {
+      key: "description",
+      label: "Description",
+    },
+    {
+      key: "details",
+      label: "Détails",
+    },
+    {
+      key: "livraison",
+      label: "Livraison",
+    },
+  ];
+
+  return (
+    <div className="pt-2">
+
+      {/* TAB HEADERS */}
+
+      <div className="flex gap-6 border-b border-stone-200/70 pb-4">
+
+        {tabs.map((tab) => (
+
+          <button
+            key={tab.key}
+            onClick={() =>
+              setActiveTab(tab.key)
+            }
+            className={`text-[11px] uppercase tracking-[0.18em] transition-colors duration-300 font-light
+              ${
+                activeTab ===
+                tab.key
+                  ? "text-stone-900"
+                  : "text-stone-400 hover:text-stone-700"
+              }`}
+          >
+            {tab.label}
+          </button>
+
+        ))}
+
+      </div>
+
+      {/* CONTENT */}
+
+      <div className="pt-8 min-h-[140px]">
+
+        <AnimatePresence mode="wait">
+
+          <motion.div
+            key={activeTab}
+            initial={{
+              opacity: 0,
+              y: 5,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            exit={{
+              opacity: 0,
+              y: -5,
+            }}
+            transition={{
+              duration: 0.2,
+            }}
+            className="text-stone-600 text-sm font-light leading-relaxed"
+          >
+
+            {activeTab ===
+              "description" && (
+              <p>
+                {
+                  product.description
+                }
+              </p>
+            )}
+
+            {activeTab ===
+              "details" && (
+              <ul className="space-y-3">
+
+                {product.details.map(
+                  (detail) => (
+
+                    <li
+                      key={detail}
+                      className="flex items-start gap-3"
+                    >
+
+                      <span className="text-stone-300">
+                        —
+                      </span>
+
+                      <span>
+                        {detail}
+                      </span>
+
+                    </li>
+
+                  )
+                )}
+
+              </ul>
+            )}
+
+            {activeTab ===
+              "livraison" && (
+              <div className="space-y-3">
+
+                <p>
+                  Livraison standard :
+                  3 à 5 jours ouvrés.
+                </p>
+
+                <p>
+                  Livraison express :
+                  1 à 2 jours ouvrés.
+                </p>
+
+                <p className="text-emerald-700">
+                  Offerte à partir de
+                  150€.
+                </p>
+
+              </div>
+            )}
+
+          </motion.div>
+
+        </AnimatePresence>
+
+      </div>
+
+    </div>
+  );
+}
+
+/* ========================= */
+
+function RelatedProducts({
+  products,
+}: {
+  products: Product[];
+}) {
+  return (
+    <section className="mt-32">
+
+      <div className="text-center mb-14">
+
+        <div className="w-10 h-px bg-stone-300 mx-auto mb-6" />
+
+        <h2 className="text-2xl md:text-3xl font-light tracking-tight">
+          Vous pourriez aussi aimer
+        </h2>
+
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-8 md:gap-10">
+
+        {products.map((p) => (
+
+          <Link
+            key={p.id}
+            href={`/boutique/${p.id}`}
+            className="group"
+          >
+
+            <div className="rounded-[24px] overflow-hidden bg-stone-100 aspect-[4/5] mb-4">
+
+              <img
+                src={p.images[0]}
+                alt={p.name}
+                className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700"
+              />
+
+            </div>
+
+            <h3 className="font-light text-sm md:text-base tracking-tight">
+              {p.name}
+            </h3>
+
+            <p className="text-stone-500 text-sm font-light mt-1">
+              {typeof p.price ===
+              "number"
+                ? p.price.toLocaleString(
+                    "fr-FR"
+                  )
+                : p.price}{" "}
+              €
+            </p>
+
+          </Link>
+
+        ))}
+
+      </div>
+
+    </section>
+  );
+}
