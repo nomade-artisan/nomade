@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { CartProvider } from "@/components/CartContext";
-import { SpeedInsights } from "@vercel/speed-insights/next"
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/next";
 import Navbar from "@/components/Navbar";
 import MaintenanceBanner from "@/components/MaintenanceBanner";
 import Footer from "@/components/Footer";
@@ -22,6 +23,7 @@ export default function RootLayout({
       <body>
         <CartProvider>
           <SpeedInsights />
+          <Analytics />
 
           <div className="flex flex-col min-h-screen">
             <Navbar />
