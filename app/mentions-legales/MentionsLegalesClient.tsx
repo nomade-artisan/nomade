@@ -78,7 +78,7 @@ function MentionsLegalesClient() {
 
             <Info
               label="Adresse"
-              value="[Ton adresse professionnelle]"
+              value="xxx rue de l'artisanat, 75000 Paris, France"
             />
 
             <Info
