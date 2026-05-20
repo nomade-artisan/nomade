@@ -136,7 +136,7 @@ function HomeClient() {
                 transition={{ duration: 0.7 }}
                 className="text-white/40 text-xs md:text-sm tracking-[0.3em] uppercase mb-6 font-light"
               >
-                Fabriqué en France • Livraison offerte dès 100 €
+                Fabriqué en France • Cuir  • Toile 
               </motion.p>
 
               <motion.h1
@@ -159,7 +159,7 @@ function HomeClient() {
                 </p>
 
                 <p className="text-white/70 text-base md:text-xl leading-relaxed font-light max-w-xl">
-                  Cuir pleine fleur, fabrication artisanale, livraison offerte dès 100 €.
+                  fabrication artisanale, livraison offerte dès 100 €.
                 </p>
               </motion.div>
 
