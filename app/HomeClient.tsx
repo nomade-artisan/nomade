@@ -1,4 +1,3 @@
-
 // app/HomeClient.tsx
 "use client";
 
@@ -74,158 +73,129 @@ function HomeClient() {
   const bestProducts = products.filter((p) => (p.rating || 0) >= 4.7).slice(0, 4);
 
   const categories = [
-    {
-      name: "Cuir",
-      slug: "Cuir",
-      img: homeImage("cat-cuir.jpg"),
-    },
-    {
-      name: "Minimal",
-      slug: "Minimal",
-      img: homeImage("cat-minimal.jpg"),
-    },
-    {
-      name: "Bandoulière",
-      slug: "Bandouliere",
-      img: homeImage("cat-bandouliere.jpg"),
-    },
-    {
-      name: "Route",
-      slug: "Aventure",
-      img: homeImage("cat-aventure.jpg"),
-    },
+    { name: "Cuir", slug: "Cuir", img: homeImage("cat-cuir.jpg") },
+    { name: "Minimal", slug: "Minimal", img: homeImage("cat-minimal.jpg") },
+    { name: "Bandoulière", slug: "Bandouliere", img: homeImage("cat-bandouliere.jpg") },
+    { name: "Route", slug: "Aventure", img: homeImage("cat-aventure.jpg") },
   ];
 
   const values = [
     {
-      title: "Fabriqué lentement",
-      text:
-        "Chaque sac prend du temps. Parce qu’on croit encore qu’un objet qu’on garde longtemps mérite de ne pas être fabriqué dans l’urgence.",
+      title: "Fabriqué à la main, chez nous",
+      text: "Chaque pièce est coupée, cousue et finie dans notre atelier. Pas d'usine, pas de chaîne. Juste le temps qu'il faut pour que ce soit parfait.",
       img: homeImage("valeur-artisanat.jpg"),
     },
     {
-      title: "Pensé pour traverser",
-      text:
-        "Les saisons changent. Les villes changent. Les gens changent aussi parfois. Certains objets restent. Nous fabriquons ceux-là.",
+      title: "Conçu pour durer des années",
+      text: "Cuir pleine fleur, toile épaisse, coutures solides. Nos sacs ne suivent pas les modes. Ils traversent le temps avec vous.",
       img: homeImage("valeur-durer.jpg"),
     },
     {
-      title: "L’essentiel suffit",
-      text:
-        "Il y a des périodes où l’on comprend que l’on possède déjà assez. Alors on apprend à choisir ce qu’on porte vraiment avec soi.",
+      title: "L'essentiel, sans superflu",
+      text: "Pas de logo criard. Pas de détail inutile. Un sac qui fait ce qu'on lui demande : porter vos affaires, bien, longtemps.",
       img: homeImage("valeur-essentiel.jpg"),
     },
   ];
 
   const testimonials = [
     {
-      quote:
-        "Je pensais acheter un simple sac. Finalement j’ai gardé quelque chose qui m’accompagne partout depuis deux ans.",
+      quote: "Je l'ai depuis un an. Il est encore plus beau qu'au premier jour. Le cuir s'est patiné exactement comme je l'espérais.",
       author: "— Claire, Lyon",
     },
     {
-      quote:
-        "Quand je l’ai reçu, j’ai eu l’impression qu’il avait déjà une histoire. C’est étrange à dire, mais peu d’objets donnent cette sensation aujourd’hui.",
+      quote: "J'ai offert le même à ma sœur. On ne se quitte plus, ni le sac ni elle. C'est devenu notre objet.",
       author: "— Mehdi, Bruxelles",
     },
   ];
 
   return (
     <div className="bg-stone-50 text-stone-900 overflow-hidden">
+
       {/* ================= HERO ================= */}
-      <section className="relative h-screen overflow-hidden">
+      <section className="relative min-h-screen overflow-hidden">
         <motion.div style={{ y: heroY }} className="absolute inset-0">
           <Image
             src={homeImage("hero.jpg")}
             alt=""
             fill
-            className="object-cover"
             priority
             sizes="100vw"
+            className="object-cover"
           />
         </motion.div>
 
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-black/70" />
 
-        <div className="relative h-full flex items-end pb-24 md:pb-32">
-          <div className="max-w-7xl mx-auto px-6 md:px-10 w-full">
+        <div className="relative min-h-screen flex items-end pt-28 md:pt-32 pb-20 md:pb-28">
+          <div className="max-w-7xl mx-auto w-full px-6 md:px-10">
             <div className="max-w-3xl">
+
               <motion.p
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.8 }}
+                transition={{ duration: 0.7 }}
                 className="text-white/40 text-xs md:text-sm tracking-[0.3em] uppercase mb-6 font-light"
               >
-                Artisanat • Cuir • Toile
+                Fabriqué en France • Livraison offerte dès 100 €
               </motion.p>
 
               <motion.h1
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 25 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5, duration: 0.8 }}
-                className="text-6xl md:text-8xl lg:text-9xl font-light text-white mb-8 tracking-wide leading-none"
+                transition={{ delay: 0.2, duration: 0.8 }}
+                className="text-5xl sm:text-6xl md:text-8xl lg:text-9xl leading-none tracking-wide font-light text-white mb-8"
               >
                 Nomade
               </motion.h1>
 
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 25 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.8, duration: 0.8 }}
-                className="space-y-4 mb-10"
+                transition={{ delay: 0.4, duration: 0.8 }}
+                className="space-y-5 mb-10"
               >
-                <p className="text-white text-2xl md:text-4xl font-light leading-tight max-w-3xl">
-                  Il y a des périodes où toute une vie tient dans un seul sac.
+                <p className="text-white text-2xl sm:text-3xl md:text-4xl leading-tight font-light max-w-3xl">
+                  Le sac qui vous suivra partout. Pendant des années.
                 </p>
 
-                <p className="text-white/60 text-base md:text-xl font-light leading-relaxed max-w-xl">
-                  Des sacs faits lentement, pour celles et ceux qui avancent avec peu,
-                  mais avec tout ce qui compte.
+                <p className="text-white/70 text-base md:text-xl leading-relaxed font-light max-w-xl">
+                  Cuir pleine fleur, fabrication artisanale, livraison offerte dès 100 €.
                 </p>
               </motion.div>
 
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: "4rem" }}
-                transition={{ delay: 1.2, duration: 0.8 }}
+                transition={{ delay: 0.8, duration: 0.8 }}
                 className="h-px bg-white/30 mb-8"
               />
-
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1.4, duration: 0.8 }}
-                className="text-white/40 italic text-sm md:text-base mb-10 max-w-md leading-relaxed"
-              >
-                Certains objets transportent plus que des affaires.
-                <br />
-                Ils transportent une période de notre vie.
-              </motion.p>
 
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.7, duration: 0.8 }}
+                transition={{ delay: 1.2, duration: 0.8 }}
                 className="flex flex-wrap gap-4"
               >
                 <Link
                   href="/boutique"
                   className="bg-white text-stone-900 px-8 py-4 rounded-full text-sm tracking-wider font-light hover:bg-stone-100 transition-all"
                 >
-                  Découvrir les sacs
+                  Voir la collection
                 </Link>
 
                 <Link
-                  href="/histoire"
+                  href="/boutique"
                   className="border border-white/20 text-white px-8 py-4 rounded-full text-sm tracking-wider font-light hover:bg-white/10 transition-all"
                 >
-                  Lire l’histoire
+                  Nouveautés
                 </Link>
               </motion.div>
+
             </div>
           </div>
         </div>
       </section>
+
 
       {/* ================= INTRO ================= */}
       <section className="py-24 md:py-36 bg-stone-50">
@@ -238,36 +208,36 @@ function HomeClient() {
               transition={{ duration: 0.8 }}
             >
               <p className="text-stone-400 text-xs tracking-[0.3em] uppercase mb-6">
-                Pourquoi Nomade
+                La différence Nomade
               </p>
 
               <h2 className="text-3xl md:text-5xl font-light mb-8 leading-tight tracking-wide">
-                Né d’un moment où tout changeait.
+                Un sac qui ne ressemble qu'à vous.
               </h2>
 
-              <div className="space-y-6 text-stone-500 text-lg leading-relaxed font-light">
+              <div className="space-y-5 text-stone-500 text-lg leading-relaxed font-light">
                 <p>
-                  Changer de ville. Recommencer. Porter sa vie dans peu de choses.
-                  Comprendre que certains objets deviennent presque des compagnons.
+                  Pas de production en série. Chaque sac est fabriqué un par un, 
+                  dans notre atelier. avec des matériaux choisis pour leur qualité et leur durabilité.
                 </p>
-
                 <p>
-                  Alors nous avons voulu créer des sacs simples, solides.
-                  Des objets qui suivent une route sans à attirer le regard.
-                </p>
-
-                <p>
-                  Des sacs qui vieillissent avec le temps au lieu de disparaître avec les tendances.
+                  Cuir pleine fleur, toile épaisse, coutures doubles. Des matériaux 
+                  qui vieillissent bien. Très bien.
                 </p>
               </div>
 
-              <div className="mt-10">
+              <div className="mt-10 flex flex-wrap gap-4">
+                <Link
+                  href="/boutique"
+                  className="bg-stone-900 text-white px-8 py-4 rounded-full text-sm tracking-wider font-light hover:bg-stone-800 transition-all"
+                >
+                  Je découvre
+                </Link>
                 <Link
                   href="/histoire"
-                  className="text-stone-700 hover:text-black transition-colors inline-flex items-center gap-3 font-light"
+                  className="border border-stone-300 text-stone-700 px-8 py-4 rounded-full text-sm tracking-wider font-light hover:border-stone-900 hover:text-stone-900 transition-all"
                 >
-                  Continuer la lecture
-                  <span>→</span>
+                  Notre histoire
                 </Link>
               </div>
             </motion.div>
@@ -301,13 +271,13 @@ function HomeClient() {
             className="text-center mb-16"
           >
             <p className="text-stone-400 text-xs tracking-[0.3em] uppercase mb-4">
-              Les collections
+              Trouvez le vôtre
             </p>
 
             <h2 className="text-3xl md:text-4xl font-light tracking-wide leading-tight">
-              Evenements,
+              quatre collections,
               <br />
-              Habitudes et longues routes.
+              un même savoir-faire.
             </h2>
           </motion.div>
 
@@ -329,7 +299,7 @@ function HomeClient() {
                     alt={cat.name}
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-700"
-                    sizes="(max-width: 768px) 50vw, 25vw"
+                    sizes="(max-width: 768px) 50vw, 20vw"
                   />
 
                   <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors" />
@@ -356,11 +326,11 @@ function HomeClient() {
             className="mb-14"
           >
             <p className="text-stone-400 text-xs tracking-[0.3em] uppercase mb-4">
-              Nouveaux sacs
+              Nouveautés
             </p>
 
             <h2 className="text-3xl md:text-4xl font-light tracking-wide leading-tight max-w-2xl">
-              Sortis récemment de l’atelier.
+              Ce qui vient de sortir de l'atelier.
             </h2>
           </motion.div>
 
@@ -378,9 +348,12 @@ function HomeClient() {
               ))}
             </div>
           ) : (
-            <p className="text-stone-400 text-center py-10 font-light">
-              Les prochains modèles arrivent bientôt.
-            </p>
+            <div className="text-center py-16">
+              <p className="text-stone-400 font-light mb-4">Les prochains modèles arrivent.</p>
+              <Link href="/boutique" className="text-stone-600 underline underline-offset-4 hover:text-stone-900 transition-colors text-sm font-light">
+                Voir toute la collection
+              </Link>
+            </div>
           )}
         </div>
       </section>
@@ -398,11 +371,17 @@ function HomeClient() {
         <div className="absolute inset-0 bg-black/30" />
 
         <div className="absolute inset-0 flex items-center justify-center px-6 text-center">
-          <blockquote className="text-white text-3xl md:text-5xl font-light leading-relaxed max-w-4xl">
-            “Il existe des objets qu’on utilise.
-            <br />
-            Et d’autres qu’on garde près de soi.”
-          </blockquote>
+          <div>
+            <p className="text-white/40 text-xs tracking-[0.3em] uppercase mb-6">
+              Avis clients
+            </p>
+            <blockquote className="text-white text-3xl md:text-5xl font-light leading-relaxed max-w-4xl mb-8">
+              "J'ai attendu un an avant de laisser un avis. Je voulais voir comment le sac allait vieillir. Il est encore plus beau."
+            </blockquote>
+            <p className="text-white/50 text-sm font-light">
+              — Marie, cliente depuis 2025
+            </p>
+          </div>
         </div>
       </section>
 
@@ -416,13 +395,13 @@ function HomeClient() {
             className="text-center mb-20"
           >
             <p className="text-stone-400 text-xs tracking-[0.3em] uppercase mb-4">
-              Ce qui nous guide
+              Pourquoi choisir Nomade
             </p>
 
             <h2 className="text-3xl md:text-4xl font-light tracking-wide leading-tight">
-              Fabriquer moins.
+              La qualité que vous méritez,
               <br />
-              Fabriquer mieux.
+              au prix juste.
             </h2>
           </motion.div>
 
@@ -469,11 +448,11 @@ function HomeClient() {
             className="mb-14"
           >
             <p className="text-stone-400 text-xs tracking-[0.3em] uppercase mb-4">
-              Les plus portés
+              Nos clients les recommandent
             </p>
 
             <h2 className="text-3xl md:text-4xl font-light tracking-wide leading-tight max-w-2xl">
-              Ceux qui accompagnent déjà des centaines de routes.
+              Les modèles qui reviennent le plus souvent.
             </h2>
           </motion.div>
 
@@ -491,9 +470,12 @@ function HomeClient() {
               ))}
             </div>
           ) : (
-            <p className="text-stone-400 text-center py-10 font-light">
-              Les essentiels arrivent bientôt.
-            </p>
+            <div className="text-center py-16">
+              <p className="text-stone-400 font-light mb-4">Les premiers avis arrivent bientôt.</p>
+              <Link href="/boutique" className="text-stone-600 underline underline-offset-4 hover:text-stone-900 transition-colors text-sm font-light">
+                Voir tous les sacs
+              </Link>
+            </div>
           )}
         </div>
       </section>
@@ -507,7 +489,7 @@ function HomeClient() {
             viewport={{ once: true }}
             className="text-stone-400 text-xs tracking-[0.3em] uppercase mb-12"
           >
-            Ce qu’ils ressentent
+            Ce que nos clients disent
           </motion.p>
 
           <div className="grid md:grid-cols-2 gap-10">
@@ -521,7 +503,7 @@ function HomeClient() {
                 className="text-left bg-stone-50 rounded-3xl p-10"
               >
                 <p className="text-xl md:text-2xl font-light italic leading-relaxed text-stone-700 mb-6">
-                  “{t.quote}”
+                  "{t.quote}"
                 </p>
 
                 <footer className="text-stone-400 text-sm font-light">
@@ -534,49 +516,47 @@ function HomeClient() {
       </section>
 
       {/* ================= FINAL ================= */}
-<section className="relative py-28 md:py-40 overflow-hidden">
-  <Image
-    src={homeImage("hommage.jpg")}
-    alt=""
-    fill
-    className="object-cover"
-    sizes="100vw"
-  />
-  <div className="absolute inset-0 bg-stone-900/70" />
+      <section className="relative py-28 md:py-40 overflow-hidden">
+        <Image
+          src={homeImage("hommage.jpg")}
+          alt=""
+          fill
+          className="object-cover"
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-stone-900/70" />
 
-  <div className="relative z-10 text-white text-center">
-    <div className="max-w-3xl mx-auto px-6">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-      >
-        <p className="text-white/40 text-xs tracking-[0.3em] uppercase mb-6">
-          Nomade
-        </p>
+        <div className="relative z-10 text-white text-center">
+          <div className="max-w-3xl mx-auto px-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+            >
+              <p className="text-white/40 text-xs tracking-[0.3em] uppercase mb-6">
+                Prêt à trouver le vôtre ?
+              </p>
 
-        <h2 className="text-4xl md:text-6xl font-light mb-8 leading-tight tracking-wide">
-          Pour celles et ceux
-          <br />
-          qui avancent encore.
-        </h2>
+              <h2 className="text-4xl md:text-6xl font-light mb-8 leading-tight tracking-wide">
+                Un sac fait main,
+                <br />
+                livré chez vous.
+              </h2>
 
-        <p className="text-white/60 text-lg md:text-xl leading-relaxed font-light mb-12 max-w-2xl mx-auto">
-          Vous n&apos;avez peut-être pas besoin de plus.
-          <br />
-          Peut-être simplement de quelque chose qui reste.
-        </p>
+              <p className="text-white/60 text-lg md:text-xl leading-relaxed font-light mb-12 max-w-2xl mx-auto">
+                Livraison offerte dès 100 €. Retours gratuits sous 30 jours.
+              </p>
 
-        <Link
-          href="/boutique"
-          className="inline-block bg-white text-stone-900 px-10 py-4 rounded-full text-sm tracking-wider font-light hover:bg-stone-100 transition-colors"
-        >
-          Entrer dans la boutique
-        </Link>
-      </motion.div>
-    </div>
-  </div>
-</section>
+              <Link
+                href="/boutique"
+                className="inline-block bg-white text-stone-900 px-10 py-4 rounded-full text-sm tracking-wider font-light hover:bg-stone-100 transition-colors"
+              >
+                Voir la collection
+              </Link>
+            </motion.div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

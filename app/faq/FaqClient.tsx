@@ -9,6 +9,7 @@ import {
 } from "framer-motion";
 
 import Link from "next/link";
+const contactEmail = 'contact@nomade-artisan.fr';
 
 const categories = [
   {
@@ -450,10 +451,10 @@ function FaqClient() {
                 </Link>
 
                 <a
-                  href="mailto:bonjour@nomade.fr"
+                  href={`mailto:${contactEmail}`}
                   className="inline-flex items-center justify-center border border-white/20 text-white px-8 py-3.5 rounded-full text-[11px] uppercase tracking-[0.18em] font-light hover:bg-white/10 transition-colors"
                 >
-                  bonjour@nomade.fr
+                  {contactEmail}
                 </a>
 
               </div>

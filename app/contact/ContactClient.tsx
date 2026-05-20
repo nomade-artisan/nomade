@@ -11,7 +11,7 @@ function ContactClient() {
     email: "",
     message: "",
   });
-
+  const contactEmail = 'contact@nomade-artisan.fr';
   const [submitted, setSubmitted] =
     useState(false);
 
@@ -364,10 +364,10 @@ function ContactClient() {
                   </p>
 
                   <a
-                    href="mailto:bonjour@nomade.fr"
+                    href="mailto:contact@nomade-artisan.fr"
                     className="text-stone-700 hover:text-black transition-colors font-light text-sm leading-relaxed break-words"
                   >
-                    bonjour@nomade.fr
+                    {contactEmail}
                   </a>
 
                 </div>

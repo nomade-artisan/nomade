@@ -5,6 +5,7 @@
 import { motion } from "framer-motion";
 
 function CgvClient() {
+  const contactEmail = 'contact@nomade-artisan.fr';
   return (
     <div className="bg-stone-50 min-h-screen pt-[64px]">
 
@@ -243,7 +244,7 @@ function CgvClient() {
               Pour toute demande :
               {" "}
               <span className="text-stone-700">
-                bonjour@nomade.fr
+                {contactEmail}
               </span>
             </p>
           </Section>

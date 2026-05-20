@@ -7,50 +7,54 @@ import Link from "next/link";
 
 function HistoireClient() {
   return (
-    <motion.div
+    <motion.main
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="bg-stone-50 text-stone-900 overflow-hidden"
+      className="bg-[#f8f5f1] text-stone-900 overflow-hidden"
     >
 
       {/* HERO */}
 
-      <section className="relative h-[75vh] md:h-[92vh] overflow-hidden">
+      <section className="relative min-h-screen overflow-hidden">
 
         <img
-          src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1"
+          src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=2000&auto=format&fit=crop"
           alt=""
-          className="w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-cover"
         />
 
-        <div className="absolute inset-0 bg-black/45" />
+        <div className="absolute inset-0 bg-black/55" />
 
-        <div className="absolute inset-0 flex items-end">
+        <div className="relative z-10 min-h-screen flex items-end">
 
-          <div className="max-w-7xl mx-auto px-6 md:px-10 w-full pb-20 md:pb-28">
+          <div className="max-w-7xl mx-auto px-6 md:px-10 w-full pb-24 md:pb-32">
 
             <motion.div
-              initial={{ opacity: 0, y: 25 }}
+              initial={{ opacity: 0, y: 35 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              className="max-w-3xl"
+              transition={{ duration: 1 }}
+              className="max-w-4xl"
             >
 
-              <p className="text-white/40 uppercase tracking-[0.35em] text-xs mb-6">
+              <p className="text-white/50 uppercase tracking-[0.4em] text-[11px] md:text-xs mb-7">
                 Notre histoire
               </p>
 
-              <h1 className="text-white text-5xl md:text-7xl font-light leading-none tracking-wide mb-8">
-                Certaines routes
+              <h1 className="text-white text-5xl md:text-7xl xl:text-8xl font-extralight leading-[0.95] tracking-[-0.04em] mb-10">
+                Créer des objets
                 <br />
-                obligent à
+                simples,
                 <br />
-                 changer de direction
+                durables
+                <br />
+                et honnêtes.
               </h1>
 
-              <p className="text-white/65 text-lg md:text-xl font-light leading-relaxed max-w-xl">
-                Nomade est né d'une période où tout changeait.
+              <p className="text-white/70 text-lg md:text-2xl font-light leading-relaxed max-w-2xl">
+                Nomade est une marque construite autour du temps,
+                des matières
+                et du goût pour les objets faits avec attention.
               </p>
 
             </motion.div>
@@ -63,46 +67,80 @@ function HistoireClient() {
 
       {/* INTRO */}
 
-      <section className="py-24 md:py-36">
+      <section className="py-24 md:py-40 bg-white">
 
-        <div className="max-w-3xl mx-auto px-6 md:px-10">
+        <div className="max-w-6xl mx-auto px-6 md:px-10">
 
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-          >
+          <div className="grid lg:grid-cols-2 gap-20 items-start">
 
-            <p className="text-stone-400 uppercase tracking-[0.3em] text-xs mb-8">
-              Là où tout commence
-            </p>
+            <motion.div
+              initial={{ opacity: 0, y: 35 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.9 }}
+            >
 
-            <div className="space-y-8 text-stone-600 font-light leading-relaxed text-lg md:text-xl">
+              <p className="text-stone-400 uppercase tracking-[0.35em] text-[11px] mb-8">
+                Là où tout commence
+              </p>
+
+              <h2 className="text-4xl md:text-6xl font-extralight leading-tight tracking-[-0.03em]">
+                Une vision née
+                <br />
+                autour du
+                <br />
+                savoir-faire
+                <br />
+                et du détail.
+              </h2>
+
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 35 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1 }}
+              className="space-y-8 text-stone-600 text-lg md:text-xl font-light leading-relaxed"
+            >
 
               <p>
-                Il y a des périodes où les choses ne suivent plus
-                le chemin prévu.
+                Nomade est né d’une fascination pour les objets
+                qui traversent les années sans perdre leur caractère.
               </p>
 
               <p>
-                Alors on avance autrement.
-                Plus lentement.
-                Plus discrètement.
+                Inspirée par le travail des matières
+                et les méthodes artisanales,
+                la marque s’est construite progressivement,
+                à travers des essais,
+                des ajustements
+                et beaucoup d’attention portée aux détails.
               </p>
 
               <p>
-                On apprend à vivre avec moins.
-                À garder seulement ce qui compte.
+                Chaque pièce est pensée pour être utile,
+                équilibrée
+                et durable.
               </p>
 
               <p>
-                C’est dans ce moment-là que Nomade est apparu.
+                Nous croyons qu’un bel objet doit vivre longtemps,
+                évoluer avec le temps
+                et accompagner le quotidien naturellement.
               </p>
 
-            </div>
+              <p>
+                Aujourd’hui,
+                Nomade continue d’avancer avec la même idée :
+                créer lentement,
+                produire avec exigence
+                et construire une maison durable autour du savoir-faire.
+              </p>
 
-          </motion.div>
+            </motion.div>
+
+          </div>
 
         </div>
 
@@ -110,71 +148,101 @@ function HistoireClient() {
 
       {/* IMAGE */}
 
-      <section className="relative h-[55vh] overflow-hidden">
+      <section className="relative h-[75vh] overflow-hidden">
 
         <img
-          src="https://images.unsplash.com/photo-1533130061792-64b345e4a833"
+          src="https://images.unsplash.com/photo-1533130061792-64b345e4a833?q=80&w=2000&auto=format&fit=crop"
           alt=""
           className="w-full h-full object-cover"
         />
 
-        <div className="absolute inset-0 bg-black/25" />
+        <div className="absolute inset-0 bg-black/35" />
 
         <div className="absolute inset-0 flex items-center justify-center px-6">
 
-          <blockquote className="text-white text-3xl md:text-5xl font-light text-center leading-tight max-w-4xl">
-            Certains objets
-            <br />
-            restent longtemps
-            <br />
-            et marque l'esprit.
-          </blockquote>
+          <motion.blockquote
+            initial={{ opacity: 0, scale: 0.96 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1 }}
+            className="text-center text-white"
+          >
+
+            <p className="text-4xl md:text-6xl xl:text-7xl font-extralight leading-[1.1] tracking-[-0.03em]">
+              Chaque détail
+              <br />
+              compte.
+            </p>
+
+          </motion.blockquote>
 
         </div>
 
       </section>
 
-      {/* STORY */}
+      {/* WHY */}
 
-      <section className="py-24 md:py-36 bg-white">
+      <section className="py-24 md:py-40">
 
-        <div className="max-w-4xl mx-auto px-6 md:px-10">
+        <div className="max-w-6xl mx-auto px-6 md:px-10">
 
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-          >
+          <div className="grid lg:grid-cols-2 gap-20">
 
-            <p className="text-stone-400 uppercase tracking-[0.3em] text-xs mb-8">
-              Pourquoi des sacs
-            </p>
+            <motion.div
+              initial={{ opacity: 0, y: 35 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.9 }}
+            >
 
-            <div className="space-y-8 text-stone-600 font-light leading-relaxed text-lg md:text-xl">
+              <p className="text-stone-400 uppercase tracking-[0.35em] text-[11px] mb-8">
+                Notre approche
+              </p>
+
+              <h2 className="text-4xl md:text-6xl font-extralight leading-tight tracking-[-0.03em]">
+                Concevoir des pièces
+                <br />
+                pensées pour durer.
+              </h2>
+
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 35 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1 }}
+              className="space-y-8 text-stone-600 text-lg md:text-xl font-light leading-relaxed"
+            >
 
               <p>
-                Parce qu’un sac accompagne ce qui bouge.
+                Nous privilégions des matières solides,
+                des lignes simples
+                et des finitions intemporelles.
               </p>
 
               <p>
-                Les départs
-                Les nouvelles habitudes
-                Les villes qu’on traverse
+                Le cuir évolue avec le temps,
+                développe sa texture
+                et rend chaque pièce unique.
               </p>
 
               <p>
-                Avec le temps,
-                certains objets cessent d’être de simples objets.
+                Cette évolution fait partie de l’objet.
+                Elle raconte son usage,
+                son quotidien
+                et les années qui passent.
               </p>
 
               <p>
-                Ils deviennent des repères nostalgiques.
+                Nous aimons l’idée qu’un produit puisse être conservé,
+                réparé
+                et transmis plutôt que remplacé.
               </p>
 
-            </div>
+            </motion.div>
 
-          </motion.div>
+          </div>
 
         </div>
 
@@ -182,75 +250,71 @@ function HistoireClient() {
 
       {/* VALUES */}
 
-      <section className="py-24 md:py-36">
+      <section className="py-24 md:py-40 bg-white">
 
-        <div className="max-w-6xl mx-auto px-6 md:px-10">
+        <div className="max-w-7xl mx-auto px-6 md:px-10">
 
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 35 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 1 }}
+            className="text-center mb-24"
           >
 
-            <div className="text-center mb-20">
+            <p className="text-stone-400 uppercase tracking-[0.35em] text-[11px] mb-8">
+              Nos principes
+            </p>
 
-              <p className="text-stone-400 uppercase tracking-[0.3em] text-xs mb-8">
-                Ce qui reste
-              </p>
-
-              <h2 className="text-4xl md:text-5xl font-light leading-tight">
-                Faire peu.
-                <br />
-                Garder longtemps.
-              </h2>
-
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-14 md:gap-16">
-
-              <div>
-
-                <h3 className="text-2xl font-light mb-5 tracking-wide">
-                  Le temps
-                </h3>
-
-                <p className="text-stone-600 leading-relaxed font-light text-lg">
-                  Certaines choses demandent du temps
-                  pour trouver leur forme.
-                </p>
-
-              </div>
-
-              <div>
-
-                <h3 className="text-2xl font-light mb-5 tracking-wide">
-                  La matière
-                </h3>
-
-                <p className="text-stone-600 leading-relaxed font-light text-lg">
-                  Nous aimons les objets
-                  qui portent les traces d’une vie.
-                </p>
-
-              </div>
-
-              <div>
-
-                <h3 className="text-2xl font-light mb-5 tracking-wide">
-                  L’essentiel
-                </h3>
-
-                <p className="text-stone-600 leading-relaxed font-light text-lg">
-                  Garder moins.
-                  Mais garder mieux.
-                </p>
-
-              </div>
-
-            </div>
+            <h2 className="text-4xl md:text-6xl font-extralight leading-tight tracking-[-0.03em]">
+              Une manière simple
+              <br />
+              de faire les choses.
+            </h2>
 
           </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+
+            {[
+              {
+                title: "Le temps",
+                text: "Créer lentement permet de porter attention à chaque finition et à chaque détail.",
+              },
+              {
+                title: "La matière",
+                text: "Chaque matière est choisie pour sa solidité, sa texture et sa capacité à durer.",
+              },
+              {
+                title: "L’équilibre",
+                text: "Des formes simples, utiles et pensées pour accompagner le quotidien durablement.",
+              },
+            ].map((item, index) => (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, y: 35 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.12, duration: 0.8 }}
+                className="bg-[#f8f5f1] rounded-[2rem] p-10 md:p-12 border border-stone-200/70"
+              >
+
+                <div className="text-stone-300 text-5xl font-extralight mb-10">
+                  0{index + 1}
+                </div>
+
+                <h3 className="text-3xl font-extralight mb-6 tracking-[-0.03em]">
+                  {item.title}
+                </h3>
+
+                <p className="text-stone-600 text-lg leading-relaxed font-light">
+                  {item.text}
+                </p>
+
+              </motion.div>
+            ))}
+
+          </div>
 
         </div>
 
@@ -258,23 +322,31 @@ function HistoireClient() {
 
       {/* QUOTE */}
 
-      <section className="py-28 md:py-40 bg-stone-900 text-white">
+      <section className="py-32 md:py-44 bg-stone-950 text-white overflow-hidden">
 
-        <div className="max-w-5xl mx-auto px-6 md:px-10 text-center">
+        <div className="max-w-6xl mx-auto px-6 md:px-10">
 
-          <motion.blockquote
-            initial={{ opacity: 0, y: 25 }}
+          <motion.div
+            initial={{ opacity: 0, y: 35 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="text-4xl md:text-6xl font-light italic leading-relaxed text-white/85"
+            transition={{ duration: 1 }}
+            className="text-center"
           >
-            “Parfois,
-            <br />
-            perdre une direction
-            <br />
-            permet d’en trouver une autre.”
-          </motion.blockquote>
+
+            <p className="text-white/30 uppercase tracking-[0.35em] text-[11px] mb-10">
+              Notre vision
+            </p>
+
+            <blockquote className="text-4xl md:text-7xl font-extralight italic leading-[1.15] tracking-[-0.04em] text-white/90">
+              “Créer moins.
+              <br />
+              Créer mieux.
+              <br />
+              Et créer pour durer.”
+            </blockquote>
+
+          </motion.div>
 
         </div>
 
@@ -282,37 +354,36 @@ function HistoireClient() {
 
       {/* END */}
 
-      <section className="py-24 md:py-36">
+      <section className="py-24 md:py-40">
 
-        <div className="max-w-3xl mx-auto px-6 md:px-10 text-center">
+        <div className="max-w-4xl mx-auto px-6 md:px-10 text-center">
 
           <motion.div
-            initial={{ opacity: 0, y: 25 }}
+            initial={{ opacity: 0, y: 35 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 1 }}
           >
 
-            <p className="text-stone-400 uppercase tracking-[0.3em] text-xs mb-8">
-              Aujourd’hui
+            <p className="text-stone-400 uppercase tracking-[0.35em] text-[11px] mb-8">
+              La suite
             </p>
 
-            <h2 className="text-4xl md:text-5xl font-light leading-tight mb-10">
-              Continuer la route.
+            <h2 className="text-4xl md:text-6xl font-extralight leading-tight tracking-[-0.03em] mb-10">
+              L’histoire continue.
             </h2>
 
-            <p className="text-stone-500 text-lg md:text-xl leading-relaxed font-light mb-14 max-w-2xl mx-auto">
-              Nomade continue d’avancer doucement.
-              <br />
-              Avec la même idée depuis le début :
-              créer des objets simples,
-              durables,
-              et utiles.
+            <p className="text-stone-500 text-lg md:text-2xl font-light leading-relaxed max-w-3xl mx-auto mb-16">
+              De nouvelles pièces arrivent progressivement,
+              toujours avec la même attention portée
+              aux matières,
+              aux détails
+              et au temps.
             </p>
 
             <Link
               href="/boutique"
-              className="inline-flex items-center justify-center bg-stone-900 text-white px-10 py-4 rounded-full text-sm tracking-[0.18em] uppercase hover:bg-stone-800 transition-colors"
+              className="inline-flex items-center justify-center bg-stone-950 text-white px-10 md:px-14 py-5 rounded-full uppercase tracking-[0.25em] text-xs hover:bg-stone-800 transition-all duration-300"
             >
               Découvrir la collection
             </Link>
@@ -323,7 +394,7 @@ function HistoireClient() {
 
       </section>
 
-    </motion.div>
+    </motion.main>
   );
 }
 

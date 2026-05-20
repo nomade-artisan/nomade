@@ -29,6 +29,7 @@ const categories = [
   "Minimal",
   "Bandoulière",
   "Aventure",
+  "Accessoires",
 ];
 
 const sortOptions = [

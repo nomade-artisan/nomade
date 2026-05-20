@@ -594,6 +594,7 @@ function AdminClient() {
           <option>Minimal</option>
           <option>Bandoulière</option>
           <option>Aventure</option>
+          <option>Accessoires</option>
         </select>
       </div>
 

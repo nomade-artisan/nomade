@@ -24,40 +24,58 @@ function CartClient() {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   const handleStripeCheckout = async () => {
-    setCheckoutLoading(true);
+  setCheckoutLoading(true);
 
-    const res = await fetch("/api/checkout", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        items: cart.map((item) => ({
+  const res = await fetch("/api/checkout", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      items: [
+        // Tous les produits
+        ...cart.map((item) => ({
           id: item.id,
           name: item.name,
           price: item.price,
           quantity: item.quantity,
           image: item.image,
         })),
-      }),
-    });
+        // Ajouter la livraison comme un item si elle n'est pas offerte
+        ...(shipping > 0
+          ? [
+              {
+                id: "shipping",
+                name: "Livraison",
+                price: shipping,
+                quantity: 1,
+                image: "",
+              },
+            ]
+          : []),
+      ],
+    }),
+  });
 
-    const data = await res.json();
+  const data = await res.json();
 
-    if (data.url) {
-      window.location.href = data.url;
-    } else {
-      alert(data.error || "Erreur lors du paiement");
-      setCheckoutLoading(false);
-    }
-  };
+  if (data.url) {
+    window.location.href = data.url;
+  } else {
+    alert(data.error || "Erreur lors du paiement");
+    setCheckoutLoading(false);
+  }
+};
 
   const subtotal = cart.reduce(
     (acc, item) => acc + item.price * item.quantity,
     0
   );
 
-  const shipping = subtotal > 150 ? 0 : 9.9;
+  // Nouveaux frais de livraison
+  const FREE_SHIPPING_THRESHOLD = process.env.FREE_SHIPPING_THRESHOLD ? parseFloat(process.env.FREE_SHIPPING_THRESHOLD) : 120;
+  const SHIPPING_COST = process.env.SHIPPING_COST ? parseFloat(process.env.SHIPPING_COST) : 7;
+  const shipping = subtotal > FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
   const total = subtotal + shipping - promoDiscount;
 
   const handleApplyPromo = (e: React.FormEvent) => {
@@ -119,7 +137,7 @@ function CartClient() {
             transition={{ delay: 0.05, duration: 0.4 }}
             className="text-stone-500 text-lg leading-relaxed font-light mb-10"
           >
-            L’essentiel n’est jamais loin.
+            L'essentiel n'est jamais loin.
           </motion.p>
 
           <motion.div
@@ -410,13 +428,13 @@ function CartClient() {
 
                 {/* FREE SHIPPING */}
 
-                {subtotal < 150 && (
+                {subtotal < FREE_SHIPPING_THRESHOLD && (
 
                   <div className="bg-stone-100/70 rounded-2xl p-4 mt-3">
 
                     <p className="text-xs text-stone-500 font-light mb-3 leading-relaxed">
                       Plus que{" "}
-                      {(150 - subtotal).toLocaleString("fr-FR", {
+                      {(FREE_SHIPPING_THRESHOLD - subtotal).toLocaleString("fr-FR", {
                         minimumFractionDigits: 2,
                       })} €
                       pour la livraison offerte.
@@ -428,7 +446,7 @@ function CartClient() {
                         className="h-full bg-stone-900 rounded-full transition-all duration-500"
                         style={{
                           width: `${Math.min(
-                            (subtotal / 150) * 100,
+                            (subtotal / FREE_SHIPPING_THRESHOLD) * 100,
                             100
                           )}%`,
                         }}
@@ -438,6 +456,14 @@ function CartClient() {
 
                   </div>
 
+                )}
+
+                {subtotal >= FREE_SHIPPING_THRESHOLD && (
+                  <div className="bg-emerald-50/50 rounded-2xl p-4 mt-3">
+                    <p className="text-xs text-emerald-700 font-light text-center">
+                      Livraison offerte
+                    </p>
+                  </div>
                 )}
 
               </div>

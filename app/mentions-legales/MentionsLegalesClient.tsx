@@ -5,6 +5,7 @@
 import { motion } from "framer-motion";
 
 function MentionsLegalesClient() {
+  const contactEmail = 'contact@nomade-artisan.fr';
   return (
     <div className="bg-stone-50 min-h-screen pt-[64px]">
 
@@ -67,7 +68,7 @@ function MentionsLegalesClient() {
 
             <Info
               label="Entreprise"
-              value="[Ton nom complet]"
+              value="Megan cadet"
             />
 
             <Info
@@ -82,32 +83,32 @@ function MentionsLegalesClient() {
 
             <Info
               label="Email"
-              value="bonjour@nomade.fr"
+              value= {contactEmail}
             />
 
             <Info
               label="Téléphone"
-              value="[Ton numéro]"
+              value="xxx xxx xxx"
             />
 
             <Info
               label="SIRET"
-              value="[À compléter]"
+              value="xxx xxx xxx xxx xx"
             />
 
             <Info
               label="TVA"
-              value="[À compléter]"
+              value="xxx xxx xxx"
             />
 
             <Info
               label="Code APE"
-              value="[À compléter]"
+              value="xxx x xx"
             />
 
             <Info
-              label="Directeur de publication"
-              value="[Ton nom complet]"
+              label="Directrice de publication"
+              value="Megan cadet"
             />
 
           </LegalBlock>
@@ -181,7 +182,7 @@ function MentionsLegalesClient() {
               Contact :
               {" "}
               <span className="text-stone-700">
-                bonjour@nomade.fr
+                {contactEmail}
               </span>
             </p>
 
