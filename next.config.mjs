@@ -1,13 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    // Désactiver les formats automatiques car toutes les images sont déjà en WebP
-    formats: [],
-    // Garder uniquement la qualité standard utilisée
+    // ✅ Supprimer formats: [] complètement
     qualities: [75],
-    // Désactiver l'optimisation coûteuse des images externes (elles sont déjà optimisées)
     unoptimized: true,
-    // Autoriser uniquement ton domaine Supabase
     remotePatterns: [
       {
         protocol: "https",
