@@ -22,6 +22,9 @@ interface Product {
 const homeImage = (filename: string) =>
   supabase.storage.from("home").getPublicUrl(`home/${filename}`).data.publicUrl;
 
+const homeVideo = (filename: string) =>
+  supabase.storage.from("home").getPublicUrl(`home/${filename}`).data.publicUrl;
+
 function HomeClient() {
   const { scrollY } = useScroll();
   const heroY = useTransform(scrollY, [0, 500], [0, 150]);
@@ -72,6 +75,7 @@ function HomeClient() {
   const newProducts = products.filter((p) => p.isNew).slice(0, 4);
   const bestProducts = products.filter((p) => (p.rating || 0) >= 4.7).slice(0, 4);
 
+
   const categories = [
     { name: "Cuir", slug: "Cuir", img: homeImage("cat-cuir.webp") },
     { name: "Minimal", slug: "Minimal", img: homeImage("cat-minimal.webp") },
@@ -110,20 +114,42 @@ function HomeClient() {
 
   return (
     <div className="bg-stone-50 text-stone-900 overflow-hidden">
-{/* ================= HERO ================= */}
-<section className="relative h-dvh overflow-hidden">
-  <motion.div style={{ y: heroY }} className="absolute inset-0">
-    <Image
-      src={homeImage("hero.webp")}
-      alt=""
-      fill
-      priority
-      sizes="100vw"
-      className="object-cover"
-    />
-  </motion.div>
+      {/* ================= HERO ================= */}
+      <section className="relative h-dvh overflow-hidden">
+            {/* Image de fond (toujours visible, sert de poster) */}
+          <motion.div style={{ y: heroY }} className="absolute inset-0">
+            <Image
+              src={homeImage("hero.webp")}
+              alt=""
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover"
+            />
+          </motion.div>
 
-  <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-black/70" />
+          {/* Vidéo (chargée par-dessus, invisible tant qu'elle n'est pas prête) */}
+          <motion.div style={{ y: heroY }} className="absolute inset-0 opacity-0 transition-opacity duration-700" id="hero-video-wrapper">
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              preload="auto"
+              onLoadedData={(e) => {
+                setTimeout(() => {
+                  const wrapper = document.getElementById("hero-video-wrapper");
+                  if (wrapper) wrapper.classList.add("opacity-100");
+                }, 3000);
+              }}
+              className="absolute inset-0 w-full h-full object-cover"
+            >
+              <source src={homeVideo("hero.webm")} type="video/webm" />
+              <source src={homeVideo("hero.mp4")} type="video/mp4" />
+            </video>
+          </motion.div>
+
+          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-black/70" />
 
   {/* Conteneur flex qui centre verticalement et pousse les boutons en bas */}
   <div className="relative h-full flex flex-col justify-end pb-6 sm:pb-10 md:pb-14 px-6 md:px-10">
