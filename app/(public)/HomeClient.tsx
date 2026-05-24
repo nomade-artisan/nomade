@@ -73,27 +73,27 @@ function HomeClient() {
   const bestProducts = products.filter((p) => (p.rating || 0) >= 4.7).slice(0, 4);
 
   const categories = [
-    { name: "Cuir", slug: "Cuir", img: homeImage("cat-cuir.jpg") },
-    { name: "Minimal", slug: "Minimal", img: homeImage("cat-minimal.jpg") },
-    { name: "Bandoulière", slug: "Bandouliere", img: homeImage("cat-bandouliere.jpg") },
-    { name: "Route", slug: "Aventure", img: homeImage("cat-aventure.jpg") },
+    { name: "Cuir", slug: "Cuir", img: homeImage("cat-cuir.webp") },
+    { name: "Minimal", slug: "Minimal", img: homeImage("cat-minimal.webp") },
+    { name: "Bandoulière", slug: "Bandouliere", img: homeImage("cat-bandouliere.webp") },
+    { name: "Route", slug: "Aventure", img: homeImage("cat-aventure.webp") },
   ];
 
   const values = [
     {
       title: "Fabriqué à la main, chez nous",
       text: "Chaque pièce est coupée, cousue et finie dans notre atelier. Pas d'usine, pas de chaîne. Juste le temps qu'il faut pour que ce soit parfait.",
-      img: homeImage("valeur-artisanat.jpg"),
+      img: homeImage("valeur-artisanat.webp"),
     },
     {
       title: "Conçu pour durer des années",
       text: "Cuir pleine fleur, toile épaisse, coutures solides. Nos sacs ne suivent pas les modes. Ils traversent le temps avec vous.",
-      img: homeImage("valeur-durer.jpg"),
+      img: homeImage("valeur-durer.webp"),
     },
     {
       title: "L'essentiel, sans superflu",
       text: "Pas de logo criard. Pas de détail inutile. Un sac qui fait ce qu'on lui demande : porter vos affaires, bien, longtemps.",
-      img: homeImage("valeur-essentiel.jpg"),
+      img: homeImage("valeur-essentiel.webp"),
     },
   ];
 
@@ -115,7 +115,7 @@ function HomeClient() {
       <section className="relative min-h-screen overflow-hidden">
         <motion.div style={{ y: heroY }} className="absolute inset-0">
           <Image
-            src={homeImage("hero.jpg")}
+            src={homeImage("hero.webp")}
             alt=""
             fill
             priority
@@ -250,7 +250,7 @@ function HomeClient() {
               className="relative rounded-3xl overflow-hidden aspect-[4/5]"
             >
               <Image
-                src={homeImage("intro.jpg")}
+                src={homeImage("intro.webp")}
                 alt=""
                 fill
                 className="object-cover"
@@ -364,7 +364,7 @@ function HomeClient() {
       {/* ================= FULL IMAGE ================= */}
       <section className="relative h-[70vh] overflow-hidden">
         <Image
-          src={homeImage("silence.jpg")}
+          src={homeImage("silence.webp")}
           alt=""
           fill
           className="object-cover"
@@ -521,7 +521,7 @@ function HomeClient() {
       {/* ================= FINAL ================= */}
       <section className="relative py-28 md:py-40 overflow-hidden">
         <Image
-          src={homeImage("hommage.jpg")}
+          src={homeImage("hommage.webp")}
           alt=""
           fill
           className="object-cover"
