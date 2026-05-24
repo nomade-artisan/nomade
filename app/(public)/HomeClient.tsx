@@ -114,107 +114,124 @@ function HomeClient() {
 
   return (
     <div className="bg-stone-50 text-stone-900 overflow-hidden">
-    {/* ================= HERO ================= */}
-    <section className="relative h-dvh overflow-hidden">
-          {/* Image de fond (toujours visible, sert de poster) */}
-        <motion.div style={{ y: heroY }} className="absolute inset-0">
-          <Image
-            src={homeImage("hero.webp")}
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover"
-          />
-        </motion.div>
+  {/* ================= HERO ================= */}
+<section className="relative min-h-dvh overflow-hidden">
+  {/* Image de fond (visible en premier) */}
+  <motion.div style={{ y: heroY }} className="absolute inset-0">
+    <Image
+      src={homeImage("hero.webp")}
+      alt=""
+      fill
+      priority
+      sizes="100vw"
+      className="object-cover"
+    />
+  </motion.div>
 
-        {/* Vidéo (chargée par-dessus, invisible tant qu'elle n'est pas prête) */}
-        <motion.div style={{ y: heroY }} className="absolute inset-0 opacity-0 transition-opacity duration-700" id="hero-video-wrapper">
-          <video
-            autoPlay
-            loop
-            muted
-            playsInline
-            preload="auto"
-            onLoadedData={(e) => {
-              setTimeout(() => {
-                const wrapper = document.getElementById("hero-video-wrapper");
-                if (wrapper) wrapper.classList.add("opacity-100");
-              }, 3000);
-            }}
-            className="absolute inset-0 w-full h-full object-cover"
-          >
-            <source src={homeVideo("hero.webm")} type="video/webm" />
-            <source src={homeVideo("hero.mp4")} type="video/mp4" />
-          </video>
-        </motion.div>
+  {/* Vidéo (invisible au début, apparaît après 3 secondes) */}
+  <motion.div
+    style={{ y: heroY }}
+    className="absolute inset-0 opacity-0 transition-opacity duration-1000"
+    id="hero-video-wrapper"
+  >
+    <video
+  autoPlay
+  loop
+  muted
+  playsInline
+  preload="auto"
+  onCanPlay={() => {
+    setTimeout(() => {
+      const wrapper = document.getElementById("hero-video-wrapper");
+      if (wrapper) wrapper.classList.add("opacity-100");
+    }, 3000);
+  }}
+  // Fallback : si onCanPlay n'est pas déclenché, afficher après 5s max
+  onLoadedMetadata={() => {
+    setTimeout(() => {
+      const wrapper = document.getElementById("hero-video-wrapper");
+      if (wrapper && !wrapper.classList.contains("opacity-100")) {
+        wrapper.classList.add("opacity-100");
+      }
+    }, 5000);
+  }}
+  className="absolute inset-0 w-full h-full object-cover"
+>
+  <source src={homeVideo("hero.webm")} type="video/webm" />
+  <source src={homeVideo("hero.mp4")} type="video/mp4" />
+</video>
+  </motion.div>
 
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-black/70" />
+  <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-black/70" />
 
-  {/* Conteneur flex qui centre verticalement et pousse les boutons en bas */}
-  
-  <div className="relative h-full flex flex-col justify-center px-6 md:px-10">
-    <div className="max-w-4xl w-full mx-auto text-center">
-
+  {/* Contenu texte + boutons */}
+  <div className="relative min-h-dvh flex flex-col justify-center px-6 md:px-10 pt-20 md:pt-24">
+    <div className="max-w-5xl w-full mx-auto text-center">
+      {/* Tag */}
       <motion.p
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7 }}
-        className="text-white/40 text-xs md:text-sm tracking-[0.3em] uppercase mb-4 font-light"
+        className="text-white/40 text-xs sm:text-sm md:text-base tracking-[0.35em] uppercase mb-5 sm:mb-7 font-light"
       >
-        Fabriqué en France • Cuir • Toile
+        Fabriqué en France &nbsp;·&nbsp; Cuir &nbsp;·&nbsp; Toile
       </motion.p>
 
+      {/* Titre */}
       <motion.h1
         initial={{ opacity: 0, y: 25 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.8 }}
-        className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl leading-none tracking-wide font-light text-white mb-6"
+        className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl leading-[0.85] tracking-[-0.02em] font-light text-white mb-6 sm:mb-8"
       >
         Nomade
       </motion.h1>
 
+      {/* Sous‑titre */}
       <motion.p
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4, duration: 0.8 }}
-        className="text-white text-xl sm:text-2xl md:text-4xl leading-tight font-light mb-3 max-w-2xl mx-auto"
+        className="text-white text-2xl sm:text-3xl md:text-4xl lg:text-5xl leading-tight tracking-[-0.01em] font-extralight mb-3 max-w-3xl mx-auto"
       >
         Le sac qui vous suivra partout, pendant des années.
       </motion.p>
 
+      {/* Sous‑texte secondaire */}
       <motion.p
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5, duration: 0.8 }}
-        className="text-white/70 text-sm md:text-lg leading-relaxed font-light mb-6 max-w-md mx-auto"
+        className="text-white/60 text-base sm:text-lg md:text-xl leading-relaxed font-extralight mb-8 max-w-lg mx-auto italic"
       >
-        Fabrication artisanale, livraison offerte dès 100 €.
+        Fabrication artisanale, livraison offerte dès 100&nbsp;€.
       </motion.p>
 
+      {/* Ligne décorative */}
       <motion.div
         initial={{ width: 0 }}
-        animate={{ width: "3rem" }}
+        animate={{ width: "4rem" }}
         transition={{ delay: 0.7, duration: 0.8 }}
-        className="h-px bg-white/30 mx-auto mb-6"
+        className="h-px bg-white/20 mx-auto mb-8"
       />
 
+      {/* Boutons */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.9, duration: 0.8 }}
-        className="flex flex-wrap justify-center gap-3"
+        className="flex flex-wrap justify-center gap-4"
       >
         <Link
           href="/boutique"
-          className="bg-white text-stone-900 px-6 py-3 sm:px-8 sm:py-4 rounded-full text-xs sm:text-sm tracking-wider font-light hover:bg-stone-100 transition-all"
+          className="bg-white text-stone-900 px-8 py-4 sm:px-10 sm:py-5 rounded-full text-xs sm:text-sm tracking-[0.15em] font-light hover:bg-stone-100 transition-all"
         >
           Voir la collection
         </Link>
 
         <Link
           href="/boutique?filter=nouveautes"
-          className="border border-white/20 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-full text-xs sm:text-sm tracking-wider font-light hover:bg-white/10 transition-all"
+          className="border border-white/20 text-white px-8 py-4 sm:px-10 sm:py-5 rounded-full text-xs sm:text-sm tracking-[0.15em] font-light hover:bg-white/10 transition-all"
         >
           Nouveautés
         </Link>
@@ -222,7 +239,6 @@ function HomeClient() {
     </div>
   </div>
 </section>
-
       {/* ================= INTRO ================= */}
       <section className="py-24 md:py-36 bg-stone-50">
         <div className="max-w-6xl mx-auto px-6 md:px-10">
