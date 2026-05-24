@@ -110,92 +110,90 @@ function HomeClient() {
 
   return (
     <div className="bg-stone-50 text-stone-900 overflow-hidden">
+{/* ================= HERO ================= */}
+<section className="relative h-dvh overflow-hidden">
+  <motion.div style={{ y: heroY }} className="absolute inset-0">
+    <Image
+      src={homeImage("hero.webp")}
+      alt=""
+      fill
+      priority
+      sizes="100vw"
+      className="object-cover"
+    />
+  </motion.div>
 
-      {/* ================= HERO ================= */}
-      <section className="relative min-h-screen overflow-hidden">
-        <motion.div style={{ y: heroY }} className="absolute inset-0">
-          <Image
-            src={homeImage("hero.webp")}
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover"
-          />
-        </motion.div>
+  <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-black/70" />
 
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-black/70" />
+  {/* Conteneur flex qui centre verticalement et pousse les boutons en bas */}
+  <div className="relative h-full flex flex-col justify-end pb-6 sm:pb-10 md:pb-14 px-6 md:px-10">
+    <div className="max-w-4xl w-full mx-auto text-center">
+      <motion.p
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7 }}
+        className="text-white/40 text-xs md:text-sm tracking-[0.3em] uppercase mb-4 font-light"
+      >
+        Fabriqué en France • Cuir • Toile
+      </motion.p>
 
-        <div className="relative min-h-screen flex items-end pt-28 md:pt-32 pb-20 md:pb-28">
-          <div className="max-w-7xl mx-auto w-full px-6 md:px-10">
-            <div className="max-w-3xl">
+      <motion.h1
+        initial={{ opacity: 0, y: 25 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.8 }}
+        className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl leading-none tracking-wide font-light text-white mb-6"
+      >
+        Nomade
+      </motion.h1>
 
-              <motion.p
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7 }}
-                className="text-white/40 text-xs md:text-sm tracking-[0.3em] uppercase mb-6 font-light"
-              >
-                Fabriqué en France • Cuir  • Toile 
-              </motion.p>
+      <motion.p
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.8 }}
+        className="text-white text-xl sm:text-2xl md:text-4xl leading-tight font-light mb-3 max-w-2xl mx-auto"
+      >
+        Le sac qui vous suivra partout, pendant des années.
+      </motion.p>
 
-              <motion.h1
-                initial={{ opacity: 0, y: 25 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.8 }}
-                className="text-5xl sm:text-6xl md:text-8xl lg:text-9xl leading-none tracking-wide font-light text-white mb-8"
-              >
-                Nomade
-              </motion.h1>
+      <motion.p
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5, duration: 0.8 }}
+        className="text-white/70 text-sm md:text-lg leading-relaxed font-light mb-6 max-w-md mx-auto"
+      >
+        Fabrication artisanale, livraison offerte dès 100 €.
+      </motion.p>
 
-              <motion.div
-                initial={{ opacity: 0, y: 25 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4, duration: 0.8 }}
-                className="space-y-5 mb-10"
-              >
-                <p className="text-white text-2xl sm:text-3xl md:text-4xl leading-tight font-light max-w-3xl">
-                  Le sac qui vous suivra partout, pendant des années
-                </p>
+      <motion.div
+        initial={{ width: 0 }}
+        animate={{ width: "3rem" }}
+        transition={{ delay: 0.7, duration: 0.8 }}
+        className="h-px bg-white/30 mx-auto mb-6"
+      />
 
-                <p className="text-white/70 text-base md:text-xl leading-relaxed font-light max-w-xl">
-                  fabrication artisanale, livraison offerte dès 100 €
-                </p>
-              </motion.div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.9, duration: 0.8 }}
+        className="flex flex-wrap justify-center gap-3"
+      >
+        <Link
+          href="/boutique"
+          className="bg-white text-stone-900 px-6 py-3 sm:px-8 sm:py-4 rounded-full text-xs sm:text-sm tracking-wider font-light hover:bg-stone-100 transition-all"
+        >
+          Voir la collection
+        </Link>
 
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: "4rem" }}
-                transition={{ delay: 0.8, duration: 0.8 }}
-                className="h-px bg-white/30 mb-8"
-              />
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.2, duration: 0.8 }}
-                className="flex flex-wrap gap-4"
-              >
-                <Link
-                  href="/boutique"
-                  className="bg-white text-stone-900 px-8 py-4 rounded-full text-sm tracking-wider font-light hover:bg-stone-100 transition-all"
-                >
-                  Voir la collection
-                </Link>
-
-                <Link
-                  href="/boutique?filter=nouveautes"
-                  className="border border-white/20 text-white px-8 py-4 rounded-full text-sm tracking-wider font-light hover:bg-white/10 transition-all"
-                >
-                  Nouveautés
-                </Link>
-              </motion.div>
-
-            </div>
-          </div>
-        </div>
-      </section>
-
+        <Link
+          href="/boutique?filter=nouveautes"
+          className="border border-white/20 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-full text-xs sm:text-sm tracking-wider font-light hover:bg-white/10 transition-all"
+        >
+          Nouveautés
+        </Link>
+      </motion.div>
+    </div>
+  </div>
+</section>
 
       {/* ================= INTRO ================= */}
       <section className="py-24 md:py-36 bg-stone-50">
@@ -226,7 +224,7 @@ function HomeClient() {
                 </p>
               </div>
 
-              <div className="mt-10 flex flex-wrap gap-4">
+              <div className="mt-10 flex flex-wrap gap-4 justify-center">
                 <Link
                   href="/boutique"
                   className="bg-stone-900 text-white px-8 py-4 rounded-full text-sm tracking-wider font-light hover:bg-stone-800 transition-all"
@@ -448,25 +446,26 @@ function HomeClient() {
             initial={{ opacity: 0, y: 20 }}
             animate={isVisible["best-sellers"] ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6 }}
-            className="mb-14"
+            className="mb-14 text-center"
           >
             <p className="text-stone-400 text-xs tracking-[0.3em] uppercase mb-4">
               Nos clients les recommandent
             </p>
 
-            <h2 className="text-3xl md:text-4xl font-light tracking-wide leading-tight max-w-2xl">
+            <h2 className="text-3xl md:text-4xl font-light tracking-wide leading-tight max-w-2xl mx-auto">
               Les modèles qui reviennent le plus souvent.
             </h2>
           </motion.div>
 
           {bestProducts.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="flex flex-wrap justify-center gap-6">
               {bestProducts.map((product, index) => (
                 <motion.div
                   key={product.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={isVisible["best-sellers"] ? { opacity: 1, y: 0 } : {}}
                   transition={{ delay: index * 0.1, duration: 0.5 }}
+                  className="w-full sm:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] max-w-[280px]"
                 >
                   <ProductCard product={product} />
                 </motion.div>
