@@ -325,23 +325,26 @@ function HomeClient() {
             transition={{ duration: 0.6 }}
             className="mb-14"
           >
-            <p className="text-stone-400 text-xs tracking-[0.3em] uppercase mb-4">
-              Nouveautés
-            </p>
+            <div className="text-center mb-14">
+              <p className="text-stone-400 text-xs tracking-[0.3em] uppercase mb-4">
+                Nouveautés
+              </p>
 
-            <h2 className="text-3xl md:text-4xl font-light tracking-wide leading-tight max-w-2xl">
-              Ce qui vient de sortir de l'atelier.
-            </h2>
+              <h2 className="text-3xl md:text-4xl font-light tracking-wide leading-tight max-w-2xl mx-auto">
+                Ce qui vient de sortir de l'atelier.
+              </h2>
+            </div>
           </motion.div>
 
           {newProducts.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {newProducts.map((product, index) => (
+            <div className="flex flex-wrap justify-center gap-6">
+              {newProducts.slice(0, 4).map((product, index) => (
                 <motion.div
                   key={product.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={isVisible["new-products"] ? { opacity: 1, y: 0 } : {}}
                   transition={{ delay: index * 0.1, duration: 0.5 }}
+                  className="w-full sm:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] max-w-[280px]"
                 >
                   <ProductCard product={product} />
                 </motion.div>

@@ -16,7 +16,7 @@ export interface CartItem {
   price: number;
   image: string;
   quantity: number;
-  stock?: number; 
+  stock?: number;
 }
 
 interface CartContextType {
@@ -31,60 +31,81 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | null>(null);
 
+const STORAGE_KEY = "nomade-cart";
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [mounted, setMounted] = useState(false);
 
+  // Charger depuis localStorage au montage
   useEffect(() => {
-    const saved = localStorage.getItem("nomade-cart");
-    if (saved) setCart(JSON.parse(saved));
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) setCart(parsed);
+      }
+    } catch (e) {
+      // Données corrompues, on réinitialise
+      localStorage.removeItem(STORAGE_KEY);
+    }
     setMounted(true);
   }, []);
 
+  // Sauvegarder dans localStorage à chaque changement
   useEffect(() => {
     if (mounted) {
-      localStorage.setItem("nomade-cart", JSON.stringify(cart));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
     }
   }, [cart, mounted]);
 
-  // Ajout avec quantité optionnelle
-  const addToCart = (
-    product: Omit<CartItem, "quantity">,
-    quantity: number = 1
-  ) => {
-    setCart((prev) => {
-      const existing = prev.find((item) => item.id === product.id);
-      const currentQty = existing ? existing.quantity : 0;
-      const maxQty = (product as any).stock || 10; // Stock max
-      const newQty = Math.min(currentQty + quantity, maxQty);
-      
-      if (existing) {
-        return prev.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: newQty }
-            : item
-        );
-      }
-      return [...prev, { ...product, quantity: Math.min(quantity, maxQty) }];
-    });
-  };
+  // Ajouter au panier
+  const addToCart = useCallback(
+    (product: Omit<CartItem, "quantity">, quantity: number = 1) => {
+      setCart((prev) => {
+        const existing = prev.find((item) => item.id === product.id);
+        const maxQty = product.stock || 99;
 
-  const removeFromCart = (id: number | string) => {
+        if (existing) {
+          const newQty = Math.min(existing.quantity + quantity, maxQty);
+          return prev.map((item) =>
+            item.id === product.id ? { ...item, quantity: newQty } : item
+          );
+        }
+
+        return [...prev, { ...product, quantity: Math.min(quantity, maxQty) }];
+      });
+    },
+    []
+  );
+
+  // Supprimer un article
+  const removeFromCart = useCallback((id: number | string) => {
     setCart((prev) => prev.filter((item) => item.id !== id));
-  };
+  }, []);
 
-  const updateQuantity = (id: number | string, quantity: number) => {
+  // Mettre à jour la quantité
+  const updateQuantity = useCallback((id: number | string, quantity: number) => {
     if (quantity < 1) {
-      removeFromCart(id);
+      setCart((prev) => prev.filter((item) => item.id !== id));
       return;
     }
     setCart((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, quantity } : item))
+      prev.map((item) =>
+        item.id === id
+          ? { ...item, quantity: Math.min(quantity, item.stock || 99) }
+          : item
+      )
     );
-  };
+  }, []);
 
-  const clearCart = useCallback(() => setCart([]), []);
+  // Vider le panier
+  const clearCart = useCallback(() => {
+    setCart([]);
+    localStorage.removeItem(STORAGE_KEY);
+  }, []);
 
+  // Calculs
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const cartTotal = cart.reduce(
     (acc, item) => acc + item.price * item.quantity,
