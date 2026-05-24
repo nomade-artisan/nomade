@@ -152,8 +152,8 @@ function HomeClient() {
           <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-black/70" />
 
   {/* Conteneur flex qui centre verticalement et pousse les boutons en bas */}
-  <div className="relative h-full flex flex-col justify-end pb-6 sm:pb-10 md:pb-14 px-6 md:px-10">
-    <div className="max-w-4xl w-full mx-auto text-center">
+  <div className="relative h-full flex flex-col justify-center px-6 md:px-10">
+  <div className="max-w-4xl w-full mx-auto text-center">
       <motion.p
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
@@ -219,7 +219,7 @@ function HomeClient() {
       </motion.div>
     </div>
   </div>
-</section>
+      </section>
 
       {/* ================= INTRO ================= */}
       <section className="py-24 md:py-36 bg-stone-50">
