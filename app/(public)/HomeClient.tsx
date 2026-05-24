@@ -114,46 +114,48 @@ function HomeClient() {
 
   return (
     <div className="bg-stone-50 text-stone-900 overflow-hidden">
-      {/* ================= HERO ================= */}
-      <section className="relative h-dvh overflow-hidden">
-            {/* Image de fond (toujours visible, sert de poster) */}
-          <motion.div style={{ y: heroY }} className="absolute inset-0">
-            <Image
-              src={homeImage("hero.webp")}
-              alt=""
-              fill
-              priority
-              sizes="100vw"
-              className="object-cover"
-            />
-          </motion.div>
+    {/* ================= HERO ================= */}
+    <section className="relative h-dvh overflow-hidden">
+          {/* Image de fond (toujours visible, sert de poster) */}
+        <motion.div style={{ y: heroY }} className="absolute inset-0">
+          <Image
+            src={homeImage("hero.webp")}
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
+          />
+        </motion.div>
 
-          {/* Vidéo (chargée par-dessus, invisible tant qu'elle n'est pas prête) */}
-          <motion.div style={{ y: heroY }} className="absolute inset-0 opacity-0 transition-opacity duration-700" id="hero-video-wrapper">
-            <video
-              autoPlay
-              loop
-              muted
-              playsInline
-              preload="auto"
-              onLoadedData={(e) => {
-                setTimeout(() => {
-                  const wrapper = document.getElementById("hero-video-wrapper");
-                  if (wrapper) wrapper.classList.add("opacity-100");
-                }, 3000);
-              }}
-              className="absolute inset-0 w-full h-full object-cover"
-            >
-              <source src={homeVideo("hero.webm")} type="video/webm" />
-              <source src={homeVideo("hero.mp4")} type="video/mp4" />
-            </video>
-          </motion.div>
+        {/* Vidéo (chargée par-dessus, invisible tant qu'elle n'est pas prête) */}
+        <motion.div style={{ y: heroY }} className="absolute inset-0 opacity-0 transition-opacity duration-700" id="hero-video-wrapper">
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+            onLoadedData={(e) => {
+              setTimeout(() => {
+                const wrapper = document.getElementById("hero-video-wrapper");
+                if (wrapper) wrapper.classList.add("opacity-100");
+              }, 3000);
+            }}
+            className="absolute inset-0 w-full h-full object-cover"
+          >
+            <source src={homeVideo("hero.webm")} type="video/webm" />
+            <source src={homeVideo("hero.mp4")} type="video/mp4" />
+          </video>
+        </motion.div>
 
-          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-black/70" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-black/70" />
 
   {/* Conteneur flex qui centre verticalement et pousse les boutons en bas */}
+  
   <div className="relative h-full flex flex-col justify-center px-6 md:px-10">
-  <div className="max-w-4xl w-full mx-auto text-center">
+    <div className="max-w-4xl w-full mx-auto text-center">
+
       <motion.p
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
@@ -219,7 +221,7 @@ function HomeClient() {
       </motion.div>
     </div>
   </div>
-      </section>
+</section>
 
       {/* ================= INTRO ================= */}
       <section className="py-24 md:py-36 bg-stone-50">
