@@ -1,6 +1,12 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 
 function Footer() {
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+
   const boutiqueLinks = [
     { label: "Tous les sacs", to: "/boutique" },
     { label: "Nouveautés", to: "/boutique?filter=nouveautes" },
@@ -15,17 +21,41 @@ function Footer() {
   ];
 
   const legalLinks = [
-  { label: "Mentions légales", to: "/mentions-legales" },
-  { label: "CGV", to: "/cgv" },
-  { label: "Confidentialité", to: "/confidentialite" },
-];
+    { label: "Mentions légales", to: "/mentions-legales" },
+    { label: "CGV", to: "/cgv" },
+    { label: "Confidentialité", to: "/confidentialite" },
+  ];
+
+  const handleNewsletter = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || status === "loading") return;
+
+    setStatus("loading");
+    try {
+      const res = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      if (res.ok) {
+        setStatus("success");
+        setEmail("");
+      } else {
+        setStatus("error");
+      }
+    } catch {
+      setStatus("error");
+    }
+
+    setTimeout(() => setStatus("idle"), 3000);
+  };
 
   return (
     <footer className="bg-stone-900 text-white">
       <div className="max-w-7xl mx-auto px-6 md:px-10 py-16 md:py-20">
-        {/* Mobile : 1 colonne, Desktop : 5 colonnes */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-10 md:gap-12">
-          {/* Marque — pleine largeur sur mobile */}
+          {/* Marque */}
           <div className="sm:col-span-2 md:col-span-1">
             <Link
               href="/"
@@ -95,7 +125,7 @@ function Footer() {
             </ul>
           </div>
 
-          {/* Newsletter — pleine largeur sur mobile */}
+          {/* Newsletter */}
           <div className="sm:col-span-2 md:col-span-1">
             <h3 className="text-xs tracking-[0.2em] uppercase text-stone-500 mb-5 font-light">
               Restez nomade
@@ -103,19 +133,35 @@ function Footer() {
             <p className="text-stone-400 text-xs font-light mb-4 leading-relaxed">
               Recevez nos actualités et offres exclusives.
             </p>
-            <form className="flex gap-2 max-w-sm">
+            <form onSubmit={handleNewsletter} className="flex gap-2 max-w-sm">
               <input
                 type="email"
                 placeholder="Votre email"
-                className="flex-1 min-w-0 bg-stone-800 border border-stone-700 text-white text-sm px-4 py-2 rounded-lg font-light placeholder-stone-500 focus:outline-none focus:border-stone-500 transition-colors"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={status === "loading" || status === "success"}
+                className="flex-1 min-w-0 bg-stone-800 border border-stone-700 text-white text-sm px-4 py-2 rounded-lg font-light placeholder-stone-500 focus:outline-none focus:border-stone-500 transition-colors disabled:opacity-50"
               />
               <button
                 type="submit"
-                className="flex-shrink-0 bg-stone-700 hover:bg-stone-600 text-white text-sm px-4 py-2 rounded-lg font-light transition-colors"
+                disabled={status === "loading" || status === "success"}
+                className={`flex-shrink-0 text-sm px-4 py-2 rounded-lg font-light transition-colors ${
+                  status === "success"
+                    ? "bg-emerald-700 text-white"
+                    : status === "error"
+                    ? "bg-red-700 text-white"
+                    : "bg-stone-700 hover:bg-stone-600 text-white"
+                }`}
               >
-                OK
+                {status === "loading" ? "..." : status === "success" ? "✓" : status === "error" ? "✕" : "OK"}
               </button>
             </form>
+            {status === "success" && (
+              <p className="text-emerald-400 text-xs mt-2 font-light">Bienvenue dans la tribu.</p>
+            )}
+            {status === "error" && (
+              <p className="text-red-400 text-xs mt-2 font-light">Une erreur est survenue.</p>
+            )}
           </div>
         </div>
 
