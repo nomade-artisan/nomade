@@ -87,9 +87,49 @@ export default function ProductsView({ products, fetchProducts }: Props) {
     fetchProducts();
   };
 
+  // ─── SUPPRIMER UN PRODUIT (avec nettoyage du storage) ──────
   const deleteProduct = async (productId: number) => {
     if (!window.confirm("Supprimer ce produit ?")) return;
-    await supabase.from("products").delete().eq("id", productId);
+
+    // 1. Récupérer les URLs des images du produit
+    const { data: product, error: fetchError } = await supabase
+      .from("products")
+      .select("images")
+      .eq("id", productId)
+      .single();
+
+    if (fetchError) {
+      alert("Erreur lors de la récupération des images");
+      return;
+    }
+
+    // 2. Supprimer les fichiers du bucket Supabase Storage
+    if (product?.images && product.images.length > 0) {
+      const fileNames = product.images
+        .map((url: string) => url.split("/").pop()) // extraire le nom du fichier
+        .filter(Boolean);
+
+      if (fileNames.length > 0) {
+        const { error: storageError } = await supabase.storage
+          .from("products")
+          .remove(fileNames);
+        if (storageError) {
+          console.warn("Erreur lors de la suppression des fichiers :", storageError);
+        }
+      }
+    }
+
+    // 3. Supprimer l'entrée de la base de données
+    const { error: deleteError } = await supabase
+      .from("products")
+      .delete()
+      .eq("id", productId);
+
+    if (deleteError) {
+      alert("Erreur lors de la suppression du produit");
+      return;
+    }
+
     fetchProducts();
   };
 
