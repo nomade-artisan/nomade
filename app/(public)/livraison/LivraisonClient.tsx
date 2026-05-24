@@ -203,7 +203,7 @@ function LivraisonClient() {
               </h2>
 
               <p className="text-emerald-700 text-sm font-light leading-relaxed mb-5">
-                Dès 150 €
+                Dès 100 €
                 <br />
                 en France métropolitaine
               </p>

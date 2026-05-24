@@ -144,7 +144,7 @@ function HomeClient() {
     setTimeout(() => {
       const wrapper = document.getElementById("hero-video-wrapper");
       if (wrapper) wrapper.classList.add("opacity-100");
-    }, 3000);
+    }, 2000);
   }}
   // Fallback : si onCanPlay n'est pas déclenché, afficher après 5s max
   onLoadedMetadata={() => {

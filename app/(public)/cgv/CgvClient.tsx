@@ -163,7 +163,7 @@ function CgvClient() {
             </p>
 
             <p className="mt-4">
-              Livraison offerte dès 150 € d’achat
+              Livraison offerte dès 100 € d’achat
               en France métropolitaine.
             </p>
 
