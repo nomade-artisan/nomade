@@ -152,7 +152,7 @@ function HistoireClient() {
               <h2 className="text-4xl md:text-6xl font-extralight leading-tight tracking-[-0.03em]">
                 Concevoir des pièces
                 <br />
-                pensées pour durer.
+                pensées pour durer
               </h2>
             </motion.div>
 
@@ -256,7 +256,7 @@ function HistoireClient() {
               <br />
               Créer mieux.
               <br />
-              Et créer pour durer.”
+              Et créer pour durer”
             </blockquote>
           </motion.div>
         </div>

@@ -164,7 +164,7 @@ function BoutiqueClient({ products }: { products: Product[] }) {
       ? "Les modèles les plus appréciés."
       : activeCategory !== "Tous"
       ? `Une sélection ${activeCategory.toLowerCase()}.`
-      : "Des objets pensés pour durer.";
+      : "Des objets pensés pour durer";
 
   const currentSortLabel =
     sortOptions.find((opt) => opt.value === sortBy)?.label || "Par défaut";

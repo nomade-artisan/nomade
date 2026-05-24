@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
+import Image from "next/image";
 
 interface Product {
   id: number | string;
@@ -28,10 +28,13 @@ function ProductCard({ product }: { product: Product }) {
     <Link href={`/boutique/${product.id}`} className="group block">
       <div className="overflow-hidden rounded-xl bg-stone-200 aspect-[3/4] mb-4 relative">
         {imageUrl ? (
-          <motion.img
+          <Image
             src={imageUrl}
             alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            className="object-cover transition-transform duration-700 group-hover:scale-105"
+            loading="lazy"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-stone-400 text-4xl font-light">

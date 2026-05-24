@@ -155,11 +155,11 @@ function HomeClient() {
                 className="space-y-5 mb-10"
               >
                 <p className="text-white text-2xl sm:text-3xl md:text-4xl leading-tight font-light max-w-3xl">
-                  Le sac qui vous suivra partout. Pendant des années.
+                  Le sac qui vous suivra partout, pendant des années
                 </p>
 
                 <p className="text-white/70 text-base md:text-xl leading-relaxed font-light max-w-xl">
-                  fabrication artisanale, livraison offerte dès 100 €.
+                  fabrication artisanale, livraison offerte dès 100 €
                 </p>
               </motion.div>
 
@@ -184,7 +184,7 @@ function HomeClient() {
                 </Link>
 
                 <Link
-                  href="/boutique"
+                  href="/boutique?filter=nouveautes"
                   className="border border-white/20 text-white px-8 py-4 rounded-full text-sm tracking-wider font-light hover:bg-white/10 transition-all"
                 >
                   Nouveautés
