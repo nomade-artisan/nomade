@@ -60,26 +60,35 @@ function Navbar() {
   const solid = !isHome || scrolled;
 
   // Couleurs dynamiques
-  const logoColor = solid ? "text-stone-900" : "text-white";
-  const linkActive = solid ? "text-stone-900" : "text-white";
-  const linkInactive = solid
-    ? "text-stone-500 hover:text-stone-900"
-    : "text-white/70 hover:text-white";
-  const cartColor = solid
-    ? "text-stone-700 hover:text-black"
-    : "text-white/70 hover:text-white";
-  const cartBadge = solid
-    ? "bg-stone-900 text-white"
-    : "bg-white text-black";
-  const burgerLine = solid ? "bg-stone-900" : "bg-white";
+const logoColor = solid ? "text-stone-900" : "text-white";
+
+const linkActive = solid
+  ? "text-stone-900"
+  : "text-white";
+
+const linkInactive = solid
+  ? "text-stone-500 hover:text-stone-900"
+  : "text-white/70 hover:text-white";
+
+const cartColor = solid
+  ? "text-stone-700 hover:text-black"
+  : "text-white/70 hover:text-white";
+
+const cartBadge = solid
+  ? "bg-stone-900 text-white"
+  : "bg-white text-black";
+
+const burgerLine = solid
+  ? "bg-stone-900"
+  : "bg-white";
 
   return (
     <>
       {/* ========== NAVBAR ========== */}
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           solid
-            ? "bg-stone-50/80 backdrop-blur-xl border-b border-stone-200/50"
+            ? "bg-white/85 backdrop-blur-xl border-b border-stone-200/50 shadow-sm"
             : "bg-transparent"
         }`}
       >

@@ -4,6 +4,7 @@ import { stripe } from "@/lib/stripe";
 import { supabase } from "@/lib/db";
 import { Resend } from "resend";
 import Stripe from "stripe";
+import crypto from "crypto";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
@@ -54,7 +55,7 @@ export async function POST(req: NextRequest) {
     // 2. Récupérer les produits + adresse
     const { data: lineItems } = await stripe.checkout.sessions.listLineItems(session.id);
     const shipping = session.shipping_details || session.customer_details;
-
+    const orderNumber = "NOM-" + crypto.randomBytes(3).toString("hex").toUpperCase();
     // 3. Enregistrer la commande
     const { data: order, error: orderError } = await supabase
       .from("orders")
@@ -75,9 +76,10 @@ export async function POST(req: NextRequest) {
               }
             : null,
           payment_intent_id: session.payment_intent,
+          order_number: orderNumber,
         },
       ])
-      .select("id")
+      .select("id, order_number")
       .single();
 
     // 4. Facture Stripe
@@ -121,6 +123,8 @@ export async function POST(req: NextRequest) {
               Bonjour ${customerName},<br />
               Votre commande est confirmée. Nous la préparons avec soin.
             </p>
+            <br /><br />
+            <strong>Numéro de commande : ${orderNumber}</strong>
             <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
               <tbody>${itemsList}</tbody>
             </table>
@@ -151,7 +155,7 @@ export async function POST(req: NextRequest) {
     await resend.emails.send({
       from: `Nomade <${NOREPLY_EMAIL}>`,
       to: `${ADMIN_EMAIL}`,
-      subject: `Nouvelle commande #${order?.id || "?"} — ${totalAmount} €`,
+      subject: `Nouvelle commande ${orderNumber} — ${totalAmount} €`,
       html: `
         <div style="font-family: Inter, system-ui, sans-serif; max-width: 520px; margin: auto; padding: 30px; background: #fafaf9; border-radius: 12px;">
           <h2 style="font-weight: 400; color: #1c1917; font-size: 20px; margin-bottom: 8px;">
@@ -159,7 +163,7 @@ export async function POST(req: NextRequest) {
           </h2>
           <div style="background: #1c1917; color: white; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px;">
             <p style="margin: 0; font-size: 18px; font-weight: 400;">${totalAmount} €</p>
-            <p style="margin: 4px 0 0 0; font-size: 13px; opacity: 0.7;">Commande #${order?.id || "?"}</p>
+            <p style="margin: 4px 0 0 0; font-size: 13px; opacity: 0.7;">Commande ${orderNumber}</p>
           </div>
           <p style="color: #44403c; font-size: 14px; margin-bottom: 16px;">
             <strong>${customerName}</strong><br />

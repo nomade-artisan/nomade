@@ -9,3 +9,17 @@ body {
     @apply text-stone-900 bg-stone-50 font-light;
   }
 }
+/* Chrome, Edge, Safari */
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* Firefox */
+html {
+  scrollbar-width: none;
+}
+
+/* IE */
+body {
+  -ms-overflow-style: none;
+}

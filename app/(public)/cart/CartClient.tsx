@@ -22,50 +22,57 @@ function CartClient() {
   const [promoApplied, setPromoApplied] = useState(false);
   const [promoDiscount, setPromoDiscount] = useState(0);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [stockModalOpen, setStockModalOpen] = useState(false);
+
+  const [unavailableProducts, setUnavailableProducts] = useState<any[]>([]);
 
   const handleStripeCheckout = async () => {
-  setCheckoutLoading(true);
+    setCheckoutLoading(true);
+    const res = await fetch("/api/checkout", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        items: [
+          // Tous les produits
+          ...cart.map((item) => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            image: item.image,
+          })),
+          // Ajouter la livraison comme un item si elle n'est pas offerte
+          ...(shipping > 0
+            ? [
+                {
+                  id: "shipping",
+                  name: "Livraison",
+                  price: shipping,
+                  quantity: 1,
+                  image: "",
+                },
+              ]
+            : []),
+        ],
+      }),
+    });
 
-  const res = await fetch("/api/checkout", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      items: [
-        // Tous les produits
-        ...cart.map((item) => ({
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-          image: item.image,
-        })),
-        // Ajouter la livraison comme un item si elle n'est pas offerte
-        ...(shipping > 0
-          ? [
-              {
-                id: "shipping",
-                name: "Livraison",
-                price: shipping,
-                quantity: 1,
-                image: "",
-              },
-            ]
-          : []),
-      ],
-    }),
-  });
-
-  const data = await res.json();
-
-  if (data.url) {
-    window.location.href = data.url;
-  } else {
-    alert(data.error || "Erreur lors du paiement");
-    setCheckoutLoading(false);
-  }
-};
+    const data = await res.json();
+    if (res.status === 409) {
+      setUnavailableProducts(data.products);
+      setStockModalOpen(true);
+      setCheckoutLoading(false);
+      return;
+    }
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      alert(data.error || "Erreur lors du paiement");
+      setCheckoutLoading(false);
+    }
+  };
 
   const subtotal = cart.reduce(
     (acc, item) => acc + item.price * item.quantity,
@@ -583,8 +590,76 @@ function CartClient() {
 
       </div>
 
+    <AnimatePresence>
+        {stockModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center px-6"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 12 }}
+              className="bg-white max-w-md w-full rounded-3xl p-8"
+            >
+              <div className="w-12 h-px bg-stone-300 mb-6" />
+
+              <h2 className="text-2xl font-light mb-3">
+                Disponibilité modifiée
+              </h2>
+
+              <p className="text-stone-500 text-sm leading-relaxed mb-6">
+                Certains articles de votre sélection
+                ne sont plus disponibles.
+              </p>
+
+              <div className="space-y-3">
+                {unavailableProducts.map((product) => (
+                  <div
+                    key={product.id}
+                    className="border border-stone-200 rounded-2xl px-4 py-3"
+                  >
+                    <p className="font-light">
+                      {product.name}
+                    </p>
+
+                    <p className="text-xs text-red-500 mt-1">
+                      Rupture de stock
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex gap-3 mt-8">
+                <button
+                  onClick={() => {
+                    unavailableProducts.forEach((p) =>
+                      removeFromCart(p.id)
+                    );
+                    setStockModalOpen(false);
+                  }}
+                  className="flex-1 bg-stone-900 text-white py-3 rounded-full text-xs tracking-wider uppercase"
+                >
+                  Retirer
+                </button>
+
+                <button
+                  onClick={() => setStockModalOpen(false)}
+                  className="flex-1 border border-stone-200 py-3 rounded-full text-xs tracking-wider uppercase"
+                >
+                  Fermer
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
+    
   );
+  
 }
 
 export default CartClient;
