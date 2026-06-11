@@ -3,7 +3,7 @@ import { Metadata } from "next";
 import FaqClient from "./FaqClient";
 
 export const metadata: Metadata = {
-  title: "FAQ | Nomade",
+  title: "FAQ",
   description:
     "Les réponses à vos questions. Simple, comme tout ce qu'on fait.",
 };

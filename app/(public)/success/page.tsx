@@ -5,7 +5,7 @@ import SuccessClient from "./SuccessClient";
 import { Suspense } from "react";
 
 export const metadata: Metadata = {
-  title: "Commande confirmée | Nomade",
+  title: "Commande confirmée",
 };
 
 export default function SuccessPage() {

@@ -3,7 +3,7 @@ import { Metadata } from "next";
 import CartClient from "./CartClient";
 
 export const metadata: Metadata = {
-  title: "Panier | Nomade",
+  title: "Panier",
   description:
     "Votre panier Nomade. L'essentiel est à l'intérieur.",
 };

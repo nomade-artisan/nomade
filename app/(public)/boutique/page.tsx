@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import BoutiqueClient from "./BoutiqueClient";
 
 export const metadata: Metadata = {
-  title: "Boutique | Nomade",
+  title: "Boutique",
   description:
     "Découvrez notre collection de sacs faits main. Cuir, minimal, bandoulière ou aventure : trouvez le sac qui vous portera.",
 };

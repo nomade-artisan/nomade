@@ -3,7 +3,7 @@ import { Metadata } from "next";
 import AdminClient from "./AdminClient";
 
 export const metadata: Metadata = {
-  title: "Admin | Nomade",
+  title: "Admin",
 };
 
 export default function AdminPage() {

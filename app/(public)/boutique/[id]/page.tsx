@@ -53,7 +53,7 @@ export async function generateMetadata({
 
   if (!product) {
     return {
-      title: "Produit introuvable | Nomade",
+      title: "Produit introuvable",
       description: "Le produit recherché n'existe pas ou n'est plus disponible.",
     };
   }
