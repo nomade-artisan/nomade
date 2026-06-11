@@ -1,7 +1,7 @@
-// middleware.ts
+// proxy.ts
 import { NextRequest, NextResponse } from "next/server";
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const auth = req.headers.get("authorization");
 
   if (auth !== `Basic ${btoa(`admin:${process.env.ADMIN_PASSWORD || "nomade2024"}`)}`) {

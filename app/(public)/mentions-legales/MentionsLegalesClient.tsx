@@ -57,9 +57,7 @@ function MentionsLegalesClient() {
 
           {/* ÉDITEUR */}
 
-          <LegalBlock
-            title="Éditeur du site"
-          >
+          <LegalBlock title="Éditeur du site">
 
             <Info
               label="Marque"
@@ -67,57 +65,65 @@ function MentionsLegalesClient() {
             />
 
             <Info
-              label="Entreprise"
-              value="Megan cadet"
+              label="Nom"
+              value="Megan Cadet"
             />
 
             <Info
               label="Statut"
-              value="Entrepreneur individuel / Micro-entreprise"
+              value="Entrepreneur individuel"
+            />
+
+            <Info
+              label="Nom commercial"
+              value="Nomade"
             />
 
             <Info
               label="Adresse"
-              value="xxx rue de l'artisanat, 75000 Paris, France"
+              value="30000 Nîmes, France"
             />
 
             <Info
               label="Email"
-              value= {contactEmail}
+              value={contactEmail}
             />
 
             <Info
-              label="Téléphone"
-              value="xxx xxx xxx"
+              label="SIREN"
+              value="105 460 646"
             />
 
             <Info
               label="SIRET"
-              value="xxx xxx xxx xxx xx"
+              value="105 460 646 00018"
             />
 
             <Info
               label="TVA"
-              value="xxx xxx xxx"
+              value="TVA non applicable, art. 293 B du CGI"
             />
 
             <Info
               label="Code APE"
-              value="xxx x xx"
+              value="1512Z"
+            />
+
+            <Info
+              label="Activité"
+              value="Fabrication artisanale de sacs, pochettes et accessoires en cuir et textile"
             />
 
             <Info
               label="Directrice de publication"
-              value="Megan cadet"
+              value="Megan Cadet"
             />
 
           </LegalBlock>
 
           {/* HÉBERGEMENT */}
 
-          <LegalBlock
-            title="Hébergement"
-          >
+          <LegalBlock title="Hébergement">
 
             <Info
               label="Hébergeur"
@@ -143,10 +149,7 @@ function MentionsLegalesClient() {
           >
 
             <p className="text-stone-500 font-light leading-relaxed">
-              L’ensemble des contenus présents sur le site NOMADE
-              — textes, images, photographies, logos,
-              éléments graphiques et identité visuelle —
-              est protégé par le Code de la propriété intellectuelle.
+                    L’ensemble des contenus présents sur le site Nomade, notamment les textes, photographies, illustrations, créations graphiques, logos et éléments visuels, est protégé par les dispositions du Code de la propriété intellectuelle.
             </p>
 
             <p className="text-stone-500 font-light leading-relaxed mt-4">
@@ -154,6 +157,9 @@ function MentionsLegalesClient() {
               modification ou adaptation,
               totale ou partielle,
               est interdite sans autorisation écrite préalable.
+            </p>
+            <p className="text-stone-500 font-light leading-relaxed mt-4">
+              La dénomination « Nomade » est utilisée dans le cadre de l’activité commerciale de l’entreprise. Toute utilisation susceptible de créer une confusion avec l’activité ou l’identité visuelle de Nomade pourra faire l’objet des recours prévus par la loi.
             </p>
 
           </LegalBlock>

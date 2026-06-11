@@ -85,7 +85,7 @@ const categories = [
         question:
           "La livraison est-elle offerte ?",
         answer:
-          "Oui à partir de 150€ en France métropolitaine.",
+          "Oui à partir de 100€ en France métropolitaine.",
       },
       {
         question:

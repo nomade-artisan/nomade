@@ -48,15 +48,81 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
+
   const product = await getProduct(id);
 
   if (!product) {
-    return { title: "Produit introuvable | Nomade" };
+    return {
+      title: "Produit introuvable | Nomade",
+      description: "Le produit recherché n'existe pas ou n'est plus disponible.",
+    };
   }
 
+  const image =
+    product.images?.[0] ||
+    "https://www.nomade-artisan.fr/og-image.jpg";
+
+  const description =
+    product.description?.trim()
+      ? product.description.length > 160
+        ? product.description.slice(0, 157) + "..."
+        : product.description
+      : `${product.name} - création artisanale Nomade fabriquée à la main.`;
+  
   return {
     title: `${product.name} | Nomade`,
-    description: product.description,
+
+    description,
+
+    keywords: [
+      product.name,
+      "Nomade",
+      "maroquinerie artisanale",
+      "sac artisanal",
+      "sac fait main",
+      "fabrication française",
+      "cuir",
+      "accessoire artisanal",
+    ],
+
+    alternates: {
+      canonical: `https://www.nomade-artisan.fr/boutique/${product.id}`,
+    },
+
+    openGraph: {
+      title: `${product.name} | Nomade`,
+      description,
+      url: `https://www.nomade-artisan.fr/boutique/${product.id}`,
+      siteName: "Nomade",
+
+      images: [
+        {
+          url: image,
+          width: 1200,
+          height: 630,
+          alt: product.name,
+        },
+      ],
+
+      locale: "fr_FR",
+      type: "article",
+    },
+
+    twitter: {
+      card: "summary_large_image",
+      title: `${product.name} | Nomade`,
+      description,
+      images: [image],
+    },
+
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+      },
+    },
   };
 }
 
