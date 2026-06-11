@@ -412,7 +412,7 @@ function Tabs({
             <div className="space-y-3">
               <p>Livraison standard : 3 à 5 jours ouvrés.</p>
               <p>Livraison express : 1 à 2 jours ouvrés.</p>
-              <p className="text-emerald-700">Offerte à partir de 150€.</p>
+              <p className="text-emerald-700">Offerte à partir de 100€.</p>
             </div>
           )}
         </div>

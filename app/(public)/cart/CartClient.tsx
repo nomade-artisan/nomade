@@ -81,7 +81,7 @@ function CartClient() {
 
   // Nouveaux frais de livraison
   const FREE_SHIPPING_THRESHOLD = process.env.FREE_SHIPPING_THRESHOLD ? parseFloat(process.env.FREE_SHIPPING_THRESHOLD) : 120;
-  const SHIPPING_COST = process.env.SHIPPING_COST ? parseFloat(process.env.SHIPPING_COST) : 7;
+  const SHIPPING_COST = process.env.SHIPPING_COST ? parseFloat(process.env.SHIPPING_COST) : 0;
   const shipping = subtotal > FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
   const total = subtotal + shipping - promoDiscount;
 

@@ -167,23 +167,31 @@ export default function ProductsView({ products, fetchProducts }: Props) {
     const { data: url } = supabase.storage.from("products").getPublicUrl(fileName);
     const det = newProduct.details.split("\n").filter((d) => d.trim());
 
-    await supabase.from("products").insert([
-      {
-        name: newProduct.name,
-        price: parseFloat(newProduct.price),
-        category: newProduct.category,
-        stock: parseInt(newProduct.stock) || 0,
-        images: [url.publicUrl],
-        description: newProduct.description,
-        details: det,
-        colors: [],
-        color_names: [],
-        rating: 0,
-        reviews: 0,
-        is_new: true,
-        related_products: [],
-      },
-    ]);
+    const { data, error } = await supabase
+      .from("products")
+      .insert([
+        {
+          name: newProduct.name,
+          price: parseFloat(newProduct.price),
+          category: newProduct.category,
+          stock: parseInt(newProduct.stock) || 0,
+          images: [url.publicUrl],
+          description: newProduct.description,
+          details: det,
+          rating: 0,
+          reviews: 0,
+          is_new: true,
+          related_products: [],
+        },
+      ]);
+
+    console.log("INSERT RESULT", data);
+    console.log("INSERT ERROR", error);
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
 
     setNewProduct({
       name: "",
