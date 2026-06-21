@@ -7,6 +7,8 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import { Truck, RotateCcw, ShieldCheck } from "lucide-react";
 import { useCart } from "@/components/CartContext";
+import { useEffect } from "react";
+import { trackEvent } from "@/lib/analytics/tracking";
 
 const Reviews = dynamic(() => import("@/components/Reviews"), {
   loading: () => (
@@ -54,8 +56,18 @@ function ProductClient({
         image: product.images[0],
         stock: product.stock,
       },
+      
       quantity,
     );
+    trackEvent("add_to_cart", {
+      product_id: String(product.id),
+      page_url: window.location.pathname,
+      metadata: {
+        product_name: product.name,
+        quantity,
+        price: product.price,
+      },
+    });
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 1800);
   }, [product, quantity, addToCart]);
@@ -64,7 +76,17 @@ function ProductClient({
     typeof product.price === "number"
       ? product.price.toLocaleString("fr-FR", { minimumFractionDigits: 2 })
       : product.price;
-
+  useEffect(() => {
+    trackEvent("product_view", {
+      product_id: String(product.id),
+      page_url: window.location.pathname,
+      metadata: {
+        product_name: product.name,
+        price: product.price,
+        category: product.category,
+      },
+    });
+  }, [product]);
   return (
     <div className="bg-stone-50 pt-20 min-h-screen">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-10 py-8 md:py-16">
