@@ -160,7 +160,8 @@ export default function ProductsView({ products, fetchProducts }: Props) {
       .from("products")
       .upload(fileName, fileToUpload);
     if (uploadError) {
-      alert("Erreur upload");
+      console.error(uploadError);
+      alert(uploadError.message);
       return;
     }
 
@@ -242,6 +243,7 @@ export default function ProductsView({ products, fetchProducts }: Props) {
       .from("products")
       .upload(fileName, fileToUpload);
     if (uploadError) {
+      console.error(uploadError);
       alert("Erreur upload");
       setUploadingImage((prev) => ({ ...prev, [productId]: false }));
       return;
