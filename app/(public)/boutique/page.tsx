@@ -1,6 +1,6 @@
 
 // app/boutique/page.tsx
-
+import { supabase } from "@/lib/db";
 import { Metadata } from "next";
 import { Suspense } from "react";
 import BoutiqueClient from "./BoutiqueClient";
@@ -30,26 +30,19 @@ function formatProduct(p: any) {
   };
 }
 async function getProducts() {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .order("created_at", { ascending: false });
 
-  console.log("BASE URL =", baseUrl);
-
-  const res = await fetch(`${baseUrl}/api/products`, {
-    cache: "no-store",
-  });
-
-  console.log("STATUS =", res.status);
-
-  if (!res.ok) {
-    console.error("API ERROR");
+  if (error) {
+    console.error("SUPABASE ERROR:", error);
     return [];
   }
 
-  const products = await res.json();
+  console.log("PRODUCTS:", data);
 
-  console.log("PRODUCTS =", products);
-
-  return products.map(formatProduct);
+  return data.map(formatProduct);
 }
 export default async function BoutiquePage() {
   const products = await getProducts();
