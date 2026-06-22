@@ -27,15 +27,50 @@ function formatProduct(p: any) {
     relatedProducts: p.related_products || [],
   };
 }
-
 async function getProducts() {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-  const res = await fetch(`${baseUrl}/api/products`, {
-    cache: "no-store",
-  });
-  if (!res.ok) return [];
-  const products = await res.json();
-  return products.map(formatProduct);
+  const baseUrl =
+    process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+
+  try {
+    console.log("[Boutique] Fetching products from:", `${baseUrl}/api/products`);
+
+    const res = await fetch(`${baseUrl}/api/products`, {
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      console.error("❌ API Products Error");
+      console.error("Status:", res.status);
+      console.error("Status Text:", res.statusText);
+
+      const body = await res.text();
+      console.error("Response:", body);
+
+      throw new Error(
+        `Products API failed: ${res.status} ${res.statusText}`
+      );
+    }
+
+    const products = await res.json();
+
+    console.log(
+      `✅ Products loaded: ${products.length} product(s)`
+    );
+
+    return products.map(formatProduct);
+
+  } catch (error) {
+    console.error("🔥 getProducts() failed");
+
+    if (error instanceof Error) {
+      console.error("Message:", error.message);
+      console.error("Stack:", error.stack);
+    } else {
+      console.error(error);
+    }
+
+    return [];
+  }
 }
 
 export default async function BoutiquePage() {
