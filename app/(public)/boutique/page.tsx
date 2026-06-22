@@ -33,7 +33,8 @@ async function getProducts() {
 
   try {
     console.log("[Boutique] Fetching products from:", `${baseUrl}/api/products`);
-
+    console.log("BASE URL =", baseUrl);
+    console.log("FETCH URL =", `${baseUrl}/api/products`);
     const res = await fetch(`${baseUrl}/api/products`, {
       cache: "no-store",
     });
