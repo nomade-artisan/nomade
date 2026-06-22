@@ -1,3 +1,4 @@
+
 // app/boutique/page.tsx
 
 import { Metadata } from "next";
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
   description:
     "Découvrez notre collection de sacs faits main. Cuir, minimal, bandoulière ou aventure : trouvez le sac qui vous portera.",
 };
-throw new Error("TEST BOUTIQUE");
+
 function formatProduct(p: any) {
   return {
     id: p.id,
@@ -28,17 +29,28 @@ function formatProduct(p: any) {
     relatedProducts: p.related_products || [],
   };
 }
-
 async function getProducts() {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+
+  console.log("BASE URL =", baseUrl);
+
   const res = await fetch(`${baseUrl}/api/products`, {
     cache: "no-store",
   });
-  if (!res.ok) return [];
+
+  console.log("STATUS =", res.status);
+
+  if (!res.ok) {
+    console.error("API ERROR");
+    return [];
+  }
+
   const products = await res.json();
+
+  console.log("PRODUCTS =", products);
+
   return products.map(formatProduct);
 }
-
 export default async function BoutiquePage() {
   const products = await getProducts();
 
