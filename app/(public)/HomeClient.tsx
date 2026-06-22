@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion, useScroll, useTransform } from "framer-motion";
 import ProductCard from "@/components/ProductCard";
+import CookieConsent from "@/components/CookieConsent";
 import { supabase } from "@/lib/db";
 
 interface Product {
@@ -114,6 +115,7 @@ function HomeClient() {
 
   return (
     <div className="bg-stone-50 text-stone-900 overflow-hidden">
+      <CookieConsent />
   {/* ================= HERO ================= */}
 <section className="relative min-h-dvh overflow-hidden">
   {/* Image de fond (visible en premier) */}
