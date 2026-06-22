@@ -7,11 +7,20 @@ interface AnalyticsEvent {
   page_url?: string;
   metadata?: Record<string, any>;
 }
+function hasConsent() {
+  return (
+    localStorage.getItem("analytics-consent") === "accepted"
+  );
+}
 
 export async function trackEvent(
   eventType: string,
   data: AnalyticsEvent = {}
 ) {
+  if (!hasConsent()) {
+    return;
+  }
+
   try {
     const { error } = await supabase
       .from("analytics_events")
