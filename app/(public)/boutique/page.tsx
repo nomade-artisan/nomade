@@ -1,4 +1,5 @@
 // app/boutique/page.tsx
+
 import { Metadata } from "next";
 import { Suspense } from "react";
 import BoutiqueClient from "./BoutiqueClient";
@@ -8,7 +9,7 @@ export const metadata: Metadata = {
   description:
     "Découvrez notre collection de sacs faits main. Cuir, minimal, bandoulière ou aventure : trouvez le sac qui vous portera.",
 };
-
+throw new Error("TEST BOUTIQUE");
 function formatProduct(p: any) {
   return {
     id: p.id,
