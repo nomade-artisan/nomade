@@ -84,7 +84,7 @@ export default function CookieConsent() {
               id="cookie-title" 
               className="text-base font-medium text-stone-900"
             >
-              🍪 Votre confidentialité
+             Votre confidentialité
             </h3>
             <button
               onClick={acceptEssential}
@@ -99,7 +99,7 @@ export default function CookieConsent() {
 
           {/* ===== DESCRIPTION ===== */}
           <p id="cookie-description" className="text-sm text-stone-600 leading-relaxed">
-            Nomade Artisan utilise des cookies pour assurer le bon fonctionnement
+            Nomade utilise des cookies pour assurer le bon fonctionnement
             du site, sécuriser les paiements et analyser l'utilisation de notre
             boutique afin d'améliorer votre expérience.
           </p>
@@ -138,15 +138,8 @@ export default function CookieConsent() {
               className="flex-1 px-4 py-3 bg-stone-900 text-white rounded-full text-sm font-medium hover:bg-stone-800 hover:shadow-lg transition-all duration-200 active:scale-95"
               aria-label="Accepter tous les cookies"
             >
-              Accepter tout ✓
+              Accepter tout
             </button>
-          </div>
-
-          {/* ===== INDICATEUR DE PROGRÈS ===== */}
-          <div className="mt-4 flex justify-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-stone-900" />
-            <span className="w-1.5 h-1.5 rounded-full bg-stone-300" />
-            <span className="w-1.5 h-1.5 rounded-full bg-stone-300" />
           </div>
         </motion.div>
       )}
