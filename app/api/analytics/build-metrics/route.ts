@@ -9,15 +9,18 @@ export async function GET() {
       .from("analytics_events")
       .select("*");
 
-    if (error) {
-      throw error;
-    }
+    if (error) throw error;
 
-    const products = new Map();
+    const products = new Map<string, {
+      views: number;
+      carts: number;
+      purchases: number;
+      totalTime: number;
+      timeCount: number;
+    }>();
 
     for (const event of events || []) {
       const productId = event.product_id;
-
       if (!productId) continue;
 
       if (!products.has(productId)) {
@@ -30,25 +33,20 @@ export async function GET() {
         });
       }
 
-      const stats = products.get(productId);
+      const stats = products.get(productId)!;
 
       switch (event.event_type) {
         case "product_view":
           stats.views++;
           break;
-
         case "add_to_cart":
           stats.carts++;
           break;
-
         case "purchase_completed":
           stats.purchases++;
           break;
-
         case "product_time_spent":
-          stats.totalTime += Number(
-            event.metadata?.seconds || 0
-          );
+          stats.totalTime += Number(event.metadata?.seconds || 0);
           stats.timeCount++;
           break;
       }
@@ -70,15 +68,18 @@ export async function GET() {
 
       await supabase
         .from("product_daily_metrics")
-        .upsert({
-          metric_date: today,
-          product_id: productId,
-          views: stats.views,
-          carts: stats.carts,
-          purchases: stats.purchases,
-          avg_time_spent: avgTime,
-          trend_score: trendScore,
-        });
+        .upsert(
+          {
+            metric_date: today,
+            product_id: productId,
+            views: stats.views,
+            carts: stats.carts,
+            purchases: stats.purchases,
+            avg_time_spent: avgTime,
+            trend_score: trendScore,
+          },
+          { onConflict: "metric_date, product_id" }
+        );
 
       generated++;
     }
@@ -89,12 +90,8 @@ export async function GET() {
     });
   } catch (error) {
     console.error(error);
-
     return NextResponse.json(
-      {
-        success: false,
-        error: "metrics_generation_failed",
-      },
+      { success: false, error: "metrics_generation_failed" },
       { status: 500 }
     );
   }

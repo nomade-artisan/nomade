@@ -70,7 +70,7 @@ export async function generateMetadata({
       : `${product.name} - création artisanale Nomade fabriquée à la main.`;
   
   return {
-    title: `${product.name} | Nomade`,
+    title: `${product.name}`,
 
     description,
 
@@ -90,7 +90,7 @@ export async function generateMetadata({
     },
 
     openGraph: {
-      title: `${product.name} | Nomade`,
+      title: `${product.name}`,
       description,
       url: `https://www.nomade-artisan.fr/boutique/${product.id}`,
       siteName: "Nomade",
@@ -110,7 +110,7 @@ export async function generateMetadata({
 
     twitter: {
       card: "summary_large_image",
-      title: `${product.name} | Nomade`,
+      title: `${product.name}`,
       description,
       images: [image],
     },
