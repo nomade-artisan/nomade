@@ -56,7 +56,8 @@ export async function getAnalyticsData() {
       (b.trend_score || 0) -
       (a.trend_score || 0)
   );
-
+console.log(products);
+console.log(metrics);
   // Prévision stock
   const stockForecast = (products || [])
     .map((product) => {
