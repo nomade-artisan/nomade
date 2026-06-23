@@ -1,13 +1,18 @@
 // app/boutique/[id]/ProductClient.tsx
 "use client";
 
-import { useState, memo, useCallback } from "react";
+import {
+  useState,
+  memo,
+  useCallback,
+  useEffect,
+  useRef,
+} from "react";
 import Link from "next/link";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { Truck, RotateCcw, ShieldCheck } from "lucide-react";
 import { useCart } from "@/components/CartContext";
-import { useEffect } from "react";
 import { trackEvent } from "@/lib/analytics/tracking";
 
 const Reviews = dynamic(() => import("@/components/Reviews"), {
@@ -46,6 +51,7 @@ function ProductClient({
   const [quantity, setQuantity] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
   const [activeTab, setActiveTab] = useState("description");
+  const startTime = useRef<number>(Date.now());
 
   const handleAddToCart = useCallback(() => {
     addToCart(
@@ -76,6 +82,7 @@ function ProductClient({
     typeof product.price === "number"
       ? product.price.toLocaleString("fr-FR", { minimumFractionDigits: 2 })
       : product.price;
+
   useEffect(() => {
     trackEvent("product_view", {
       product_id: String(product.id),
@@ -86,6 +93,25 @@ function ProductClient({
         category: product.category,
       },
     });
+  }, [product]);
+
+  useEffect(() => {
+    return () => {
+      const seconds = Math.round(
+        (Date.now() - startTime.current) / 1000
+      );
+
+      if (seconds >= 4) {
+        trackEvent("product_time_spent", {
+          product_id: String(product.id),
+          page_url: window.location.pathname,
+          metadata: {
+            product_name: product.name,
+            seconds,
+          },
+        });
+      }
+    };
   }, [product]);
   return (
     <div className="bg-stone-50 pt-20 min-h-screen">

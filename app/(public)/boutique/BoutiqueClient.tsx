@@ -4,6 +4,8 @@
 import { useState, useMemo, useCallback, memo } from "react";
 import { useSearchParams } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
+import { useEffect } from "react";
+import { trackEvent } from "@/lib/analytics/tracking";
 
 // Types
 interface Product {
@@ -26,6 +28,7 @@ const categories = [
   "Accessoires",
 ];
 
+
 const sortOptions = [
   { label: "Par défaut", value: "default" },
   { label: "Prix croissant", value: "price-asc" },
@@ -47,6 +50,28 @@ function BoutiqueClient({ products }: { products: Product[] }) {
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
   const [transitioning, setTransitioning] = useState(false); // pour animation CSS
 
+   useEffect(() => {
+    if (activeCategory === "Tous") return;
+
+    trackEvent("category_view", {
+      metadata: {
+        category: activeCategory,
+      },
+    });
+  }, [activeCategory]);
+  useEffect(() => {
+    if (searchTerm.trim().length < 2) return;
+
+    const timeout = setTimeout(() => {
+      trackEvent("search", {
+        metadata: {
+          query: searchTerm.trim(),
+        },
+      });
+    }, 1000);
+
+    return () => clearTimeout(timeout);
+  }, [searchTerm]);
   // Initialisation depuis les paramètres d'URL (une seule fois)
   useMemo(() => {
     let category = "Tous";

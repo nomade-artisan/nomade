@@ -81,6 +81,20 @@ export async function POST(req: NextRequest) {
       ])
       .select("id, order_number")
       .single();
+    await supabase.from("analytics_events").insert({
+      event_type: "purchase_completed",
+
+      product_id: productIds.join(","),
+
+      metadata: {
+        order_id: order?.id,
+        order_number: order?.order_number,
+        amount: (session.amount_total || 0) / 100,
+        products: productIds,
+        quantities,
+        customer_email: session.customer_details?.email,
+      },
+    });
 
     // 4. Facture Stripe
     const invoice = await stripe.invoices.retrieve(session.invoice as string);
