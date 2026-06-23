@@ -8,9 +8,7 @@ export default function AnalyticsPage() {
       sidebar={<AnalyticsSidebar />}
       navbar={<AnalyticsNavbar />}
     >
-      <div>
-        Dashboard Analytics
-      </div>
+      <div>Dashboard Analytics</div>
     </AnalyticsLayout>
   );
 }
