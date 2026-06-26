@@ -106,39 +106,21 @@ export async function POST(req: NextRequest) {
       console.log("📋 Commande créée :", order.id);
 
       // ─── 4. Créer les order_items ────────────────────
-     // 4. Créer les order_items
-const orderItems = lineItems.data.map((item: any, index: number) => {
-  const productId = Number(productIds[index]) || 0;
-
-  return {
-    order_id: order.id,
-    product_id: productId,
-    product_name: item.description,
-    product_price: (item.amount_total || 0) / 100 / item.quantity,
-    quantity: item.quantity || 1,
-    total: (item.amount_total || 0) / 100,
-  };
-});
-
-console.log("📦 Order items à insérer :", JSON.stringify(orderItems, null, 2));
-
-if (orderItems.length > 0 && orderItems.some((oi) => oi.product_id > 0)) {
-  const { error: itemsError } = await supabase
-    .from("order_items")
-    .insert(orderItems);
-
-  if (itemsError) {
-    console.error("❌ Erreur order_items :", itemsError);
-  } else {
-    console.log("✅ Order items insérés :", orderItems.length);
-  }
-} else {
-  console.warn("⚠️ Aucun order_items à insérer (product_id = 0)");
-}
+      const orderItems = lineItems.data.map((item: any, index: number) => {
+        const productId = Number(productIds[index]) || 0;
+        return {
+          order_id: order.id,
+          product_id: productId,
+          product_name: item.description,
+          product_price: (item.amount_total || 0) / 100 / item.quantity,
+          quantity: item.quantity || 1,
+          total: (item.amount_total || 0) / 100,
+        };
+      });
 
       console.log("📦 Order items :", orderItems.length);
 
-      if (orderItems.length > 0) {
+      if (orderItems.length > 0 && orderItems.some((oi) => oi.product_id > 0)) {
         const { error: itemsError } = await supabase
           .from("order_items")
           .insert(orderItems);
@@ -148,6 +130,8 @@ if (orderItems.length > 0 && orderItems.some((oi) => oi.product_id > 0)) {
         } else {
           console.log("✅ Order items insérés");
         }
+      } else {
+        console.warn("⚠️ Aucun order_items à insérer (product_id = 0)");
       }
 
       // ─── 5. Créer le suivi ───────────────────────────
