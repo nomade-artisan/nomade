@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import { getProductsList } from "@/lib/products/queries";
 import BoutiqueClient from "./BoutiqueClient";
 
+export const revalidate = 60
+
 export default function BoutiquePage() {
   return (
     <Suspense fallback={

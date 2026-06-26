@@ -1,7 +1,7 @@
 import { getProductById, getProductsList, getProductRating } from "@/lib/products/queries";
 import { notFound } from "next/navigation";
 import ProductClient from "./ProductClient";
-
+export const revalidate = 60
 interface Props {
   params: Promise<{ id: string }>;
 }
