@@ -4,11 +4,26 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Cache le curseur sur tout le site */
+* {
+  cursor: none !important;
+}
+
+/* Remet le curseur sur les inputs et textareas */
+input, textarea, select, [contenteditable] {
+  cursor: text !important;
+}
+
+/* Curseur pointer sur les liens et boutons */
+a, button, [role="button"], .cursor-pointer {
+  cursor: pointer !important;
+}
 html,
 body {
   height: 100%;
   margin: 0;
 }
+
 
 body {
   font-family: "Inter", system-ui, sans-serif;
