@@ -101,10 +101,12 @@ await Promise.all(
         quantity: item.quantity || 1,
         total: (item.amount_total || 0) / 100,
       })) || [];
-
+      console.error("taille de la commande:", orderItems.length);
       if (orderItems.length > 0) {
         await supabase.from("order_items").insert(orderItems);
       }
+
+
 
       // 6. Créer l'entrée de suivi
       await supabase.from("order_tracking").insert({
@@ -112,7 +114,65 @@ await Promise.all(
         status: "confirmed",
         comment: "Paiement validé via Stripe",
       });
+      // 6.5 Créer ou mettre à jour le client
+const customerEmail = session.customer_details?.email;
+const customerName = session.customer_details?.name || "";
 
+if (customerEmail) {
+  const nameParts = customerName.split(" ");
+  const firstName = nameParts[0] || "";
+  const lastName = nameParts.slice(1).join(" ") || "";
+
+  // Vérifier si le client existe
+  const { data: existingCustomer } = await supabase
+    .from("customers")
+    .select("id, total_orders, total_spent")
+    .eq("email", customerEmail)
+    .single();
+
+  if (existingCustomer) {
+    // Mettre à jour le client existant
+    await supabase
+      .from("customers")
+      .update({
+        total_orders: existingCustomer.total_orders + 1,
+        total_spent: existingCustomer.total_spent + totalAmount,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", existingCustomer.id);
+  } else {
+    // Créer un nouveau client
+    const { data: newCustomer } = await supabase
+      .from("customers")
+      .insert({
+        email: customerEmail,
+        first_name: firstName,
+        last_name: lastName,
+        phone: shipping?.phone || null,
+        address: shipping?.address
+          ? {
+              line1: shipping.address.line1,
+              line2: shipping.address.line2 || "",
+              city: shipping.address.city,
+              postal_code: shipping.address.postal_code,
+              country: shipping.address.country,
+            }
+          : null,
+        total_orders: 1,
+        total_spent: totalAmount,
+      })
+      .select("id")
+      .single();
+
+    // Lier le customer_id à la commande
+    if (newCustomer && order) {
+      await supabase
+        .from("orders")
+        .update({ customer_id: newCustomer.id })
+        .eq("id", order.id);
+    }
+  }
+}
       // 7. Analytics
       await supabase.from("analytics_events").insert({
         event_type: "purchase_completed",
