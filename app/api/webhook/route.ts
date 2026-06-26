@@ -23,56 +23,67 @@ export async function POST(req: NextRequest) {
       process.env.STRIPE_WEBHOOK_SECRET!
     );
   } catch (error: any) {
+    console.error("❌ Signature webhook invalide:", error.message);
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as any;
 
-    const productIds = session.metadata?.product_ids?.split(",") || [];
-    const quantities = session.metadata?.quantities?.split(",").map(Number) || [];
+    console.log("✅ Paiement reçu :", session.id);
 
-   // 1. Récupérer tous les stocks en une requête
-const { data: products } = await supabase
-  .from("products")
-  .select("id, stock")
-  .in("id", productIds.map(Number));
+    const productIds: string[] =
+      session.metadata?.product_ids?.split(",").filter(Boolean) || [];
+    const quantities: number[] =
+      session.metadata?.quantities?.split(",").map(Number).filter(Boolean) || [];
 
-// 2. Préparer toutes les updates
-const updates = productIds
-  .map((id: string, i: number) => {
-    const product = products?.find((p) => p.id === Number(id));
-    if (!product) return null;
-    const qty = quantities[i] ?? 1;
-    return {
-      id: Number(id),
-      stock: Math.max(0, product.stock - qty),
-    };
-  })
-  .filter(Boolean);
+    console.log("📦 Produits :", productIds, "Quantités :", quantities);
 
-// 3. Exécuter toutes les updates en parallèle
-await Promise.all(
-  updates.map((u: any) =>
-    supabase.from("products").update({ stock: u!.stock }).eq("id", u!.id)
-  )
-);
-    // 3. Récupérer les line items Stripe
-    const { data: lineItems } = await stripe.checkout.sessions.listLineItems(
-      session.id
+    // ─── 1. Mise à jour des stocks ──────────────────────
+    const { data: products } = await supabase
+      .from("products")
+      .select("id, stock")
+      .in("id", productIds.map(Number));
+
+    const updates = productIds
+      .map((id: string, i: number) => {
+        const product = products?.find((p) => p.id === Number(id));
+        if (!product) {
+          console.warn(`⚠️ Produit ${id} introuvable`);
+          return null;
+        }
+        const qty = quantities[i] ?? 1;
+        return {
+          id: Number(id),
+          stock: Math.max(0, product.stock - qty),
+        };
+      })
+      .filter((u): u is { id: number; stock: number } => u !== null);
+
+    await Promise.all(
+      updates.map((u) =>
+        supabase.from("products").update({ stock: u.stock }).eq("id", u.id)
+      )
     );
+
+    console.log("📉 Stocks mis à jour :", updates.length, "produits");
+
+    // ─── 2. Récupérer les line items ────────────────────
+    const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
     const shipping = session.shipping_details || session.customer_details;
     const orderNumber =
       "NOM-" + crypto.randomBytes(3).toString("hex").toUpperCase();
     const totalAmount = (session.amount_total || 0) / 100;
 
-    // 4. Créer la commande dans la nouvelle structure
+    console.log("🛒 Line items :", lineItems.data.length);
+
+    // ─── 3. Créer la commande ───────────────────────────
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .insert({
-        customer_id: null, // Peut être lié plus tard si compte client
+        customer_id: null,
         status: "confirmed",
-        subtotal: totalAmount - 0, // Ajuster si livraison
+        subtotal: totalAmount,
         shipping: 0,
         total: totalAmount,
         shipping_address: shipping?.address
@@ -84,96 +95,131 @@ await Promise.all(
               country: shipping.address.country,
             }
           : null,
-        notes: `Commande Stripe: ${session.payment_intent}`,
+        notes: `Stripe: ${session.payment_intent} | ${orderNumber}`,
       })
       .select("id")
       .single();
 
     if (orderError || !order) {
-      console.error("Erreur création commande:", orderError);
+      console.error("❌ Erreur création commande :", orderError);
     } else {
-      // 5. Créer les order_items
-      const orderItems = lineItems?.map((item: any) => ({
-        order_id: order.id,
-        product_id: Number(item.price?.metadata?.product_id) || 0,
-        product_name: item.description,
-        product_price: (item.amount_total || 0) / 100 / item.quantity,
-        quantity: item.quantity || 1,
-        total: (item.amount_total || 0) / 100,
-      })) || [];
-      console.error("taille de la commande:", orderItems.length);
+      console.log("📋 Commande créée :", order.id);
+
+      // ─── 4. Créer les order_items ────────────────────
+     // 4. Créer les order_items
+const orderItems = lineItems.data.map((item: any, index: number) => {
+  const productId = Number(productIds[index]) || 0;
+
+  return {
+    order_id: order.id,
+    product_id: productId,
+    product_name: item.description,
+    product_price: (item.amount_total || 0) / 100 / item.quantity,
+    quantity: item.quantity || 1,
+    total: (item.amount_total || 0) / 100,
+  };
+});
+
+console.log("📦 Order items à insérer :", JSON.stringify(orderItems, null, 2));
+
+if (orderItems.length > 0 && orderItems.some((oi) => oi.product_id > 0)) {
+  const { error: itemsError } = await supabase
+    .from("order_items")
+    .insert(orderItems);
+
+  if (itemsError) {
+    console.error("❌ Erreur order_items :", itemsError);
+  } else {
+    console.log("✅ Order items insérés :", orderItems.length);
+  }
+} else {
+  console.warn("⚠️ Aucun order_items à insérer (product_id = 0)");
+}
+
+      console.log("📦 Order items :", orderItems.length);
+
       if (orderItems.length > 0) {
-        await supabase.from("order_items").insert(orderItems);
+        const { error: itemsError } = await supabase
+          .from("order_items")
+          .insert(orderItems);
+
+        if (itemsError) {
+          console.error("❌ Erreur order_items :", itemsError);
+        } else {
+          console.log("✅ Order items insérés");
+        }
       }
 
-
-
-      // 6. Créer l'entrée de suivi
+      // ─── 5. Créer le suivi ───────────────────────────
       await supabase.from("order_tracking").insert({
         order_id: order.id,
         status: "confirmed",
         comment: "Paiement validé via Stripe",
       });
-      // 6.5 Créer ou mettre à jour le client
-const customerEmail = session.customer_details?.email;
-const customerName = session.customer_details?.name || "";
 
-if (customerEmail) {
-  const nameParts = customerName.split(" ");
-  const firstName = nameParts[0] || "";
-  const lastName = nameParts.slice(1).join(" ") || "";
+      // ─── 6. Créer ou mettre à jour le client ─────────
+      const customerEmail = session.customer_details?.email;
+      const customerName = session.customer_details?.name || "";
 
-  // Vérifier si le client existe
-  const { data: existingCustomer } = await supabase
-    .from("customers")
-    .select("id, total_orders, total_spent")
-    .eq("email", customerEmail)
-    .single();
+      if (customerEmail) {
+        const nameParts = customerName.trim().split(" ");
+        const firstName = nameParts[0] || "";
+        const lastName = nameParts.slice(1).join(" ") || "";
 
-  if (existingCustomer) {
-    // Mettre à jour le client existant
-    await supabase
-      .from("customers")
-      .update({
-        total_orders: existingCustomer.total_orders + 1,
-        total_spent: existingCustomer.total_spent + totalAmount,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", existingCustomer.id);
-  } else {
-    // Créer un nouveau client
-    const { data: newCustomer } = await supabase
-      .from("customers")
-      .insert({
-        email: customerEmail,
-        first_name: firstName,
-        last_name: lastName,
-        phone: shipping?.phone || null,
-        address: shipping?.address
-          ? {
-              line1: shipping.address.line1,
-              line2: shipping.address.line2 || "",
-              city: shipping.address.city,
-              postal_code: shipping.address.postal_code,
-              country: shipping.address.country,
-            }
-          : null,
-        total_orders: 1,
-        total_spent: totalAmount,
-      })
-      .select("id")
-      .single();
+        const { data: existingCustomer } = await supabase
+          .from("customers")
+          .select("id, total_orders, total_spent")
+          .eq("email", customerEmail)
+          .single();
 
-    // Lier le customer_id à la commande
-    if (newCustomer && order) {
-      await supabase
-        .from("orders")
-        .update({ customer_id: newCustomer.id })
-        .eq("id", order.id);
-    }
-  }
-}
-      // 7. Analytics
+        if (existingCustomer) {
+          await supabase
+            .from("customers")
+            .update({
+              total_orders: existingCustomer.total_orders + 1,
+              total_spent: existingCustomer.total_spent + totalAmount,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", existingCustomer.id);
+
+          console.log("👤 Client existant mis à jour :", existingCustomer.id);
+        } else {
+          const { data: newCustomer, error: customerError } = await supabase
+            .from("customers")
+            .insert({
+              email: customerEmail,
+              first_name: firstName,
+              last_name: lastName,
+              phone: shipping?.phone || null,
+              address: shipping?.address
+                ? {
+                    line1: shipping.address.line1,
+                    line2: shipping.address.line2 || "",
+                    city: shipping.address.city,
+                    postal_code: shipping.address.postal_code,
+                    country: shipping.address.country,
+                  }
+                : null,
+              total_orders: 1,
+              total_spent: totalAmount,
+            })
+            .select("id")
+            .single();
+
+          if (newCustomer && !customerError) {
+            await supabase
+              .from("orders")
+              .update({ customer_id: newCustomer.id })
+              .eq("id", order.id);
+
+            console.log("👤 Nouveau client créé :", newCustomer.id);
+          } else {
+            console.error("❌ Erreur création client :", customerError);
+          }
+        }
+      }
+
+      // ─── 7. Analytics ─────────────────────────────────
       await supabase.from("analytics_events").insert({
         event_type: "purchase_completed",
         product_id: productIds.join(","),
@@ -183,27 +229,29 @@ if (customerEmail) {
           amount: totalAmount,
           products: productIds,
           quantities,
-          customer_email: session.customer_details?.email,
+          customer_email: customerEmail,
         },
       });
 
-      // 8. ✅ Revalidation du cache
+      // ─── 8. Revalidation du cache ────────────────────
       for (const id of productIds) {
         revalidatePath(`/boutique/${id}`);
       }
       revalidatePath("/admin/orders");
+      revalidatePath("/admin/customers");
       revalidatePath("/boutique");
       revalidatePath("/");
+
+      console.log("🔄 Cache revalidé");
     }
 
-    // 9. Facture Stripe
+    // ─── 9. Facture Stripe ──────────────────────────────
     const invoice = await stripe.invoices.retrieve(session.invoice as string);
     const invoiceUrl = invoice.hosted_invoice_url;
 
-    // 10. Contenu commun pour les emails
-
-      const itemsList = lineItems
-      ?.map(
+    // ─── 10. Emails ─────────────────────────────────────
+    const itemsList = lineItems.data
+      .map(
         (item: any) =>
           `<tr>
             <td style="padding: 8px 0; color: #44403c; font-size: 14px;">${item.description}</td>
@@ -220,7 +268,7 @@ if (customerEmail) {
     const customerName = session.customer_details?.name || "";
     const customerEmail = session.customer_details?.email || "";
 
-    // ==================== EMAIL CLIENT ====================
+    // Email client
     if (customerEmail) {
       await resend.emails.send({
         from: `Nomade <${NOREPLY_EMAIL}>`,
@@ -228,72 +276,37 @@ if (customerEmail) {
         subject: "Votre commande Nomade est confirmée",
         html: `
           <div style="font-family: Inter, system-ui, sans-serif; max-width: 520px; margin: auto; padding: 30px; background: #fafaf9; border-radius: 12px;">
-            <h2 style="font-weight: 400; color: #1c1917; font-size: 22px; margin-bottom: 8px;">
-              Merci pour votre commande
-            </h2>
-            <p style="color: #78716c; font-size: 14px; margin-bottom: 24px;">
-              Bonjour ${customerName},<br />
-              Votre commande est confirmée. Nous la préparons avec soin.
-            </p>
-            <strong>Numéro de commande : ${orderNumber}</strong>
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
-              <tbody>${itemsList}</tbody>
-            </table>
-            <div style="background: #f5f5f4; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
-              <p style="color: #44403c; font-size: 14px; margin: 0 0 4px 0; font-weight: 500;">Livraison</p>
-              <p style="color: #78716c; font-size: 13px; margin: 0;">${shippingAddress}</p>
-              <p style="color: #78716c; font-size: 13px; margin: 4px 0 0 0;">3 à 5 jours ouvrés</p>
-            </div>
-            <div style="border-top: 1px solid #e7e5e4; padding-top: 16px; margin-bottom: 16px;">
-              <p style="color: #44403c; font-size: 16px; margin: 0; text-align: right;">
-                Total : <strong>${totalAmount.toFixed(2)} €</strong>
-              </p>
-            </div>
-            <div style="text-align: center; margin: 20px 0;">
-              <a href="${invoiceUrl}" style="display: inline-block; background: #1c1917; color: white; padding: 10px 20px; border-radius: 24px; text-decoration: none; font-size: 13px;">
-                Voir ma facture
-              </a>
-            </div>
-            <p style="color: #a8a29e; font-size: 12px; margin: 24px 0 0 0; text-align: center;">
-              Nomade — L&apos;essentiel est à l&apos;intérieur
-            </p>
-          </div>
-        `,
+            <h2 style="font-weight: 400; color: #1c1917; font-size: 22px;">Merci pour votre commande</h2>
+            <p style="color: #78716c; font-size: 14px;">Bonjour ${customerName},<br/>Votre commande est confirmée.</p>
+            <strong>N° ${orderNumber}</strong>
+            <table style="width:100%; margin: 16px 0;">${itemsList}</table>
+            <p style="color: #78716c; font-size: 13px;">📍 ${shippingAddress}</p>
+            <p style="font-size: 16px; text-align: right;">Total : <strong>${totalAmount.toFixed(2)} €</strong></p>
+            <a href="${invoiceUrl}" style="display: inline-block; background: #1c1917; color: white; padding: 10px 20px; border-radius: 24px; text-decoration: none;">Voir ma facture</a>
+          </div>`,
       });
     }
 
-    // ==================== EMAIL ADMIN ====================
+    // Email admin
     await resend.emails.send({
       from: `Nomade <${NOREPLY_EMAIL}>`,
       to: `${ADMIN_EMAIL}`,
       subject: `Nouvelle commande ${orderNumber} — ${totalAmount.toFixed(2)} €`,
       html: `
         <div style="font-family: Inter, system-ui, sans-serif; max-width: 520px; margin: auto; padding: 30px; background: #fafaf9; border-radius: 12px;">
-          <h2 style="font-weight: 400; color: #1c1917; font-size: 20px; margin-bottom: 8px;">
-            Nouvelle commande reçue
-          </h2>
-          <div style="background: #1c1917; color: white; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px;">
-            <p style="margin: 0; font-size: 18px; font-weight: 400;">${totalAmount.toFixed(2)} €</p>
-            <p style="margin: 4px 0 0 0; font-size: 13px; opacity: 0.7;">Commande ${orderNumber}</p>
+          <h2 style="font-weight: 400; color: #1c1917;">Nouvelle commande</h2>
+          <div style="background: #1c1917; color: white; padding: 12px 16px; border-radius: 8px;">
+            <p style="font-size: 18px;">${totalAmount.toFixed(2)} €</p>
+            <p style="font-size: 13px; opacity: 0.7;">${orderNumber}</p>
           </div>
-          <p style="color: #44403c; font-size: 14px; margin-bottom: 16px;">
-            <strong>${customerName}</strong><br />
-            ${customerEmail}
-          </p>
-          <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px;">
-            <tbody>${itemsList}</tbody>
-          </table>
-          <div style="background: #f5f5f4; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
-            <p style="color: #78716c; font-size: 13px; margin: 0;">
-              📍 ${shippingAddress}
-            </p>
-          </div>
-          <a href="${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/admin/orders/${order?.id}" style="display: inline-block; background: #1c1917; color: white; padding: 10px 20px; border-radius: 24px; text-decoration: none; font-size: 13px;">
-            Voir dans l'admin
-          </a>
-        </div>
-      `,
+          <p><strong>${customerName}</strong><br/>${customerEmail}</p>
+          <table style="width:100%;">${itemsList}</table>
+          <p>📍 ${shippingAddress}</p>
+          <a href="${process.env.NEXT_PUBLIC_BASE_URL}/admin/orders/${order?.id}" style="display: inline-block; background: #1c1917; color: white; padding: 10px 20px; border-radius: 24px; text-decoration: none;">Voir dans l'admin</a>
+        </div>`,
     });
+
+    console.log("📧 Emails envoyés");
   }
 
   return NextResponse.json({ received: true });
