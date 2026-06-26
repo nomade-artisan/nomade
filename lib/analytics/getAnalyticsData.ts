@@ -15,13 +15,13 @@ export async function getAnalyticsData() {
   // Produits uniques dans les métriques
   const uniqueProductIds = [...new Set(metrics?.map((m) => m.product_id) || [])];
 
-  // KPI globaux (toutes dates confondues)
+  
   const totalViews = metrics?.reduce((sum, item) => sum + (item.views || 0), 0) || 0;
   const totalCarts = metrics?.reduce((sum, item) => sum + (item.carts || 0), 0) || 0;
   const totalPurchases = metrics?.reduce((sum, item) => sum + (item.purchases || 0), 0) || 0;
 
   // Agrégation par product_id
-  const aggregatedProducts = uniqueProductIds.map((productId) => {
+    const aggregatedProducts = uniqueProductIds.map((productId) => {
     const productMetrics = metrics?.filter((m) => String(m.product_id) === String(productId)) || [];
     const product = products?.find((p) => String(p.id) === String(productId));
 

@@ -1,3 +1,4 @@
+//components/analytics/StockForecast.tsx
 interface StockProduct {
   product_id: string;
   stock: number;

@@ -1,3 +1,5 @@
+
+// components/analytics/AnalyticsStats.tsx
 interface AnalyticsStatsProps {
   products: number;
   views: number;

@@ -1,8 +1,0 @@
-{
-  "crons": [
-    {
-      "path": "/api/analytics/build-metrics",
-      "schedule": "0 2 * * *"
-    }
-  ]
-}

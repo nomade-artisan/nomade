@@ -1,3 +1,4 @@
+//components/analytics/TrendScoreTable.tsx
 interface TrendProduct {
   product_id: string;
   trend_score: number;

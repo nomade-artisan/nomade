@@ -1,3 +1,4 @@
+//components/analytics/AnalyticsNavbar.tsx
 "use client";
 
 export default function AnalyticsNavbar() {

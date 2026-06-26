@@ -81,6 +81,7 @@ export async function POST(req: NextRequest) {
       ])
       .select("id, order_number")
       .single();
+      
     await supabase.from("analytics_events").insert({
       event_type: "purchase_completed",
 

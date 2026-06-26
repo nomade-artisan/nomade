@@ -1,3 +1,4 @@
+//components/analytics/TopProducts.tsx
 interface ProductMetric {
   product_id: string;
   views: number;

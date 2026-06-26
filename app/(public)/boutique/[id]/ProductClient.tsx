@@ -1,13 +1,6 @@
-// app/boutique/[id]/ProductClient.tsx
 "use client";
 
-import {
-  useState,
-  memo,
-  useCallback,
-  useEffect,
-  useRef,
-} from "react";
+import { useState, memo, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import dynamic from "next/dynamic";
@@ -62,8 +55,7 @@ function ProductClient({
         image: product.images[0],
         stock: product.stock,
       },
-      
-      quantity,
+      quantity
     );
     trackEvent("add_to_cart", {
       product_id: String(product.id),
@@ -97,10 +89,7 @@ function ProductClient({
 
   useEffect(() => {
     return () => {
-      const seconds = Math.round(
-        (Date.now() - startTime.current) / 1000
-      );
-
+      const seconds = Math.round((Date.now() - startTime.current) / 1000);
       if (seconds >= 4) {
         trackEvent("product_time_spent", {
           product_id: String(product.id),
@@ -113,6 +102,7 @@ function ProductClient({
       }
     };
   }, [product]);
+
   return (
     <div className="bg-stone-50 pt-20 min-h-screen">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-10 py-8 md:py-16">
@@ -140,7 +130,9 @@ function ProductClient({
           />
         </div>
 
-        {relatedProducts.length > 0 && <RelatedProducts products={relatedProducts} />}
+        {relatedProducts.length > 0 && (
+          <RelatedProducts products={relatedProducts} />
+        )}
 
         <section className="mt-24 md:mt-32 max-w-4xl mx-auto">
           <div className="text-center mb-10">
@@ -158,8 +150,12 @@ function ProductClient({
 
 export default ProductClient;
 
-// ─── Breadcrumb (memo) ────────────────────────────────
-const Breadcrumb = memo(function Breadcrumb({ productName }: { productName: string }) {
+// ─── Breadcrumb ───────────────────────────────────────
+const Breadcrumb = memo(function Breadcrumb({
+  productName,
+}: {
+  productName: string;
+}) {
   return (
     <div className="flex items-center gap-2 text-[10px] sm:text-[11px] uppercase tracking-[0.18em] text-stone-400 font-light mb-8 md:mb-10 overflow-hidden">
       <Link href="/" className="hover:text-stone-700 transition-colors shrink-0">
@@ -193,11 +189,10 @@ function Gallery({
 }) {
   return (
     <div className="space-y-4 md:space-y-5">
-      {/* Image principale */}
       <div className="relative overflow-hidden rounded-[24px] md:rounded-[28px] bg-stone-100 aspect-[3/4] md:aspect-[4/5]">
         <div className="relative w-full h-full">
           <Image
-            src={images[selectedImage]}
+            src={images[selectedImage] || "/placeholder.svg"}
             alt={productName}
             fill
             priority={selectedImage === 0}
@@ -206,7 +201,6 @@ function Gallery({
           />
         </div>
 
-        {/* Badges */}
         <div className="absolute top-4 left-4 md:top-5 md:left-5 flex flex-col gap-2 z-10">
           {isNew && (
             <span className="bg-white/90 backdrop-blur-sm text-stone-900 text-[10px] uppercase tracking-[0.18em] px-3 py-1.5 rounded-full font-light">
@@ -220,43 +214,47 @@ function Gallery({
           )}
         </div>
 
-        {/* Indicateurs */}
-        <div className="absolute bottom-4 md:bottom-5 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-          {images.map((_, i) => (
+        {images.length > 1 && (
+          <div className="absolute bottom-4 md:bottom-5 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+            {images.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setSelectedImage(i)}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  i === selectedImage
+                    ? "w-8 bg-stone-900"
+                    : "w-2 bg-white/60 hover:bg-white"
+                }`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {images.length > 1 && (
+        <div className="grid grid-cols-4 gap-2 md:gap-3">
+          {images.map((img, i) => (
             <button
               key={i}
               onClick={() => setSelectedImage(i)}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                i === selectedImage ? "w-8 bg-stone-900" : "w-2 bg-white/60 hover:bg-white"
+              className={`relative rounded-2xl overflow-hidden aspect-square bg-stone-100 border transition-all duration-300 ${
+                i === selectedImage
+                  ? "border-stone-900"
+                  : "border-transparent hover:border-stone-300"
               }`}
-            />
+            >
+              <Image
+                src={img}
+                alt=""
+                fill
+                sizes="120px"
+                className="object-cover"
+                loading="lazy"
+              />
+            </button>
           ))}
         </div>
-      </div>
-
-      {/* Miniatures */}
-      <div className="grid grid-cols-4 gap-2 md:gap-3">
-        {images.map((img, i) => (
-          <button
-            key={i}
-            onClick={() => setSelectedImage(i)}
-            className={`relative rounded-2xl overflow-hidden aspect-square bg-stone-100 border transition-all duration-300 ${
-              i === selectedImage
-                ? "border-stone-900"
-                : "border-transparent hover:border-stone-300"
-            }`}
-          >
-            <Image
-              src={img}
-              alt=""
-              fill
-              sizes="120px"
-              className="object-cover"
-              loading="lazy"
-            />
-          </button>
-        ))}
-      </div>
+      )}
     </div>
   );
 }
@@ -298,7 +296,9 @@ function ProductInfo({
           <span className="text-2xl md:text-3xl font-light tracking-tight">
             {priceFormatted} €
           </span>
-          <span className="text-xs text-stone-400 font-light mb-1">Taxes incluses</span>
+          <span className="text-xs text-stone-400 font-light mb-1">
+            Taxes incluses
+          </span>
         </div>
       </div>
 
@@ -309,7 +309,11 @@ function ProductInfo({
       <div className="space-y-5 pt-2">
         <div className="flex items-center gap-5">
           <span className="text-sm text-stone-500 font-light">Quantité</span>
-          <QuantitySelector quantity={quantity} max={product.stock} onChange={setQuantity} />
+          <QuantitySelector
+            quantity={quantity}
+            max={product.stock}
+            onChange={setQuantity}
+          />
         </div>
 
         <button
@@ -319,33 +323,51 @@ function ProductInfo({
             isAdded
               ? "bg-emerald-700 text-white"
               : product.stock === 0
-              ? "bg-stone-200 text-stone-400 cursor-not-allowed"
-              : "bg-stone-900 text-white hover:bg-stone-800 active:scale-[0.99]"
+                ? "bg-stone-200 text-stone-400 cursor-not-allowed"
+                : "bg-stone-900 text-white hover:bg-stone-800 active:scale-[0.99]"
           }`}
         >
-          {isAdded ? "Ajouté au panier" : product.stock === 0 ? "Rupture de stock" : "Ajouter au panier"}
+          {isAdded
+            ? "Ajouté au panier"
+            : product.stock === 0
+              ? "Rupture de stock"
+              : "Ajouter au panier"}
         </button>
       </div>
 
       <DeliveryInfo />
-      <Tabs activeTab={activeTab} setActiveTab={setActiveTab} product={product} />
+      <Tabs
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        product={product}
+      />
     </div>
   );
 }
 
-// ─── Stars (memo) ─────────────────────────────────────
-const Stars = memo(function Stars({ rating, reviews }: { rating: number; reviews: number }) {
+// ─── Stars ────────────────────────────────────────────
+const Stars = memo(function Stars({
+  rating,
+  reviews,
+}: {
+  rating: number;
+  reviews: number;
+}) {
   return (
     <div className="flex items-center gap-1 shrink-0">
       {[...Array(5)].map((_, i) => (
         <span
           key={i}
-          className={`text-xs ${i < Math.floor(rating) ? "text-stone-900" : "text-stone-300"}`}
+          className={`text-xs ${
+            i < Math.floor(rating) ? "text-stone-900" : "text-stone-300"
+          }`}
         >
           ●
         </span>
       ))}
-      <span className="text-xs text-stone-400 font-light ml-2">{reviews} avis</span>
+      <span className="text-xs text-stone-400 font-light ml-2">
+        {reviews} avis
+      </span>
     </div>
   );
 });
@@ -381,7 +403,7 @@ function QuantitySelector({
   );
 }
 
-// ─── DeliveryInfo (memo) ──────────────────────────────
+// ─── DeliveryInfo ─────────────────────────────────────
 const DeliveryInfo = memo(function DeliveryInfo() {
   const items = [
     { label: "Livraison 3–5 jours", icon: Truck },
@@ -432,7 +454,9 @@ function Tabs({
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
             className={`text-[11px] uppercase tracking-[0.18em] transition-colors duration-300 font-light whitespace-nowrap ${
-              activeTab === tab.key ? "text-stone-900" : "text-stone-400 hover:text-stone-700"
+              activeTab === tab.key
+                ? "text-stone-900"
+                : "text-stone-400 hover:text-stone-700"
             }`}
           >
             {tab.label}
@@ -474,7 +498,9 @@ function RelatedProducts({ products }: { products: Product[] }) {
     <section className="mt-24 md:mt-32">
       <div className="text-center mb-12 md:mb-14">
         <div className="w-10 h-px bg-stone-300 mx-auto mb-6" />
-        <h2 className="text-2xl md:text-3xl font-light tracking-tight">Vous pourriez aussi aimer</h2>
+        <h2 className="text-2xl md:text-3xl font-light tracking-tight">
+          Vous pourriez aussi aimer
+        </h2>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-5 md:gap-10">
@@ -482,7 +508,7 @@ function RelatedProducts({ products }: { products: Product[] }) {
           <Link key={p.id} href={`/boutique/${p.id}`} className="group">
             <div className="relative rounded-[22px] md:rounded-[24px] overflow-hidden bg-stone-100 aspect-[4/5] mb-4">
               <Image
-                src={p.images[0]}
+                src={p.images[0] || "/placeholder.svg"}
                 alt={p.name}
                 fill
                 sizes="(max-width: 768px) 50vw, 33vw"
@@ -490,9 +516,14 @@ function RelatedProducts({ products }: { products: Product[] }) {
                 loading="lazy"
               />
             </div>
-            <h3 className="font-light text-sm md:text-base tracking-tight">{p.name}</h3>
+            <h3 className="font-light text-sm md:text-base tracking-tight">
+              {p.name}
+            </h3>
             <p className="text-stone-500 text-sm font-light mt-1">
-              {typeof p.price === "number" ? p.price.toLocaleString("fr-FR") : p.price} €
+              {typeof p.price === "number"
+                ? p.price.toLocaleString("fr-FR")
+                : p.price}{" "}
+              €
             </p>
           </Link>
         ))}

@@ -1,3 +1,4 @@
+// components/analytics/AnalyticsLayout.tsx
 interface AnalyticsLayoutProps {
   sidebar: React.ReactNode;
   navbar: React.ReactNode;

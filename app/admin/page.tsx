@@ -1,11 +1,15 @@
 // app/admin/page.tsx
-import { Metadata } from "next";
-import AdminClient from "./AdminClient";
-
-export const metadata: Metadata = {
-  title: "Admin",
-};
 
 export default function AdminPage() {
-  return <AdminClient />;
+  return (
+    <div className="space-y-6">
+      <h1 className="text-3xl font-bold">
+        Dashboard
+      </h1>
+
+      <p className="text-muted-foreground">
+        Bienvenue dans l'administration Nomade.
+      </p>
+    </div>
+  );
 }

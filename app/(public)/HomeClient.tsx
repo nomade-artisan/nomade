@@ -32,24 +32,26 @@ function HomeClient() {
   const [isVisible, setIsVisible] = useState<Record<string, boolean>>({});
   const [products, setProducts] = useState<Product[]>([]);
 
-  useEffect(() => {
-    fetch("/api/products")
-      .then((res) => res.json())
-      .then((data) => {
-        const formatted = data.map((p: any) => ({
-          id: p.id,
-          name: p.name,
-          price: typeof p.price === "string" ? parseFloat(p.price) : p.price,
-          images: p.images || [],
-          category: p.category || "",
-          isNew: p.is_new || false,
-          rating: typeof p.rating === "string" ? parseFloat(p.rating) : (p.rating || 0),
-          reviews: p.reviews || 0,
-        }));
-        setProducts(formatted);
-      })
-      .catch(console.error);
-  }, []);
+ useEffect(() => {
+  fetch("/api/products?pageSize=50&status=active")
+    .then((res) => res.json())
+    .then((result) => {
+      // ✅ result.data si paginé, result si tableau direct
+      const products = result.data || result;
+      const formatted = products.map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        price: typeof p.price === "string" ? parseFloat(p.price) : p.price,
+        images: p.cover_image ? [p.cover_image] : [],
+        category: p.category_name || "",
+        isNew: p.is_new || false,
+        rating: 0,
+        reviews: 0,
+      }));
+      setProducts(formatted);
+    })
+    .catch(console.error);
+}, []);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -87,7 +89,7 @@ function HomeClient() {
   const values = [
     {
       title: "Fabriqué à la main, chez nous",
-      text: "Chaque pièce est coupée, cousue et finie dans notre atelier. Pas d'usine, pas de chaîne. Juste le temps qu'il faut pour que ce soit parfait.",
+      text: "Chaque pièce est coupée, cousue et finie dans notre atelier. Juste le temps qu'il faut pour que ce soit parfait.",
       img: homeImage("valeur-artisanat.webp"),
     },
     {
@@ -97,7 +99,7 @@ function HomeClient() {
     },
     {
       title: "L'essentiel, sans superflu",
-      text: "Pas de logo criard. Pas de détail inutile. Un sac qui fait ce qu'on lui demande : porter vos affaires, bien, longtemps.",
+      text: "Un sac qui fait ce qu'on lui demande : porter vos affaires, bien, longtemps.",
       img: homeImage("valeur-essentiel.webp"),
     },
   ];
@@ -195,7 +197,7 @@ function HomeClient() {
         transition={{ delay: 0.4, duration: 0.8 }}
         className="text-white text-2xl sm:text-3xl md:text-4xl lg:text-5xl leading-tight tracking-[-0.01em] font-extralight mb-3 max-w-3xl mx-auto"
       >
-        Le sac qui vous suivra partout, pendant des années.
+        Le sac qui vous suivra partout, pendant des années
       </motion.p>
 
       {/* Sous‑texte secondaire */}
@@ -205,7 +207,7 @@ function HomeClient() {
         transition={{ delay: 0.5, duration: 0.8 }}
         className="text-white/60 text-base sm:text-lg md:text-xl leading-relaxed font-extralight mb-8 max-w-lg mx-auto italic"
       >
-        Fabrication artisanale, livraison offerte dès 100&nbsp;€.
+        Fabrication artisanale, livraison offerte dès 100&nbsp;€
       </motion.p>
 
       {/* Ligne décorative */}
@@ -251,11 +253,11 @@ function HomeClient() {
               transition={{ duration: 0.8 }}
             >
               <p className="text-stone-400 text-xs tracking-[0.3em] uppercase mb-6">
-                La différence Nomade
+                La différence
               </p>
 
               <h2 className="text-3xl md:text-5xl font-light mb-8 leading-tight tracking-wide">
-                Un sac qui ne ressemble qu'à vous.
+                Un sac qui ne ressemble qu'à vous
               </h2>
 
               <div className="space-y-5 text-stone-500 text-lg leading-relaxed font-light">
@@ -320,7 +322,7 @@ function HomeClient() {
             <h2 className="text-3xl md:text-4xl font-light tracking-wide leading-tight">
               quatre collections,
               <br />
-              un même savoir-faire.
+              un même savoir-faire
             </h2>
           </motion.div>
 
@@ -374,7 +376,7 @@ function HomeClient() {
               </p>
 
               <h2 className="text-3xl md:text-4xl font-light tracking-wide leading-tight max-w-2xl mx-auto">
-                Ce qui vient de sortir de l'atelier.
+                Ce qui vient de sortir de l'atelier
               </h2>
             </div>
           </motion.div>
@@ -447,7 +449,7 @@ function HomeClient() {
             <h2 className="text-3xl md:text-4xl font-light tracking-wide leading-tight">
               La qualité que vous méritez,
               <br />
-              au prix juste.
+              au prix juste
             </h2>
           </motion.div>
 
@@ -498,7 +500,7 @@ function HomeClient() {
             </p>
 
             <h2 className="text-3xl md:text-4xl font-light tracking-wide leading-tight max-w-2xl mx-auto">
-              Les modèles qui reviennent le plus souvent.
+              Les modèles qui reviennent le plus souvent
             </h2>
           </motion.div>
 
@@ -587,11 +589,11 @@ function HomeClient() {
               <h2 className="text-4xl md:text-6xl font-light mb-8 leading-tight tracking-wide">
                 Un sac fait main,
                 <br />
-                livré chez vous.
+                livré chez vous
               </h2>
 
               <p className="text-white/60 text-lg md:text-xl leading-relaxed font-light mb-12 max-w-2xl mx-auto">
-                Livraison offerte dès 100 €. Retours gratuits sous 30 jours.
+                Livraison offerte dès 100 €. Retours gratuits sous 30 jours
               </p>
 
               <Link

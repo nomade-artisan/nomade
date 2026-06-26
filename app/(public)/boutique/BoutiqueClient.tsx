@@ -1,4 +1,3 @@
-// app/boutique/BoutiqueClient.tsx
 "use client";
 
 import { useState, useMemo, useCallback, memo } from "react";
@@ -28,7 +27,6 @@ const categories = [
   "Accessoires",
 ];
 
-
 const sortOptions = [
   { label: "Par défaut", value: "default" },
   { label: "Prix croissant", value: "price-asc" },
@@ -48,31 +46,27 @@ function BoutiqueClient({ products }: { products: Product[] }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
-  const [transitioning, setTransitioning] = useState(false); // pour animation CSS
+  const [transitioning, setTransitioning] = useState(false);
 
-   useEffect(() => {
+  // Tracking
+  useEffect(() => {
     if (activeCategory === "Tous") return;
-
     trackEvent("category_view", {
-      metadata: {
-        category: activeCategory,
-      },
+      metadata: { category: activeCategory },
     });
   }, [activeCategory]);
+
   useEffect(() => {
     if (searchTerm.trim().length < 2) return;
-
     const timeout = setTimeout(() => {
       trackEvent("search", {
-        metadata: {
-          query: searchTerm.trim(),
-        },
+        metadata: { query: searchTerm.trim() },
       });
     }, 1000);
-
     return () => clearTimeout(timeout);
   }, [searchTerm]);
-  // Initialisation depuis les paramètres d'URL (une seule fois)
+
+  // Initialisation depuis les paramètres d'URL
   useMemo(() => {
     let category = "Tous";
     let filter: string | null = null;
@@ -101,7 +95,7 @@ function BoutiqueClient({ products }: { products: Product[] }) {
     setSortBy(sort);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Filtrage et tri
+  // Filtrage et tri (côté client car données déjà chargées)
   const filteredProducts = useMemo(() => {
     let filtered = [...products];
 
@@ -138,18 +132,20 @@ function BoutiqueClient({ products }: { products: Product[] }) {
     return filtered;
   }, [activeCategory, sortBy, searchTerm, activeFilter, products]);
 
-  // Changement de catégorie avec animation
-  const handleCategoryChange = useCallback((cat: string) => {
-    if (cat === activeCategory && !activeFilter) return;
-    setTransitioning(true);
-    setTimeout(() => {
-      setActiveCategory(cat);
-      setActiveFilter(null);
-      setTransitioning(false);
-    }, 150);
-  }, [activeCategory, activeFilter]);
+  // Handlers
+  const handleCategoryChange = useCallback(
+    (cat: string) => {
+      if (cat === activeCategory && !activeFilter) return;
+      setTransitioning(true);
+      setTimeout(() => {
+        setActiveCategory(cat);
+        setActiveFilter(null);
+        setTransitioning(false);
+      }, 150);
+    },
+    [activeCategory, activeFilter]
+  );
 
-  // Filtre Nouveautés
   const handleNewFilter = useCallback(() => {
     if (activeFilter === "nouveautes") return;
     setTransitioning(true);
@@ -161,7 +157,6 @@ function BoutiqueClient({ products }: { products: Product[] }) {
     }, 150);
   }, [activeFilter]);
 
-  // Filtre Best
   const handleBestFilter = useCallback(() => {
     if (activeFilter === "best") return;
     setTransitioning(true);
@@ -177,19 +172,19 @@ function BoutiqueClient({ products }: { products: Product[] }) {
     activeFilter === "nouveautes"
       ? "Nouveautés"
       : activeFilter === "best"
-      ? "Essentiels"
-      : activeCategory !== "Tous"
-      ? activeCategory
-      : "La collection";
+        ? "Essentiels"
+        : activeCategory !== "Tous"
+          ? activeCategory
+          : "La collection";
 
   const pageSubtitle =
     activeFilter === "nouveautes"
       ? "Les dernières pièces."
       : activeFilter === "best"
-      ? "Les modèles les plus appréciés."
-      : activeCategory !== "Tous"
-      ? `Une sélection ${activeCategory.toLowerCase()}.`
-      : "Des objets pensés pour durer";
+        ? "Les modèles les plus appréciés."
+        : activeCategory !== "Tous"
+          ? `Une sélection ${activeCategory.toLowerCase()}.`
+          : "Des objets pensés pour durer";
 
   const currentSortLabel =
     sortOptions.find((opt) => opt.value === sortBy)?.label || "Par défaut";
@@ -268,7 +263,11 @@ function BoutiqueClient({ products }: { products: Product[] }) {
                 className="bg-white/70 backdrop-blur-sm border border-stone-200 rounded-full px-5 py-2.5 text-[11px] uppercase tracking-[0.18em] font-light text-stone-600 hover:border-stone-400 transition-all duration-300 flex items-center gap-3"
               >
                 {currentSortLabel}
-                <span className={`text-stone-400 transition-transform duration-200 ${sortMenuOpen ? "rotate-180" : ""}`}>
+                <span
+                  className={`text-stone-400 transition-transform duration-200 ${
+                    sortMenuOpen ? "rotate-180" : ""
+                  }`}
+                >
                   ↓
                 </span>
               </button>
@@ -303,14 +302,17 @@ function BoutiqueClient({ products }: { products: Product[] }) {
         {/* Nombre de produits */}
         {filteredProducts.length > 0 && (
           <p className="text-[11px] uppercase tracking-[0.2em] text-stone-400 font-light mb-10">
-            {filteredProducts.length} produit{filteredProducts.length > 1 ? "s" : ""}
+            {filteredProducts.length} produit
+            {filteredProducts.length > 1 ? "s" : ""}
           </p>
         )}
 
-        {/* Grille de produits */}
+        {/* Grille */}
         <div
           className={`transition-opacity duration-300 ${
-            transitioning ? "opacity-0 translate-y-2" : "opacity-100 translate-y-0"
+            transitioning
+              ? "opacity-0 translate-y-2"
+              : "opacity-100 translate-y-0"
           } motion-safe:transition-all`}
         >
           {filteredProducts.length > 0 ? (
@@ -344,7 +346,7 @@ function BoutiqueClient({ products }: { products: Product[] }) {
   );
 }
 
-// Memoize ProductCard pour éviter les re-renders inutiles
+// Memoize ProductCard
 const MemoizedProductCard = memo(ProductCard);
 
 export default BoutiqueClient;
