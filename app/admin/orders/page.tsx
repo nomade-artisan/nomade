@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import OrdersPagination from "@/components/admin/orders/OrdersPagination";
 import OrdersTable from "@/components/admin/orders/OrdersTable";
-
+export const dynamic = "force-dynamic";
 interface Props {
   searchParams: Promise<{
     page?: string;

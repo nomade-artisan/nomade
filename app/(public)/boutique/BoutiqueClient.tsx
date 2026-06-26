@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
 import { useEffect } from "react";
 import { trackEvent } from "@/lib/analytics/tracking";
-export const revalidate = 60;
+
 
 // Types
 interface Product {

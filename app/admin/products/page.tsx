@@ -5,7 +5,7 @@ import { Plus } from "lucide-react";
 import Link from "next/link";
 import ProductsTable from "@/components/admin/products/ProductsTable";
 import ProductsPagination from "@/components/admin/products/ProductsPagination";
-
+export const dynamic = "force-dynamic";
 interface Props {
   searchParams: Promise<{
     page?: string;
