@@ -95,8 +95,8 @@ export default function OrdersTable({ orders }: Props) {
               orders.map((order) => (
                 <tr key={order.id} className="border-b hover:bg-muted/50 transition-colors">
                   <td className="p-4 font-mono text-sm">
-                    #{order.id.substring(0, 8)}
-                  </td>
+                    #{order.order_number || order.id.substring(0, 8)}
+                    </td>
                   <td className="p-4 text-sm">{order.customer_name}</td>
                   <td className="p-4 text-sm">{order.items_count}</td>
                   <td className="p-4 text-sm font-medium">

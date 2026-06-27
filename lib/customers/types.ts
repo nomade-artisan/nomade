@@ -14,6 +14,7 @@ export interface Customer {
 export interface CustomerWithOrders extends Customer {
   orders: {
     id: string;
+    order_number: string | null;
     status: string;
     total: number;
     created_at: string;

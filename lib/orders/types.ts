@@ -23,6 +23,8 @@ export const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
 export interface Order {
   id: string;
   customer_id: string | null;
+  order_number: string | null;
+  payment_intent_id?: string | null; // ✅ Ajouté pour le remboursement
   status: OrderStatus;
   subtotal: number;
   shipping: number;
@@ -61,6 +63,7 @@ export interface OrderWithRelations extends Order {
 // ─── Liste (léger) ────────────────────────────────────
 export interface OrderListItem {
   id: string;
+  order_number: string | null;
   customer_name: string | null;
   status: OrderStatus;
   total: number;

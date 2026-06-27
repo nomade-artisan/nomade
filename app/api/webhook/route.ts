@@ -30,14 +30,10 @@ export async function POST(req: NextRequest) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as any;
 
-    console.log("✅ Paiement reçu :", session.id);
-
     const productIds: string[] =
       session.metadata?.product_ids?.split(",").filter(Boolean) || [];
     const quantities: number[] =
       session.metadata?.quantities?.split(",").map(Number).filter(Boolean) || [];
-
-    console.log("📦 Produits :", productIds, "Quantités :", quantities);
 
     // ─── 1. Mise à jour des stocks ──────────────────────
     const { data: products } = await supabase
@@ -66,17 +62,12 @@ export async function POST(req: NextRequest) {
       )
     );
 
-    console.log("📉 Stocks mis à jour :", updates.length, "produits");
-
     // ─── 2. Récupérer les line items ────────────────────
     const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
     const shipping = session.shipping_details || session.customer_details;
     const orderNumber =
       "NOM-" + crypto.randomBytes(3).toString("hex").toUpperCase();
     const totalAmount = (session.amount_total || 0) / 100;
-
-    console.log("🛒 Line items :", lineItems.data.length);
-
     // ─── 3. Créer la commande ───────────────────────────
     const { data: order, error: orderError } = await supabase
       .from("orders")
@@ -95,7 +86,9 @@ export async function POST(req: NextRequest) {
               country: shipping.address.country,
             }
           : null,
-        notes: `Stripe: ${session.payment_intent} | ${orderNumber}`,
+        notes: `Commande passée via Stripes`,
+        payment_intent_id: session.payment_intent,
+        order_number: orderNumber,
       })
       .select("id")
       .single();
@@ -292,21 +285,102 @@ export async function POST(req: NextRequest) {
 
     // Email client
     if (customerEmail) {
-      await resend.emails.send({
-        from: `Nomade <${NOREPLY_EMAIL}>`,
-        to: customerEmail,
-        subject: "Votre commande Nomade est confirmée",
-        html: `
-          <div style="font-family: Inter, system-ui, sans-serif; max-width: 520px; margin: auto; padding: 30px; background: #fafaf9; border-radius: 12px;">
-            <h2 style="font-weight: 400; color: #1c1917; font-size: 22px;">Merci pour votre commande</h2>
-            <p style="color: #78716c; font-size: 14px;">Bonjour ${customerName},<br/>Votre commande est confirmée.</p>
-            <strong>N° ${orderNumber}</strong>
-            <table style="width:100%; margin: 16px 0;">${itemsList}</table>
-            <p style="color: #78716c; font-size: 13px;">📍 ${shippingAddress}</p>
-            <p style="font-size: 16px; text-align: right;">Total : <strong>${totalAmount.toFixed(2)} €</strong></p>
-            <a href="${invoiceUrl}" style="display: inline-block; background: #1c1917; color: white; padding: 10px 20px; border-radius: 24px; text-decoration: none;">Voir ma facture</a>
-          </div>`,
-      });
+    await resend.emails.send({
+      from: `Nomade <${NOREPLY_EMAIL}>`,
+      to: customerEmail,
+      subject: "Votre commande Nomade est confirmée",
+      html: `
+        <div style="font-family: Inter, system-ui, sans-serif; max-width: 560px; margin: auto; padding: 36px; background: #fafaf9; border-radius: 16px; color: #1c1917;">
+
+          <h2 style="font-size: 26px; font-weight: 500; margin: 0 0 12px;">
+            Merci pour votre confiance !
+          </h2>
+
+          <p style="font-size: 15px; color: #57534e; line-height: 1.7; margin-bottom: 24px;">
+            Bonjour ${customerName || "à vous"},
+            <br><br>
+            Nous sommes ravis de vous compter parmi les clients <strong>Nomade</strong>.
+            Votre commande a bien été reçue et notre atelier va désormais préparer votre article avec le plus grand soin.
+          </p>
+
+          <div style="background: #f5f5f4; border-radius: 12px; padding: 16px; margin-bottom: 24px;">
+            <p style="margin: 0; font-size: 13px; color: #78716c;">
+              Numéro de commande
+            </p>
+            <p style="margin: 6px 0 0; font-size: 18px; font-weight: 600; color: #1c1917;">
+              ${orderNumber}
+            </p>
+          </div>
+
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
+            <tbody>
+              ${itemsList}
+            </tbody>
+          </table>
+
+          <div style="background: #f5f5f4; border-radius: 12px; padding: 16px; margin-bottom: 24px;">
+            <p style="margin: 0 0 6px; font-size: 14px; font-weight: 600; color: #1c1917;">
+              Adresse de livraison
+            </p>
+
+            <p style="margin: 0; font-size: 14px; color: #57534e; line-height: 1.6;">
+              📍 ${shippingAddress}
+            </p>
+
+            <p style="margin: 10px 0 0; font-size: 13px; color: #78716c;">
+              Livraison estimée : <strong>3 à 5 jours ouvrés</strong>
+            </p>
+          </div>
+
+          <div style="border-top: 1px solid #e7e5e4; padding-top: 18px; margin-bottom: 28px;">
+            <p style="margin: 0; text-align: right; font-size: 18px;">
+              Total : <strong>${totalAmount.toFixed(2)} €</strong>
+            </p>
+          </div>
+
+          <div style="text-align: center; margin-bottom: 32px;">
+            <a
+              href="${invoiceUrl}"
+              style="display: inline-block; background: #1c1917; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 999px; font-size: 14px; font-weight: 500;"
+            >
+              Télécharger ma facture
+            </a>
+          </div>
+
+          <div style="border-top: 1px solid #e7e5e4; padding-top: 24px;">
+
+            <p style="font-size: 14px; color: #57534e; line-height: 1.7;">
+              Nous vous informerons par e-mail dès que votre commande sera expédiée.
+            </p>
+
+            <p style="font-size: 14px; color: #57534e; line-height: 1.7;">
+              Cet e-mail a été envoyé automatiquement depuis une adresse ne recevant pas de réponses.
+            </p>
+
+            <p style="font-size: 14px; color: #57534e; line-height: 1.7;">
+              Pour toute question concernant votre commande, vous pouvez nous contacter via notre formulaire en ligne ou directement par e-mail :
+            </p>
+
+            <p style="font-size: 14px; line-height: 1.8; margin-top: 10px;">
+              🌐 <a href="https://nomade-artisan.fr/contact" style="color:#1c1917;">nomade-artisan.fr/contact</a><br>
+              ✉️ <a href="mailto:contact@nomade-artisan.fr" style="color:#1c1917;">contact@nomade-artisan.fr</a>
+            </p>
+
+            <p style="margin-top: 26px; font-size: 15px; color: #1c1917;">
+              Chaque pièce est préparée avec soin. Merci de faire partie de l'aventure <strong>Nomade</strong>.
+            </p>
+
+            <p style="margin-top: 20px; color: #1c1917;">
+              À très bientôt,<br>
+              <strong>L'équipe Nomade</strong>
+            </p>
+
+          </div>
+
+        </div>
+      `,
+    });
+
     }
 
     // Email admin

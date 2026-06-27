@@ -28,7 +28,7 @@ export async function getCustomersList(
       total_orders,
       total_spent,
       created_at,
-      orders:orders(created_at)
+      orders:orders(order_number, created_at)
     `,
       { count: "exact" }
     )
@@ -75,14 +75,14 @@ export async function getCustomerById(id: string): Promise<CustomerWithOrders | 
     .select(
       `
       *,
-      orders:orders(id, status, total, created_at)
+      orders:orders(id, order_number, status, total, created_at)
     `
     )
     .eq("id", id)
     .order("created_at", { referencedTable: "orders", ascending: false })
     .single();
-
-  if (error) {
+    
+  if (error) {  
     console.error("Error fetching customer:", error);
     return null;
   }

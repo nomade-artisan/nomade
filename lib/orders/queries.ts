@@ -23,6 +23,7 @@ export async function getOrdersList(
       id,
       status,
       total,
+      order_number,
       created_at,
       customer:customers(id, first_name, last_name),
       items:order_items(count)
@@ -51,6 +52,7 @@ export async function getOrdersList(
 
   const orders: OrderListItem[] = (data || []).map((order: any) => ({
     id: order.id,
+    order_number: order.order_number || null,
     customer_name: order.customer
       ? `${order.customer.first_name} ${order.customer.last_name}`
       : "Client invité",

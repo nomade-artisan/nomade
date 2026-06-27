@@ -10,6 +10,7 @@ interface Props {
 }
 
 export default function CustomerDetail({ customer }: Props) {
+    
   return (
     <div className="grid lg:grid-cols-3 gap-6">
       {/* Infos client */}
@@ -80,10 +81,10 @@ export default function CustomerDetail({ customer }: Props) {
                   </td>
                 </tr>
               ) : (
-                console.log("😂😂😂😂😂😂Number of orders:", customer.orders.length, customer.orders, customer.total_orders),
                 customer.orders.map((order) => (
                   <tr key={order.id} className="border-b hover:bg-muted/50">
-                    <td className="p-4 font-mono text-sm">#{order.id.substring(0, 8)}</td>
+                    <td className="p-4 font-mono text-sm">{order.order_number || order.id.substring(0, 8)}</td>
+                    
                     <td className="p-4">
                       <span className={`text-xs px-2 py-1 rounded-full ${ORDER_STATUS_COLORS[order.status as keyof typeof ORDER_STATUS_COLORS]}`}>
                         {ORDER_STATUS_LABELS[order.status as keyof typeof ORDER_STATUS_LABELS]}
