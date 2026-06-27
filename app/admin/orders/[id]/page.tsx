@@ -3,11 +3,11 @@ import { notFound } from "next/navigation";
 import OrderDetail from "@/components/admin/orders/OrderDetail";
 
 interface Props {
-  params: Promise<{ id: string , order_number: string}>;
+  params: Promise<{ id: string}>;
 }
 
 export default async function OrderDetailPage({ params }: Props) {
-  const { id, order_number } = await params;
+  const { id } = await params;
   const order = await getOrderById(id);
 
   if (!order) notFound();
@@ -17,7 +17,7 @@ export default async function OrderDetailPage({ params }: Props) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">
-            Commande {order_number}
+            Commande {order.order_number || order.id.substring(0, 8)}
           </h1>
           <p className="text-sm text-muted-foreground">
             {new Date(order.created_at).toLocaleDateString("fr-FR", {

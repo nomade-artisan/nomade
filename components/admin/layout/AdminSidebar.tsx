@@ -10,7 +10,7 @@ import {
 const links = [
   {
     label: "Dashboard",
-    href: "/admin",
+    href: "/admin/dashboard",
     icon: LayoutDashboard,
   },
   {
@@ -29,6 +29,11 @@ const links = [
     icon: Users,
   },
   {
+    label: "Catégories",
+    href: "/admin/categories",
+    icon: Package,
+  },
+  {
     label: "Paramètres",
     href: "/admin/settings",
     icon: Settings,
@@ -38,11 +43,11 @@ const links = [
 export default function AdminSidebar() {
   return (
     <aside className="w-64 border-r bg-background">
-      <div className="h-16 flex items-center px-6 border-b">
+      <Link href="/admin" className="h-16 flex items-center px-6 border-b hover:bg-accent transition-colors">
         <span className="font-bold text-lg">
           NOMADE
         </span>
-      </div>
+      </Link>
 
       <nav className="p-4 space-y-1">
         {links.map((link) => {
