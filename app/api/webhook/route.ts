@@ -142,36 +142,72 @@ export async function POST(req: NextRequest) {
       });
 
       // ─── 6. Créer ou mettre à jour le client ─────────
-      const customerEmail = session.customer_details?.email;
+      const customerEmail =
+        session.customer_details?.email || session.customer?.email || "";
       const customerName = session.customer_details?.name || "";
 
+      console.log("📧 customerEmail reçu :", customerEmail);
+
       if (customerEmail) {
+        const normalizedEmail = customerEmail.toLowerCase().trim();
         const nameParts = customerName.trim().split(" ");
         const firstName = nameParts[0] || "";
         const lastName = nameParts.slice(1).join(" ") || "";
 
-        const { data: existingCustomer } = await supabase
+        const { data: existingCustomer, error: lookupError } = await supabase
           .from("customers")
-          .select("id, total_orders, total_spent")
-          .eq("email", customerEmail)
+          .select("id, first_name, last_name, phone, address, total_orders, total_spent")
+          .eq("email", normalizedEmail)
           .single();
 
+        console.log("🔍 existingCustomer trouvé :", existingCustomer?.id || "aucun");
+
+        if (lookupError && lookupError.code !== "PGRST116") {
+          console.error("❌ Erreur lookup client :", lookupError);
+        }
+
         if (existingCustomer) {
+          // Mettre à jour les infos
           await supabase
             .from("customers")
             .update({
+              first_name: firstName || existingCustomer.first_name,
+              last_name: lastName || existingCustomer.last_name,
+              phone: shipping?.phone || existingCustomer.phone,
+              address: shipping?.address
+                ? {
+                    line1: shipping.address.line1,
+                    line2: shipping.address.line2 || "",
+                    city: shipping.address.city,
+                    postal_code: shipping.address.postal_code,
+                    country: shipping.address.country,
+                  }
+                : existingCustomer.address,
               total_orders: existingCustomer.total_orders + 1,
               total_spent: existingCustomer.total_spent + totalAmount,
               updated_at: new Date().toISOString(),
             })
             .eq("id", existingCustomer.id);
 
+          // Lier la commande
+          const { error: linkError } = await supabase
+            .from("orders")
+            .update({ customer_id: existingCustomer.id })
+            .eq("id", order.id);
+
+          if (linkError) {
+            console.error("❌ Erreur liaison commande-client :", linkError);
+          } else {
+            console.log("🔗 Commande liée au client :", existingCustomer.id);
+          }
+
           console.log("👤 Client existant mis à jour :", existingCustomer.id);
         } else {
+          // Nouveau client
           const { data: newCustomer, error: customerError } = await supabase
             .from("customers")
             .insert({
-              email: customerEmail,
+              email: normalizedEmail,
               first_name: firstName,
               last_name: lastName,
               phone: shipping?.phone || null,
@@ -201,6 +237,8 @@ export async function POST(req: NextRequest) {
             console.error("❌ Erreur création client :", customerError);
           }
         }
+      } else {
+        console.warn("⚠️ Aucun email client fourni par Stripe");
       }
 
       // ─── 7. Analytics ─────────────────────────────────

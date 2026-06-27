@@ -80,6 +80,7 @@ export default function CustomerDetail({ customer }: Props) {
                   </td>
                 </tr>
               ) : (
+                console.log("😂😂😂😂😂😂Number of orders:", customer.orders.length, customer.orders, customer.total_orders),
                 customer.orders.map((order) => (
                   <tr key={order.id} className="border-b hover:bg-muted/50">
                     <td className="p-4 font-mono text-sm">#{order.id.substring(0, 8)}</td>
