@@ -5,6 +5,7 @@ import { SalesDataPoint } from "@/lib/analytics/types";
 
 export default function TrendChart({ data }: { data: SalesDataPoint[] }) {
   if (!data.length) return null;
+  console.log("Order items data:", data);
 
   return (
     <Card>

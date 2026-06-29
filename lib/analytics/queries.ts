@@ -114,22 +114,22 @@ export async function getLatestPredictions(): Promise<ProductPrediction[]> {
 export async function getDailySales(): Promise<SalesDataPoint[]> {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-  const { data, error } = await supabase
-    .from("order_items")
-    .select("quantity, order:orders!inner(created_at)")
-    .gte("order.created_at", thirtyDaysAgo)
-    .not("order.status", "eq", "cancelled");
+  const { data: orders, error } = await supabase
+    .from("orders")
+    .select("total, created_at")
+    .gte("created_at", thirtyDaysAgo)
+    .not("status", "eq", "cancelled");
 
   if (error) throw error;
 
-  // Agréger par jour
+  // Agréger le CA par jour
   const salesByDate = new Map<string, number>();
-  for (const item of data || []) {
-    const date = (item.order as any).created_at.split("T")[0];
-    salesByDate.set(date, (salesByDate.get(date) || 0) + item.quantity);
+  for (const order of orders || []) {
+    const date = order.created_at.split("T")[0];
+    salesByDate.set(date, (salesByDate.get(date) || 0) + order.total);
   }
 
-  // Remplir les jours sans vente
+  // Remplir les 30 jours
   const result: SalesDataPoint[] = [];
   for (let i = 29; i >= 0; i--) {
     const d = new Date();

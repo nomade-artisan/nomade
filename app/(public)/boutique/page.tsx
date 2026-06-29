@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { getProductsList } from "@/lib/products/queries";
 import BoutiqueClient from "./BoutiqueClient";
 
-export const revalidate = 60
+export const revalidate = 20; // Revalidation every 20 seconds
 
 export default function BoutiquePage() {
   return (
