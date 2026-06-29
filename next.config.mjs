@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
   images: {
-    // ✅ Supprimer formats: [] complètement
     qualities: [75],
     unoptimized: true,
     remotePatterns: [

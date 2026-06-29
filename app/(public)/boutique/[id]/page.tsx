@@ -35,8 +35,8 @@ export default async function ProductPage({ params }: Props) {
     details: product.details || [],
     category: product.category?.name || "",
     stock: product.stock,
-    rating: ratingData.rating, // ✅ Vraie note
-    reviews: ratingData.reviews, // ✅ Vrai nombre d'avis
+    rating: ratingData.rating, 
+    reviews: ratingData.reviews,
     isNew: product.is_new,
   };
 
