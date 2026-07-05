@@ -1,4 +1,3 @@
-// ─── Statuts ──────────────────────────────────────────
 export type OrderStatus = 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled' | 'returned';
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
@@ -19,7 +18,6 @@ export const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
   returned: 'bg-orange-100 text-orange-800',
 };
 
-// ─── Types DB ─────────────────────────────────────────
 export interface Order {
   id: string;
   customer_id: string | null;
@@ -60,7 +58,6 @@ export interface OrderWithRelations extends Order {
   tracking: OrderTracking[];
 }
 
-// ─── Liste (léger) ────────────────────────────────────
 export interface OrderListItem {
   id: string;
   order_number: string | null;

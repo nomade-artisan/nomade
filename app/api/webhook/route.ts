@@ -35,7 +35,6 @@ export async function POST(req: NextRequest) {
     const quantities: number[] =
       session.metadata?.quantities?.split(",").map(Number).filter(Boolean) || [];
 
-    // ─── 1. Mise à jour des stocks ──────────────────────
     const { data: products } = await supabase
       .from("products")
       .select("id, stock")
@@ -45,7 +44,6 @@ export async function POST(req: NextRequest) {
       .map((id: string, i: number) => {
         const product = products?.find((p) => p.id === Number(id));
         if (!product) {
-          console.warn(`⚠️ Produit ${id} introuvable`);
           return null;
         }
         const qty = quantities[i] ?? 1;
@@ -62,13 +60,11 @@ export async function POST(req: NextRequest) {
       )
     );
 
-    // ─── 2. Récupérer les line items ────────────────────
     const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
     const shipping = session.shipping_details || session.customer_details;
     const orderNumber =
       "NOM-" + crypto.randomBytes(3).toString("hex").toUpperCase();
     const totalAmount = (session.amount_total || 0) / 100;
-    // ─── 3. Créer la commande ───────────────────────────
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .insert({
@@ -96,9 +92,6 @@ export async function POST(req: NextRequest) {
     if (orderError || !order) {
       console.error("❌ Erreur création commande :", orderError);
     } else {
-      console.log("📋 Commande créée :", order.id);
-
-      // ─── 4. Créer les order_items ────────────────────
       const orderItems = lineItems.data.map((item: any, index: number) => {
         const productId = Number(productIds[index]) || 0;
         return {
@@ -111,8 +104,6 @@ export async function POST(req: NextRequest) {
         };
       });
 
-      console.log("📦 Order items :", orderItems.length);
-
       if (orderItems.length > 0 && orderItems.some((oi) => oi.product_id > 0)) {
         const { error: itemsError } = await supabase
           .from("order_items")
@@ -120,26 +111,18 @@ export async function POST(req: NextRequest) {
 
         if (itemsError) {
           console.error("❌ Erreur order_items :", itemsError);
-        } else {
-          console.log("✅ Order items insérés");
         }
-      } else {
-        console.warn("⚠️ Aucun order_items à insérer (product_id = 0)");
       }
 
-      // ─── 5. Créer le suivi ───────────────────────────
       await supabase.from("order_tracking").insert({
         order_id: order.id,
         status: "confirmed",
         comment: "Paiement validé via Stripe",
       });
 
-      // ─── 6. Créer ou mettre à jour le client ─────────
       const customerEmail =
         session.customer_details?.email || session.customer?.email || "";
       const customerName = session.customer_details?.name || "";
-
-      console.log("📧 customerEmail reçu :", customerEmail);
 
       if (customerEmail) {
         const normalizedEmail = customerEmail.toLowerCase().trim();
@@ -152,8 +135,6 @@ export async function POST(req: NextRequest) {
           .select("id, first_name, last_name, phone, address, total_orders, total_spent")
           .eq("email", normalizedEmail)
           .single();
-
-        console.log("🔍 existingCustomer trouvé :", existingCustomer?.id || "aucun");
 
         if (lookupError && lookupError.code !== "PGRST116") {
           console.error("❌ Erreur lookup client :", lookupError);
@@ -190,11 +171,7 @@ export async function POST(req: NextRequest) {
 
           if (linkError) {
             console.error("❌ Erreur liaison commande-client :", linkError);
-          } else {
-            console.log("🔗 Commande liée au client :", existingCustomer.id);
           }
-
-          console.log("👤 Client existant mis à jour :", existingCustomer.id);
         } else {
           // Nouveau client
           const { data: newCustomer, error: customerError } = await supabase
@@ -224,17 +201,13 @@ export async function POST(req: NextRequest) {
               .from("orders")
               .update({ customer_id: newCustomer.id })
               .eq("id", order.id);
-
-            console.log("👤 Nouveau client créé :", newCustomer.id);
           } else {
             console.error("❌ Erreur création client :", customerError);
           }
         }
       } else {
-        console.warn("⚠️ Aucun email client fourni par Stripe");
       }
 
-      // ─── 7. Analytics ─────────────────────────────────
       await supabase.from("analytics_events").insert({
         event_type: "purchase_completed",
         product_id: productIds.join(","),
@@ -248,7 +221,6 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      // ─── 8. Revalidation du cache ────────────────────
       for (const id of productIds) {
         revalidatePath(`/boutique/${id}`);
       }
@@ -256,15 +228,11 @@ export async function POST(req: NextRequest) {
       revalidatePath("/admin/customers");
       revalidatePath("/boutique");
       revalidatePath("/");
-
-      console.log("🔄 Cache revalidé");
     }
 
-    // ─── 9. Facture Stripe ──────────────────────────────
     const invoice = await stripe.invoices.retrieve(session.invoice as string);
     const invoiceUrl = invoice.hosted_invoice_url;
 
-    // ─── 10. Emails ─────────────────────────────────────
     const itemsList = lineItems.data
       .map(
         (item: any) =>
@@ -401,8 +369,6 @@ export async function POST(req: NextRequest) {
           <a href="${process.env.NEXT_PUBLIC_BASE_URL}/admin/orders/${order?.id}" style="display: inline-block; background: #1c1917; color: white; padding: 10px 20px; border-radius: 24px; text-decoration: none;">Voir dans l'admin</a>
         </div>`,
     });
-
-    console.log("📧 Emails envoyés");
   }
 
   return NextResponse.json({ received: true });

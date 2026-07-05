@@ -1,4 +1,3 @@
-// app/admin/products/new/page.tsx
 
 import ProductForm from "@/components/admin/products/ProductForm";
 import { getCategories } from "@/lib/categories/queries";

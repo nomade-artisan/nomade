@@ -1,5 +1,4 @@
 
-// app/confidentialite/page.tsx
 import { Metadata } from "next";
 import ConfidentialiteClient from "./ConfidentialiteClient";
 

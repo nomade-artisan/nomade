@@ -35,7 +35,6 @@ const sortOptions = [
   { label: "Nouveautés", value: "newest" },
 ];
 
-// ─── Composant principal ────────────────────────────────────
 function BoutiqueClient({ products }: { products: Product[] }) {
   const searchParams = useSearchParams();
   const categoryParam = searchParams.get("category");

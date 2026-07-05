@@ -1,4 +1,3 @@
-// app/HomeClient.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -36,7 +35,6 @@ function HomeClient() {
   fetch("/api/products?pageSize=50&status=active")
     .then((res) => res.json())
     .then((result) => {
-      // ✅ result.data si paginé, result si tableau direct
       const products = result.data || result;
       const formatted = products.map((p: any) => ({
         id: p.id,
@@ -50,7 +48,9 @@ function HomeClient() {
       }));
       setProducts(formatted);
     })
-    .catch(console.error);
+    .catch((error) => {
+      console.error(error);
+    });
 }, []);
 
   useEffect(() => {
@@ -117,9 +117,8 @@ function HomeClient() {
 
   return (
     <div className="bg-stone-50 text-stone-900 overflow-hidden">
-  {/* ================= HERO ================= */}
 <section className="relative min-h-dvh overflow-hidden">
-  {/* Image de fond (visible en premier) */}
+  {/* Image de fond */}
   <motion.div style={{ y: heroY }} className="absolute inset-0">
     <Image
       src={homeImage("hero.webp")}
@@ -131,7 +130,7 @@ function HomeClient() {
     />
   </motion.div>
 
-  {/* Vidéo (invisible au début, apparaît après 3 secondes) */}
+  {/* Vidéo en fond */}
   <motion.div
     style={{ y: heroY }}
     className="absolute inset-0 opacity-0 transition-opacity duration-1000"
@@ -149,7 +148,7 @@ function HomeClient() {
       if (wrapper) wrapper.classList.add("opacity-100");
     }, 2000);
   }}
-  // Fallback : si onCanPlay n'est pas déclenché, afficher après 5s max
+  // Affiche la vidéo après 5s si nécessaire
   onLoadedMetadata={() => {
     setTimeout(() => {
       const wrapper = document.getElementById("hero-video-wrapper");
@@ -167,7 +166,6 @@ function HomeClient() {
 
   <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-black/70" />
 
-  {/* Contenu texte + boutons */}
   <div className="relative min-h-dvh flex flex-col justify-center px-6 md:px-10 pt-20 md:pt-24">
     <div className="max-w-5xl w-full mx-auto text-center">
       {/* Tag */}
@@ -242,7 +240,6 @@ function HomeClient() {
     </div>
   </div>
 </section>
-      {/* ================= INTRO ================= */}
       <section className="py-24 md:py-36 bg-stone-50">
         <div className="max-w-6xl mx-auto px-6 md:px-10">
           <div className="grid md:grid-cols-2 gap-16 md:gap-24 items-center">
@@ -306,7 +303,6 @@ function HomeClient() {
         </div>
       </section>
 
-      {/* ================= CATEGORIES ================= */}
       <section className="pb-24 md:pb-36">
         <div className="max-w-7xl mx-auto px-6 md:px-10">
           <motion.div
@@ -361,7 +357,6 @@ function HomeClient() {
         </div>
       </section>
 
-      {/* ================= NEW PRODUCTS ================= */}
       <section id="new-products" data-section className="pb-24 md:pb-36">
         <div className="max-w-7xl mx-auto px-6 md:px-10">
           <motion.div
@@ -406,7 +401,6 @@ function HomeClient() {
         </div>
       </section>
 
-      {/* ================= FULL IMAGE ================= */}
       <section className="relative h-[70vh] overflow-hidden">
         <Image
           src={homeImage("silence.webp")}
@@ -433,7 +427,6 @@ function HomeClient() {
         </div>
       </section>
 
-      {/* ================= VALUES ================= */}
       <section id="values" data-section className="py-24 md:py-36 bg-white">
         <div className="max-w-6xl mx-auto px-6 md:px-10">
           <motion.div
@@ -486,7 +479,6 @@ function HomeClient() {
         </div>
       </section>
 
-      {/* ================= BEST SELLERS ================= */}
       <section id="best-sellers" data-section className="py-24 md:py-36 bg-stone-50">
         <div className="max-w-7xl mx-auto px-6 md:px-10">
           <motion.div
@@ -529,7 +521,6 @@ function HomeClient() {
         </div>
       </section>
 
-      {/* ================= TESTIMONIALS ================= */}
       <section className="py-24 md:py-36 bg-white">
         <div className="max-w-5xl mx-auto px-6 md:px-10 text-center">
           <motion.p
@@ -564,7 +555,6 @@ function HomeClient() {
         </div>
       </section>
 
-      {/* ================= FINAL ================= */}
       <section className="relative py-28 md:py-40 overflow-hidden">
         <Image
           src={homeImage("hommage.webp")}

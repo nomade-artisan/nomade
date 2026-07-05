@@ -1,4 +1,3 @@
-// lib/products/types.ts
 export interface ProductImageFile {
   id: string
   file: File

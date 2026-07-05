@@ -33,6 +33,7 @@ import {
   XCircle,
   Undo2,
   MapPin,
+  Printer,
 } from "lucide-react";
 import type { OrderWithRelations, OrderStatus } from "@/lib/orders/types";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS } from "@/lib/orders/types";
@@ -42,6 +43,7 @@ interface Props {
 }
 
 const CARRIERS: Record<string, string> = {
+  sendcloud: "Sendcloud (générer étiquette)",
   laposte: "La Poste",
   chronopost: "Chronopost",
   colissimo: "Colissimo",
@@ -72,11 +74,14 @@ export default function OrderDetail({ order }: Props) {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelWithRefund, setCancelWithRefund] = useState(true);
 
-  // Champs tracking
+  // Champs tracking manuels (fallback)
   const [trackingNumber, setTrackingNumber] = useState("");
   const [trackingUrl, setTrackingUrl] = useState("");
-  const [carrier, setCarrier] = useState("laposte");
+  const [carrier, setCarrier] = useState("sendcloud"); // par défaut Sendcloud
   const [showShippingFields, setShowShippingFields] = useState(false);
+
+  // Génération automatique via Sendcloud
+  const [generatingLabel, setGeneratingLabel] = useState(false);
 
   async function handleStatusChange(newStatus: OrderStatus) {
     // Si on passe en "shipped" et que les champs tracking ne sont pas encore saisis,
@@ -130,6 +135,45 @@ export default function OrderDetail({ order }: Props) {
       console.error(err);
     } finally {
       setIsUpdating(false);
+    }
+  }
+
+  // Génération automatique via Sendcloud
+  async function handleGenerateLabel() {
+    setGeneratingLabel(true);
+    try {
+      const res = await fetch("/api/admin/shipping/generate-label", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: order.id,
+          carrier: "sendcloud",
+          customerName: order.customer
+            ? `${order.customer.first_name} ${order.customer.last_name}`
+            : "Client",
+          customerEmail: order.customer?.email || "",
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Erreur génération étiquette");
+      }
+
+      const { label } = await res.json();
+      setTrackingNumber(label.tracking_number);
+      setTrackingUrl(label.tracking_url || "");
+      setCarrier("sendcloud");
+
+      // Optionnel : ouvrir l'étiquette dans un nouvel onglet
+      if (label.label_url) {
+        window.open(label.label_url, "_blank");
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message);
+    } finally {
+      setGeneratingLabel(false);
     }
   }
 
@@ -329,6 +373,27 @@ export default function OrderDetail({ order }: Props) {
                     ))}
                   </SelectContent>
                 </Select>
+
+                {/* Option Sendcloud : génération automatique */}
+                {carrier === "sendcloud" && (
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleGenerateLabel}
+                    disabled={generatingLabel}
+                  >
+                    {generatingLabel ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Printer className="mr-2 h-4 w-4" />
+                    )}
+                    {generatingLabel
+                      ? "Génération en cours..."
+                      : "Générer l'étiquette avec Sendcloud"}
+                  </Button>
+                )}
+
+                {/* Champs manuels pour tous les transporteurs */}
                 <Input
                   placeholder="Numéro de suivi"
                   value={trackingNumber}

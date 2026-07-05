@@ -102,7 +102,6 @@ export async function updateCompleteProduct(
       }
     }
 
-    // ✅ Mettre à jour les positions des images conservées
     for (let i = 0; i < existingUrls.length; i++) {
       await supabase
         .from("product_images")

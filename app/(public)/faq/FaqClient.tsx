@@ -1,4 +1,3 @@
-// app/faq/FaqClient.tsx
 
 "use client";
 

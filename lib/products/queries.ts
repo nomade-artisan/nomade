@@ -1,8 +1,6 @@
-// lib/products/queries.ts
 import { supabase } from "@/lib/supabase/client";
 import type { ProductWithImages, Category } from "./types";
 
-// ─── Types ─────────────────────────────────────────────────
 
 export interface ProductListItem {
   id: number;
@@ -35,7 +33,6 @@ export interface ProductListOptions {
   sortDirection?: "asc" | "desc";
 }
 
-// ─── Requête paginée, triée, filtrée ─────────────────────
 
 export async function getProductsList(
   options: ProductListOptions = {}
@@ -134,7 +131,6 @@ export async function getProductsList(
   };
 }
 
-// ─── Produit par ID (détail complet) ──────────────────────
 
 export async function getProductById(
   id: number
@@ -157,7 +153,6 @@ export async function getProductById(
   return product as unknown as ProductWithImages;
 }
 
-// ─── Produit pour édition (colonnes utiles uniquement) ────
 
 export async function getProductForEdit(
   id: number
@@ -201,7 +196,6 @@ export async function getProductForEdit(
   return product as unknown as ProductWithImages;
 }
 
-// ─── Tous les produits (export, backup) ───────────────────
 
 export async function getAllProducts(): Promise<ProductWithImages[]> {
   const { data, error } = await supabase
@@ -221,7 +215,6 @@ export async function getAllProducts(): Promise<ProductWithImages[]> {
   return data as unknown as ProductWithImages[];
 }
 
-// ─── Catégories ───────────────────────────────────────────
 
 export async function getCategories(): Promise<Category[]> {
   const { data, error } = await supabase
@@ -251,7 +244,6 @@ export async function getCategoryNames(): Promise<string[]> {
   return (data || []).map((c: any) => c.name);
 }
 
-// ─── Génération de slug unique ────────────────────────────
 
 export function generateSlug(name: string): string {
   const base = name

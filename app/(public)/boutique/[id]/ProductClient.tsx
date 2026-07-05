@@ -16,7 +16,6 @@ const Reviews = dynamic(() => import("@/components/Reviews"), {
   ),
 });
 
-// ─── Types ────────────────────────────────────────────
 interface Product {
   id: number | string;
   name: string;
@@ -31,7 +30,6 @@ interface Product {
   isNew: boolean;
 }
 
-// ─── Composant principal ──────────────────────────────
 function ProductClient({
   product,
   relatedProducts,
@@ -150,7 +148,6 @@ function ProductClient({
 
 export default ProductClient;
 
-// ─── Breadcrumb ───────────────────────────────────────
 const Breadcrumb = memo(function Breadcrumb({
   productName,
 }: {
@@ -171,7 +168,6 @@ const Breadcrumb = memo(function Breadcrumb({
   );
 });
 
-// ─── Gallery ──────────────────────────────────────────
 function Gallery({
   images,
   productName,
@@ -259,7 +255,6 @@ function Gallery({
   );
 }
 
-// ─── ProductInfo ──────────────────────────────────────
 function ProductInfo({
   product,
   priceFormatted,
@@ -345,7 +340,6 @@ function ProductInfo({
   );
 }
 
-// ─── Stars ────────────────────────────────────────────
 const Stars = memo(function Stars({
   rating,
   reviews,
@@ -372,7 +366,6 @@ const Stars = memo(function Stars({
   );
 });
 
-// ─── QuantitySelector ─────────────────────────────────
 function QuantitySelector({
   quantity,
   max,
@@ -403,7 +396,6 @@ function QuantitySelector({
   );
 }
 
-// ─── DeliveryInfo ─────────────────────────────────────
 const DeliveryInfo = memo(function DeliveryInfo() {
   const items = [
     { label: "Livraison 3–5 jours", icon: Truck },
@@ -430,7 +422,6 @@ const DeliveryInfo = memo(function DeliveryInfo() {
   );
 });
 
-// ─── Tabs ─────────────────────────────────────────────
 function Tabs({
   activeTab,
   setActiveTab,
@@ -492,7 +483,6 @@ function Tabs({
   );
 }
 
-// ─── RelatedProducts ──────────────────────────────────
 function RelatedProducts({ products }: { products: Product[] }) {
   return (
     <section className="mt-24 md:mt-32">

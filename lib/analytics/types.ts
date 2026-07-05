@@ -1,4 +1,3 @@
-// ─── Métriques globales ─────────────────────────────
 export interface GlobalMetrics {
   totalRevenue: number;
   totalOrders: number;
@@ -6,7 +5,6 @@ export interface GlobalMetrics {
   averageOrderValue: number;
 }
 
-// ─── Prédiction produit (depuis product_predictions + products) ──
 export interface ProductPrediction {
   product_id: number;
   product_name: string;
@@ -21,21 +19,18 @@ export interface ProductPrediction {
   alert_type: string | null;
 }
 
-// ─── Alerte ──────────────────────────────────────────
 export interface Alert {
   product_id: number;
   alert_type: string;
   message: string;
 }
 
-// ─── Réponse complète de l'API analytics ────────────
 export interface AnalyticsResponse {
   globalMetrics: GlobalMetrics;
   predictions: ProductPrediction[];
   alerts: Alert[];
 }
 
-// ─── Données pour le graphique ──────────────────────
 export interface SalesDataPoint {
   date: string; // YYYY-MM-DD
   sales: number;

@@ -43,7 +43,6 @@ export default function ProductEditActions({
         throw new Error(data.error || "Erreur suppression");
       }
 
-      // ✅ Redirection directe, le popup disparaîtra avec la page
       router.push("/admin/products");
       router.refresh();
     } catch (error) {
@@ -51,7 +50,6 @@ export default function ProductEditActions({
       alert("Erreur lors de la suppression");
       setIsDeleting(false); // ✅ Réactive seulement si erreur
     }
-    // ✅ Pas de finally : si succès, on quitte la page
   }
 
   return (

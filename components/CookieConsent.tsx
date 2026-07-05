@@ -5,13 +5,11 @@ import Link from 'next/link';
 import { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// ============ CONSTANTES ============
 const CONSENT_KEY = 'analytics-consent';
 const LEGAL_PAGES = ['/confidentialite', '/cgv', '/mentions-legales'] as const;
 
 type ConsentType = 'accepted' | 'essential' | null;
 
-// ============ HOOK PERSONNALISÉ ============
 function useCookieConsent() {
   const [consent, setConsent] = useState<ConsentType>(null);
   const [showBanner, setShowBanner] = useState(false);
@@ -49,7 +47,6 @@ function useCookieConsent() {
   };
 }
 
-// ============ COMPOSANT PRINCIPAL ============
 export default function CookieConsent() {
   const pathname = usePathname();
   const { showBanner, mounted, acceptAll, acceptEssential } = useCookieConsent();
@@ -78,7 +75,6 @@ export default function CookieConsent() {
           aria-labelledby="cookie-title"
           aria-describedby="cookie-description"
         >
-          {/* ===== EN-TÊTE ===== */}
           <div className="flex items-start justify-between mb-3">
             <h3 
               id="cookie-title" 
@@ -97,14 +93,12 @@ export default function CookieConsent() {
             </button>
           </div>
 
-          {/* ===== DESCRIPTION ===== */}
           <p id="cookie-description" className="text-sm text-stone-600 leading-relaxed">
             Nomade utilise des cookies pour assurer le bon fonctionnement
             du site, sécuriser les paiements et analyser l'utilisation de notre
             boutique afin d'améliorer votre expérience.
           </p>
 
-          {/* ===== LIENS LÉGAUX ===== */}
           <div className="text-xs text-stone-500 mt-3 leading-relaxed space-x-1">
             <span>En continuant, vous acceptez notre</span>
             <Link
@@ -123,7 +117,6 @@ export default function CookieConsent() {
             <span>.</span>
           </div>
 
-          {/* ===== BOUTONS ===== */}
           <div className="flex flex-col sm:flex-row gap-3 mt-5">
             <button
               onClick={acceptEssential}

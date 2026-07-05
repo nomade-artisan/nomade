@@ -1,4 +1,3 @@
-// app/cart/CartClient.tsx
 
 "use client";
 

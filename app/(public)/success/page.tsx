@@ -1,4 +1,3 @@
-// app/success/page.tsx
 import { Metadata } from "next";
 import SuccessClient from "./SuccessClient";
 

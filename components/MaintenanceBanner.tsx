@@ -14,7 +14,6 @@ export default function MaintenanceBanner() {
   const panelRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  // ===== MONTAGE =====
   useEffect(() => {
     setMounted(true);
     const dismissed = localStorage.getItem(STORAGE_KEY);
@@ -23,7 +22,6 @@ export default function MaintenanceBanner() {
     }
   }, []);
 
-  // ===== GESTION DU CLICK OUTSIDE & ESCAPE =====
   useEffect(() => {
     if (!expanded) return;
 
@@ -56,7 +54,6 @@ export default function MaintenanceBanner() {
     };
   }, [expanded]);
 
-  // ===== FONCTIONS =====
   const closeBanner = () => {
     localStorage.setItem(STORAGE_KEY, 'true');
     setExpanded(false);
@@ -68,7 +65,6 @@ export default function MaintenanceBanner() {
     setExpanded(true);
   };
 
-  // ===== RENDU =====
   if (!isMaintenance || !mounted) {
     return null;
   }
@@ -99,7 +95,6 @@ export default function MaintenanceBanner() {
             aria-modal="true"
             aria-labelledby="maintenance-title"
           >
-            {/* ===== HEADER ===== */}
             <div className="flex items-start justify-between mb-3">
               <span 
                 id="maintenance-title"
@@ -132,7 +127,6 @@ export default function MaintenanceBanner() {
               </button>
             </div>
 
-            {/* ===== CONTENU ===== */}
             <p className="text-stone-300 text-sm leading-relaxed">
               Notre collection est actuellement en préparation.
               Les produits affichés sur le site sont présentés à
@@ -161,7 +155,6 @@ export default function MaintenanceBanner() {
               Contactez-nous
             </Link>
 
-            {/* ===== INDICATEUR ===== */}
             <div className="mt-4 flex gap-1">
               <span className="w-1 h-1 rounded-full bg-stone-400" />
               <span className="w-1 h-1 rounded-full bg-stone-600" />

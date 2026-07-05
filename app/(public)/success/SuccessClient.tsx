@@ -1,4 +1,3 @@
-// app/success/SuccessClient.tsx
 
 "use client";
 

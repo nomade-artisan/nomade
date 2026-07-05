@@ -1,10 +1,9 @@
-// proxy.ts
 import { NextRequest, NextResponse } from "next/server";
 
 export function proxy(req: NextRequest) {
   const auth = req.headers.get("authorization");
 
-  if (auth !== `Basic ${btoa(`admin:${process.env.ADMIN_PASSWORD || "nomade2026"}`)}`) {
+  if (auth !== `Basic ${btoa(`admin:${process.env.ADMIN_PASSWORD || "nomade2026_test"}`)}`) {
     return new NextResponse("Accès refusé", {
       status: 401,
       headers: {

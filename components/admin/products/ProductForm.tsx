@@ -95,7 +95,6 @@ export default function ProductForm({
     const coverIndex = product.images.findIndex((img) => img.isCover);
     formData.append("coverImageIndex", String(coverIndex >= 0 ? coverIndex : 0));
 
-    // ✅ Envoyer les URLs existantes DANS L'ORDRE (cover en premier)
     const existingUrls = product.images
       .filter((img) => img.isExisting)
       .sort((a, b) => {

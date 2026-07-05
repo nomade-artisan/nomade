@@ -3,7 +3,6 @@ import { createCompleteProduct, updateCompleteProduct } from "@/lib/products/ser
 import { generateSlug } from "@/lib/products/queries";
 import type { ProductFormState } from "@/lib/products/types";
 
-// ─── Création ────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
   try {
@@ -69,7 +68,6 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// ─── Modification ────────────────────────────────────────
 
 export async function PUT(request: NextRequest) {
   try {
@@ -143,7 +141,6 @@ export async function PUT(request: NextRequest) {
     );
   }
 }
-// ─── Suppression ────────────────────────────────────────
 
 export async function DELETE(request: NextRequest) {
   try {

@@ -1,4 +1,3 @@
-// app/api/send-preparation-email/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/db";
 import { Resend } from "resend";

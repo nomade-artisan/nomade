@@ -6,7 +6,6 @@ import type {
   PaginatedResponse,
 } from "./types";
 
-// ─── Liste paginée ────────────────────────────────────
 export async function getOrdersList(
   page = 1,
   pageSize = 10,
@@ -71,7 +70,6 @@ export async function getOrdersList(
   };
 }
 
-// ─── Détail complet ───────────────────────────────────
 export async function getOrderById(id: string): Promise<OrderWithRelations | null> {
   const { data: order, error } = await supabase
     .from("orders")

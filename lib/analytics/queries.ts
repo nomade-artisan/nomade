@@ -1,7 +1,6 @@
 import { supabase } from "@/lib/db";
 import type { GlobalMetrics, ProductPrediction, SalesDataPoint } from "./types";
 
-// ─── Métriques globales (30 jours) ──────────────────
 export async function getGlobalMetrics(): Promise<GlobalMetrics> {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
@@ -35,7 +34,6 @@ export async function getGlobalMetrics(): Promise<GlobalMetrics> {
   };
 }
 
-// ─── Prédictions les plus récentes par produit ──────
 export async function getLatestPredictions(): Promise<ProductPrediction[]> {
   // Sous-requête pour obtenir la dernière date de prédiction par produit
   const { data, error } = await supabase
@@ -110,7 +108,6 @@ export async function getLatestPredictions(): Promise<ProductPrediction[]> {
   }));
 }
 
-// ─── Données de ventes quotidiennes (30 jours) ──────
 export async function getDailySales(): Promise<SalesDataPoint[]> {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
@@ -143,7 +140,6 @@ export async function getDailySales(): Promise<SalesDataPoint[]> {
   return result;
 }
 
-// ─── Alertes générées à partir des prédictions ──────
 export function generateAlerts(predictions: ProductPrediction[]): any[] {
   const alerts: any[] = [];
   for (const p of predictions) {

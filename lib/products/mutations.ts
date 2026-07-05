@@ -1,4 +1,3 @@
-// lib/products/mutations.ts
 import { supabase } from "@/lib/supabase/client";
 import type { CreateProductInput, UpdateProductInput, Product, ProductImage } from "./types";
 
