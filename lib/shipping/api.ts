@@ -11,7 +11,7 @@ export async function generateShippingLabel(input: CreateLabelInput) {
   const { baseUrl } = CARRIERS.sendcloud;
   const headers = { ...getAuthHeaders(), 'Content-Type': 'application/json' };
 
-  // Étape 1 : Créer le colis
+  // Étape 1 : Créer le colis via API v3
   const parcelResponse = await fetch(`${baseUrl}/parcels`, {
     method: 'POST',
     headers,
@@ -26,7 +26,7 @@ export async function generateShippingLabel(input: CreateLabelInput) {
         telephone: input.shipping_address?.phone || '',
         weight: input.weight || 500,
         order_number: input.order_id,
-        request_label: true, // demande immédiate de l'étiquette
+        request_label: true,          // demande immédiate de l’étiquette
       },
     }),
   });
@@ -37,9 +37,13 @@ export async function generateShippingLabel(input: CreateLabelInput) {
   }
 
   const parcel = await parcelResponse.json();
+  // En v3, l’objet retourné peut être directement `parcel.id`, `parcel.tracking_number`, etc.
+  const parcelId = parcel.id;
+  const trackingNumber = parcel.tracking_number;
+  const trackingUrl = parcel.tracking_url;
 
-  // Étape 2 : Récupérer l'URL de l'étiquette
-  const labelResponse = await fetch(`${baseUrl}/parcels/${parcel.parcel.id}/label`, {
+  // Étape 2 : Récupérer l’URL de l’étiquette
+  const labelResponse = await fetch(`${baseUrl}/parcels/${parcelId}/label`, {
     headers: getAuthHeaders(),
   });
 
@@ -48,10 +52,15 @@ export async function generateShippingLabel(input: CreateLabelInput) {
   }
 
   const label = await labelResponse.json();
+  // Selon la version, l’URL peut être dans label.label_printer.url ou label.normal_printer.url
+  const labelUrl =
+    label.label?.label_printer?.url ||
+    label.label?.normal_printer?.url ||
+    '';
 
   return {
-    tracking_number: parcel.parcel.tracking_number,
-    tracking_url: parcel.parcel.tracking_url,
-    label_url: label.label?.label_printer?.url || label.label?.normal_printer?.url || '',
+    tracking_number: trackingNumber,
+    tracking_url: trackingUrl,
+    label_url: labelUrl,
   };
 }
