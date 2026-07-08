@@ -1,4 +1,3 @@
-// app/mentions-legales/page.tsx
 import { Metadata } from "next";
 import MentionsLegalesClient from "./MentionsLegalesClient";
 

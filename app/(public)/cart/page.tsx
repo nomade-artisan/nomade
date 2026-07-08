@@ -1,4 +1,3 @@
-// app/cart/page.tsx
 import { Metadata } from "next";
 import CartClient from "./CartClient";
 

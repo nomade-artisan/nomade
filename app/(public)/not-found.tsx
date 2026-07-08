@@ -1,4 +1,3 @@
-// app/not-found.tsx (à la racine de app/)
 "use client";
 
 import { motion } from "framer-motion";

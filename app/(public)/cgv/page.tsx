@@ -1,4 +1,3 @@
-// app/cgv/page.tsx
 import { Metadata } from "next";
 import CgvClient from "./CgvClient";
 

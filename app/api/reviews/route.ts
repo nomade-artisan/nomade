@@ -1,46 +1,70 @@
-// app/api/reviews/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/db";
+import { getProductReviews, getProductRating, createReview } from "@/lib/products/queries";
 
-export async function GET(req: NextRequest) {
-  const productId = req.nextUrl.searchParams.get("product_id");
-  
-  let query = supabase.from("reviews").select("*").order("created_at", { ascending: false });
-  if (productId) query = query.eq("product_id", productId);
+// GET : récupérer les avis + note d'un produit
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const productId = Number(searchParams.get("productId"));
 
-  const { data, error } = await query;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data);
+    if (!productId) {
+      return NextResponse.json({ error: "productId manquant" }, { status: 400 });
+    }
+
+    const [reviews, ratingData] = await Promise.all([
+      getProductReviews(productId),
+      getProductRating(productId),
+    ]);
+
+    return NextResponse.json({
+      reviews,
+      rating: ratingData.rating,
+      totalReviews: ratingData.reviews,
+      distribution: ratingData.distribution,
+    });
+  } catch (error) {
+    console.error("GET reviews error:", error);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+  }
 }
 
-export async function POST(req: NextRequest) {
-  const { product_id, customer_name, rating, comment } = await req.json();
+// POST : créer un avis
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { product_id, user_name, rating, comment } = body;
 
-  if (!product_id || !customer_name || !rating) {
-    return NextResponse.json({ error: "Champs manquants" }, { status: 400 });
+    if (!product_id || !rating || !comment) {
+      return NextResponse.json(
+        { error: "product_id, rating et comment sont requis" },
+        { status: 400 }
+      );
+    }
+
+    if (rating < 1 || rating > 5) {
+      return NextResponse.json({ error: "La note doit être entre 1 et 5" }, { status: 400 });
+    }
+
+    if (comment.length < 3) {
+      return NextResponse.json(
+        { error: "Le commentaire doit faire au moins 3 caractères" },
+        { status: 400 }
+      );
+    }
+
+    const review = await createReview({
+      product_id,
+      user_name: user_name || "Anonyme",
+      rating,
+      comment,
+    });
+
+    return NextResponse.json({ review }, { status: 201 });
+  } catch (error) {
+    console.error("POST review error:", error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Erreur serveur" },
+      { status: 500 }
+    );
   }
-
-  const { data, error } = await supabase
-    .from("reviews")
-    .insert([{ product_id, customer_name, rating, comment }])
-    .select()
-    .single();
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  // Mettre à jour la note moyenne du produit
-  const { data: reviews } = await supabase
-    .from("reviews")
-    .select("rating")
-    .eq("product_id", product_id);
-
-  if (reviews) {
-    const avgRating = reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length;
-    await supabase
-      .from("products")
-      .update({ rating: Math.round(avgRating * 10) / 10, reviews: reviews.length })
-      .eq("id", product_id);
-  }
-
-  return NextResponse.json(data);
 }

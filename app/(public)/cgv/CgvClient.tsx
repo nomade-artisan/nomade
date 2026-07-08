@@ -1,4 +1,3 @@
-// app/cgv/CgvClient.tsx
 
 "use client";
 
@@ -292,7 +291,6 @@ function CgvClient() {
 
 export default CgvClient;
 
-/* ========================= */
 
 function Section({
   number,

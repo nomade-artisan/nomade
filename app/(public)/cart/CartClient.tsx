@@ -1,4 +1,3 @@
-// app/cart/CartClient.tsx
 
 "use client";
 
@@ -6,6 +5,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/components/CartContext";
+import { trackEvent } from "@/lib/analytics/tracking";
 
 const isMaintenance =
   process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "true";
@@ -28,6 +28,13 @@ function CartClient() {
 
   const handleStripeCheckout = async () => {
     setCheckoutLoading(true);
+    await trackEvent("checkout_started", {
+      metadata: {
+        cart_items: cart.length,
+        subtotal,
+        total,
+      },
+    });
     const res = await fetch("/api/checkout", {
       method: "POST",
       headers: {
@@ -310,7 +317,13 @@ function CartClient() {
                       {/* REMOVE */}
 
                       <button
-                        onClick={() => removeFromCart(item.id)}
+                       onClick={() => {
+                        trackEvent("remove_from_cart", {
+                          product_id: String(item.id),
+                        });
+
+                        removeFromCart(item.id);
+                      }}
                         className="text-xs text-stone-400 hover:text-red-500 transition-colors font-light mt-5"
                       >
                         Supprimer

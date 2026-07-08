@@ -1,4 +1,3 @@
-// app/livraison/page.tsx
 import { Metadata } from "next";
 import LivraisonClient from "./LivraisonClient";
 

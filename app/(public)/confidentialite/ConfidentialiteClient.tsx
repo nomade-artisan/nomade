@@ -1,4 +1,3 @@
-// app/confidentialite/ConfidentialiteClient.tsx
 
 "use client";
 
@@ -442,7 +441,6 @@ function ConfidentialiteClient() {
 
 export default ConfidentialiteClient;
 
-/* ========================= */
 
 function Section({
   number,
@@ -501,7 +499,6 @@ function Section({
   );
 }
 
-/* ========================= */
 
 function MiniCard({
   title,
@@ -525,7 +522,6 @@ function MiniCard({
   );
 }
 
-/* ========================= */
 
 function Line({
   left,

@@ -5,6 +5,8 @@ import Navbar from "@/components/Navbar";
 import MaintenanceBanner from "@/components/MaintenanceBanner";
 import { Analytics } from "@vercel/analytics/next";
 import Footer from "@/components/Footer";
+import CookieConsent from "@/components/CookieConsent";
+import AnalyticsTracker from "@/components/AnalyticsTracker";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.nomade-artisan.fr"),
@@ -70,6 +72,8 @@ export default function PublicLayout({
   return (
     <div className="flex flex-col min-h-screen">
       <Analytics />
+      <AnalyticsTracker />
+      <CookieConsent/>
       <Navbar />
       <MaintenanceBanner />
       <main className="flex-1">{children}</main>

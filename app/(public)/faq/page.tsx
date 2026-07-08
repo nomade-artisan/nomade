@@ -1,4 +1,3 @@
-// app/faq/page.tsx
 import { Metadata } from "next";
 import FaqClient from "./FaqClient";
 

@@ -1,4 +1,3 @@
-// app/HomeClient.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -6,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion, useScroll, useTransform } from "framer-motion";
 import ProductCard from "@/components/ProductCard";
+
 import { supabase } from "@/lib/db";
 
 interface Product {
@@ -31,24 +31,27 @@ function HomeClient() {
   const [isVisible, setIsVisible] = useState<Record<string, boolean>>({});
   const [products, setProducts] = useState<Product[]>([]);
 
-  useEffect(() => {
-    fetch("/api/products")
-      .then((res) => res.json())
-      .then((data) => {
-        const formatted = data.map((p: any) => ({
-          id: p.id,
-          name: p.name,
-          price: typeof p.price === "string" ? parseFloat(p.price) : p.price,
-          images: p.images || [],
-          category: p.category || "",
-          isNew: p.is_new || false,
-          rating: typeof p.rating === "string" ? parseFloat(p.rating) : (p.rating || 0),
-          reviews: p.reviews || 0,
-        }));
-        setProducts(formatted);
-      })
-      .catch(console.error);
-  }, []);
+ useEffect(() => {
+  fetch("/api/products?pageSize=50&status=active")
+    .then((res) => res.json())
+    .then((result) => {
+      const products = result.data || result;
+      const formatted = products.map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        price: typeof p.price === "string" ? parseFloat(p.price) : p.price,
+        images: p.cover_image ? [p.cover_image] : [],
+        category: p.category_name || "",
+        isNew: p.is_new || false,
+        rating: 0,
+        reviews: 0,
+      }));
+      setProducts(formatted);
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+}, []);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -86,7 +89,7 @@ function HomeClient() {
   const values = [
     {
       title: "Fabriqué à la main, chez nous",
-      text: "Chaque pièce est coupée, cousue et finie dans notre atelier. Pas d'usine, pas de chaîne. Juste le temps qu'il faut pour que ce soit parfait.",
+      text: "Chaque pièce est coupée, cousue et finie dans notre atelier. Juste le temps qu'il faut pour que ce soit parfait.",
       img: homeImage("valeur-artisanat.webp"),
     },
     {
@@ -96,7 +99,7 @@ function HomeClient() {
     },
     {
       title: "L'essentiel, sans superflu",
-      text: "Pas de logo criard. Pas de détail inutile. Un sac qui fait ce qu'on lui demande : porter vos affaires, bien, longtemps.",
+      text: "Un sac qui fait ce qu'on lui demande : porter vos affaires, bien, longtemps.",
       img: homeImage("valeur-essentiel.webp"),
     },
   ];
@@ -114,9 +117,8 @@ function HomeClient() {
 
   return (
     <div className="bg-stone-50 text-stone-900 overflow-hidden">
-  {/* ================= HERO ================= */}
 <section className="relative min-h-dvh overflow-hidden">
-  {/* Image de fond (visible en premier) */}
+  {/* Image de fond */}
   <motion.div style={{ y: heroY }} className="absolute inset-0">
     <Image
       src={homeImage("hero.webp")}
@@ -128,7 +130,7 @@ function HomeClient() {
     />
   </motion.div>
 
-  {/* Vidéo (invisible au début, apparaît après 3 secondes) */}
+  {/* Vidéo en fond */}
   <motion.div
     style={{ y: heroY }}
     className="absolute inset-0 opacity-0 transition-opacity duration-1000"
@@ -146,7 +148,7 @@ function HomeClient() {
       if (wrapper) wrapper.classList.add("opacity-100");
     }, 2000);
   }}
-  // Fallback : si onCanPlay n'est pas déclenché, afficher après 5s max
+  // Affiche la vidéo après 5s si nécessaire
   onLoadedMetadata={() => {
     setTimeout(() => {
       const wrapper = document.getElementById("hero-video-wrapper");
@@ -164,7 +166,6 @@ function HomeClient() {
 
   <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-black/70" />
 
-  {/* Contenu texte + boutons */}
   <div className="relative min-h-dvh flex flex-col justify-center px-6 md:px-10 pt-20 md:pt-24">
     <div className="max-w-5xl w-full mx-auto text-center">
       {/* Tag */}
@@ -194,7 +195,7 @@ function HomeClient() {
         transition={{ delay: 0.4, duration: 0.8 }}
         className="text-white text-2xl sm:text-3xl md:text-4xl lg:text-5xl leading-tight tracking-[-0.01em] font-extralight mb-3 max-w-3xl mx-auto"
       >
-        Le sac qui vous suivra partout, pendant des années.
+        Le sac qui vous suivra partout, pendant des années
       </motion.p>
 
       {/* Sous‑texte secondaire */}
@@ -204,7 +205,7 @@ function HomeClient() {
         transition={{ delay: 0.5, duration: 0.8 }}
         className="text-white/60 text-base sm:text-lg md:text-xl leading-relaxed font-extralight mb-8 max-w-lg mx-auto italic"
       >
-        Fabrication artisanale, livraison offerte dès 100&nbsp;€.
+        Fabrication artisanale, livraison offerte dès 100&nbsp;€
       </motion.p>
 
       {/* Ligne décorative */}
@@ -239,7 +240,6 @@ function HomeClient() {
     </div>
   </div>
 </section>
-      {/* ================= INTRO ================= */}
       <section className="py-24 md:py-36 bg-stone-50">
         <div className="max-w-6xl mx-auto px-6 md:px-10">
           <div className="grid md:grid-cols-2 gap-16 md:gap-24 items-center">
@@ -250,11 +250,11 @@ function HomeClient() {
               transition={{ duration: 0.8 }}
             >
               <p className="text-stone-400 text-xs tracking-[0.3em] uppercase mb-6">
-                La différence Nomade
+                La différence
               </p>
 
               <h2 className="text-3xl md:text-5xl font-light mb-8 leading-tight tracking-wide">
-                Un sac qui ne ressemble qu'à vous.
+                Un sac qui ne ressemble qu'à vous
               </h2>
 
               <div className="space-y-5 text-stone-500 text-lg leading-relaxed font-light">
@@ -303,7 +303,6 @@ function HomeClient() {
         </div>
       </section>
 
-      {/* ================= CATEGORIES ================= */}
       <section className="pb-24 md:pb-36">
         <div className="max-w-7xl mx-auto px-6 md:px-10">
           <motion.div
@@ -319,7 +318,7 @@ function HomeClient() {
             <h2 className="text-3xl md:text-4xl font-light tracking-wide leading-tight">
               quatre collections,
               <br />
-              un même savoir-faire.
+              un même savoir-faire
             </h2>
           </motion.div>
 
@@ -358,7 +357,6 @@ function HomeClient() {
         </div>
       </section>
 
-      {/* ================= NEW PRODUCTS ================= */}
       <section id="new-products" data-section className="pb-24 md:pb-36">
         <div className="max-w-7xl mx-auto px-6 md:px-10">
           <motion.div
@@ -373,7 +371,7 @@ function HomeClient() {
               </p>
 
               <h2 className="text-3xl md:text-4xl font-light tracking-wide leading-tight max-w-2xl mx-auto">
-                Ce qui vient de sortir de l'atelier.
+                Ce qui vient de sortir de l'atelier
               </h2>
             </div>
           </motion.div>
@@ -403,7 +401,6 @@ function HomeClient() {
         </div>
       </section>
 
-      {/* ================= FULL IMAGE ================= */}
       <section className="relative h-[70vh] overflow-hidden">
         <Image
           src={homeImage("silence.webp")}
@@ -430,7 +427,6 @@ function HomeClient() {
         </div>
       </section>
 
-      {/* ================= VALUES ================= */}
       <section id="values" data-section className="py-24 md:py-36 bg-white">
         <div className="max-w-6xl mx-auto px-6 md:px-10">
           <motion.div
@@ -446,7 +442,7 @@ function HomeClient() {
             <h2 className="text-3xl md:text-4xl font-light tracking-wide leading-tight">
               La qualité que vous méritez,
               <br />
-              au prix juste.
+              au prix juste
             </h2>
           </motion.div>
 
@@ -483,7 +479,6 @@ function HomeClient() {
         </div>
       </section>
 
-      {/* ================= BEST SELLERS ================= */}
       <section id="best-sellers" data-section className="py-24 md:py-36 bg-stone-50">
         <div className="max-w-7xl mx-auto px-6 md:px-10">
           <motion.div
@@ -497,7 +492,7 @@ function HomeClient() {
             </p>
 
             <h2 className="text-3xl md:text-4xl font-light tracking-wide leading-tight max-w-2xl mx-auto">
-              Les modèles qui reviennent le plus souvent.
+              Les modèles qui reviennent le plus souvent
             </h2>
           </motion.div>
 
@@ -526,7 +521,6 @@ function HomeClient() {
         </div>
       </section>
 
-      {/* ================= TESTIMONIALS ================= */}
       <section className="py-24 md:py-36 bg-white">
         <div className="max-w-5xl mx-auto px-6 md:px-10 text-center">
           <motion.p
@@ -561,7 +555,6 @@ function HomeClient() {
         </div>
       </section>
 
-      {/* ================= FINAL ================= */}
       <section className="relative py-28 md:py-40 overflow-hidden">
         <Image
           src={homeImage("hommage.webp")}
@@ -586,11 +579,11 @@ function HomeClient() {
               <h2 className="text-4xl md:text-6xl font-light mb-8 leading-tight tracking-wide">
                 Un sac fait main,
                 <br />
-                livré chez vous.
+                livré chez vous
               </h2>
 
               <p className="text-white/60 text-lg md:text-xl leading-relaxed font-light mb-12 max-w-2xl mx-auto">
-                Livraison offerte dès 100 €. Retours gratuits sous 30 jours.
+                Livraison offerte dès 100 €. Retours gratuits sous 30 jours
               </p>
 
               <Link

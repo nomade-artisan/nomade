@@ -1,238 +1,267 @@
-// components/Reviews.tsx
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useCallback } from "react";
 
 interface Review {
   id: number;
-  product_id: number;
-  customer_name: string;
+  user_name: string;
   rating: number;
   comment: string;
+  is_verified: boolean;
   created_at: string;
 }
 
-const PAGE_SIZE = 5;
+interface ReviewsProps {
+  productId: number | string;
+}
 
-function Reviews({ productId }: { productId: number | string }) {
+export default function Reviews({ productId }: ReviewsProps) {
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [rating, setRating] = useState(0);
+  const [totalReviews, setTotalReviews] = useState(0);
+  const [distribution, setDistribution] = useState<Record<number, number>>({});
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Formulaire
   const [showForm, setShowForm] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [form, setForm] = useState({ name: "", rating: 5, comment: "" });
-  const [loading, setLoading] = useState(false);
-  const [sortBy, setSortBy] = useState<"recent" | "best" | "worst">("recent");
-  const [page, setPage] = useState(1);
+  const [newRating, setNewRating] = useState(5);
+  const [newComment, setNewComment] = useState("");
+  const [newName, setNewName] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+
+const fetchReviews = useCallback(async () => {
+  setIsLoading(true);
+  try {
+    const res = await fetch(`/api/reviews?productId=${productId}`);
+    const data = await res.json();
+    setReviews(data.reviews || []);
+    setRating(data.rating || 0);
+    setTotalReviews(data.totalReviews || 0);
+    setDistribution(data.distribution || {});
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setIsLoading(false);
+  }
+}, [productId]);
 
   useEffect(() => {
-    fetch(`/api/reviews?product_id=${productId}`)
-      .then((res) => res.json())
-      .then((data) => setReviews(data || []));
-  }, [productId, submitted]);
+    fetchReviews();
+  }, [fetchReviews]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.name.trim()) return;
-    setLoading(true);
+    setError("");
+    setIsSubmitting(true);
 
-    await fetch("/api/reviews", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        product_id: productId,
-        customer_name: form.name,
-        rating: form.rating,
-        comment: form.comment,
-      }),
-    });
+    try {
+      const res = await fetch("/api/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          product_id: productId,
+          user_name: newName || "Anonyme",
+          rating: newRating,
+          comment: newComment,
+        }),
+      });
 
-    setForm({ name: "", rating: 5, comment: "" });
-    setSubmitted(!submitted);
-    setShowForm(false);
-    setPage(1);
-    setLoading(false);
-  };
+      const data = await res.json();
 
-  // Tri
-  const sortedReviews = [...reviews].sort((a, b) => {
-    if (sortBy === "best") return b.rating - a.rating;
-    if (sortBy === "worst") return a.rating - b.rating;
-    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-  });
+      if (!res.ok) {
+        throw new Error(data.error || "Erreur");
+      }
 
-  // Pagination
-  const totalPages = Math.ceil(sortedReviews.length / PAGE_SIZE);
-  const paginatedReviews = sortedReviews.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+      setSuccess(true);
+      setNewComment("");
+      setNewName("");
+      setNewRating(5);
+      setShowForm(false);
 
-  // Stats
-  const avgRating = reviews.length > 0
-    ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)
-    : null;
+      // Rafraîchir les avis
+      await fetchReviews();
 
-  const distribution = [5, 4, 3, 2, 1].map((star) => ({
-    star,
-    count: reviews.filter((r) => r.rating === star).length,
-    pct: reviews.length > 0
-      ? Math.round((reviews.filter((r) => r.rating === star).length / reviews.length) * 100)
-      : 0,
-  }));
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-12">
+        <div className="w-6 h-6 border-2 border-stone-300 border-t-stone-700 rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <div className="grid md:grid-cols-5 gap-8">
-      {/* Colonne gauche : résumé */}
-      <div className="md:col-span-2 space-y-5">
-        {avgRating ? (
-          <div className="bg-white border border-stone-100 rounded-xl p-5">
-            <p className="text-4xl font-light text-stone-800 text-center">{avgRating}</p>
-            <div className="flex justify-center gap-0.5 my-1">
+    <div className="max-w-2xl mx-auto">
+      {/* Note globale */}
+      <div className="flex items-center gap-6 mb-10">
+        <div className="text-center">
+          <div className="text-5xl font-light">{rating || "—"}</div>
+          <div className="flex gap-0.5 mt-2 justify-center">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <span
+                key={star}
+                className={`text-sm ${star <= Math.round(rating) ? "text-stone-900" : "text-stone-300"}`}
+              >
+                ●
+              </span>
+            ))}
+          </div>
+          <div className="text-xs text-stone-400 mt-1">{totalReviews} avis</div>
+        </div>
+
+        {/* Distribution */}
+        <div className="flex-1 space-y-1">
+          {[5, 4, 3, 2, 1].map((star) => {
+            const count = distribution[star] || 0;
+            const percent = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
+            return (
+              <div key={star} className="flex items-center gap-2 text-xs text-stone-400">
+                <span className="w-3">{star}</span>
+                <div className="flex-1 h-1.5 bg-stone-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-stone-700 rounded-full transition-all"
+                    style={{ width: `${percent}%` }}
+                  />
+                </div>
+                <span className="w-6 text-right">{count}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Bouton écrire un avis */}
+      {!showForm && (
+        <div className="text-center mb-10">
+          <button
+            onClick={() => setShowForm(true)}
+            className="text-sm text-stone-500 hover:text-stone-900 underline underline-offset-4 transition-colors"
+          >
+            Écrire un avis
+          </button>
+        </div>
+      )}
+
+      {/* Message succès */}
+      {success && (
+        <div className="bg-emerald-50 text-emerald-700 px-4 py-3 rounded-lg text-sm text-center mb-6">
+          Merci ! Votre avis a été publié.
+        </div>
+      )}
+
+      {/* Formulaire */}
+      {showForm && (
+        <form onSubmit={handleSubmit} className="bg-stone-50 rounded-2xl p-6 mb-10 space-y-4">
+          <h3 className="text-lg font-light">Votre avis</h3>
+
+          {error && (
+            <div className="bg-red-50 text-red-600 px-3 py-2 rounded text-sm">{error}</div>
+          )}
+
+          {/* Nom */}
+          <input
+            type="text"
+            placeholder="Votre prénom (optionnel)"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            className="w-full border border-stone-200 rounded-lg px-4 py-2 text-sm bg-white"
+          />
+
+          {/* Note */}
+          <div>
+            <p className="text-sm text-stone-500 mb-2">Note</p>
+            <div className="flex gap-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setNewRating(star)}
+                  className={`text-2xl transition-colors ${
+                    star <= newRating ? "text-stone-900" : "text-stone-300"
+                  }`}
+                >
+                  ★
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Commentaire */}
+          <textarea
+            placeholder="Partagez votre expérience..."
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            rows={4}
+            required
+            minLength={3}
+            className="w-full border border-stone-200 rounded-lg px-4 py-2 text-sm bg-white resize-none"
+          />
+
+          <div className="flex gap-3 justify-end">
+            <button
+              type="button"
+              onClick={() => setShowForm(false)}
+              className="px-4 py-2 text-sm text-stone-500 hover:text-stone-700"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting || newComment.length < 3}
+              className="bg-stone-900 text-white px-6 py-2 rounded-full text-sm disabled:opacity-50"
+            >
+              {isSubmitting ? "Envoi..." : "Publier"}
+            </button>
+          </div>
+        </form>
+      )}
+
+      {/* Liste des avis */}
+      {reviews.length === 0 && !showForm && (
+        <p className="text-center text-stone-400 text-sm py-8">
+          Aucun avis pour le moment. Soyez le premier !
+        </p>
+      )}
+
+      <div className="space-y-6">
+        {reviews.map((review) => (
+          <div key={review.id} className="border-b border-stone-100 pb-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-sm">{review.user_name}</span>
+                {review.is_verified && (
+                  <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
+                    Achat vérifié
+                  </span>
+                )}
+              </div>
+              <span className="text-xs text-stone-400">
+                {new Date(review.created_at).toLocaleDateString("fr-FR")}
+              </span>
+            </div>
+            <div className="flex gap-0.5 mb-2">
               {[1, 2, 3, 4, 5].map((star) => (
                 <span
                   key={star}
-                  className={`text-sm ${star <= Math.round(Number(avgRating)) ? "text-yellow-500" : "text-stone-200"}`}
+                  className={`text-xs ${star <= review.rating ? "text-stone-900" : "text-stone-300"}`}
                 >
-                  ★
+                  ●
                 </span>
               ))}
             </div>
-            <p className="text-xs text-stone-400 font-light text-center">{reviews.length} avis</p>
-
-            {/* Distribution */}
-            <div className="mt-4 space-y-1.5">
-              {distribution.map((d) => (
-                <div key={d.star} className="flex items-center gap-2 text-xs">
-                  <span className="w-3 text-stone-400">{d.star}</span>
-                  <span className="text-yellow-500">★</span>
-                  <div className="flex-1 h-1.5 bg-stone-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-yellow-500 rounded-full transition-all" style={{ width: `${d.pct}%` }} />
-                  </div>
-                  <span className="w-6 text-right text-stone-400">{d.count}</span>
-                </div>
-              ))}
-            </div>
+            <p className="text-sm text-stone-600 leading-relaxed">{review.comment}</p>
           </div>
-        ) : (
-          <div className="bg-white border border-stone-100 rounded-xl p-5 text-center">
-            <p className="text-sm text-stone-400 font-light">Aucun avis pour le moment.</p>
-          </div>
-        )}
-
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="w-full text-sm border border-stone-200 rounded-xl py-3 px-4 text-stone-500 hover:text-stone-800 hover:border-stone-400 font-light transition-colors"
-        >
-          {showForm ? "Annuler" : "Écrire un avis"}
-        </button>
-
-        <AnimatePresence>
-          {showForm && (
-            <motion.form
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden"
-              onSubmit={handleSubmit}
-            >
-              <div className="space-y-3 bg-white border border-stone-100 rounded-xl p-4">
-                <input
-                  type="text"
-                  placeholder="Votre prénom"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm font-light focus:outline-none focus:border-stone-400"
-                  required
-                />
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-stone-400">Note :</span>
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      type="button"
-                      onClick={() => setForm({ ...form, rating: star })}
-                      className={`text-lg transition-colors ${star <= form.rating ? "text-yellow-500" : "text-stone-300 hover:text-yellow-400"}`}
-                    >
-                      ★
-                    </button>
-                  ))}
-                </div>
-                <textarea
-                  placeholder="Votre avis (optionnel)"
-                  value={form.comment}
-                  onChange={(e) => setForm({ ...form, comment: e.target.value })}
-                  rows={2}
-                  className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm font-light focus:outline-none focus:border-stone-400 resize-none"
-                />
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full text-sm bg-stone-800 text-white py-2 rounded-full font-light hover:bg-stone-700 disabled:opacity-50 transition-colors"
-                >
-                  {loading ? "..." : "Publier"}
-                </button>
-              </div>
-            </motion.form>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Colonne droite : liste */}
-      <div className="md:col-span-3 space-y-4">
-        {/* Tri */}
-        {reviews.length > 1 && (
-          <div className="flex gap-2">
-            {[
-              { key: "recent", label: "Récents" },
-              { key: "best", label: "Meilleurs" },
-              { key: "worst", label: "Moins bons" },
-            ].map((opt) => (
-              <button
-                key={opt.key}
-                onClick={() => { setSortBy(opt.key as any); setPage(1); }}
-                className={`text-xs px-3 py-1.5 rounded-full border font-light transition-colors ${sortBy === opt.key ? "bg-stone-800 text-white border-stone-800" : "bg-white text-stone-500 border-stone-200 hover:border-stone-400"}`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {paginatedReviews.length === 0 ? (
-          <p className="text-stone-400 text-sm font-light text-center py-8">
-            Soyez le premier à donner votre avis.
-          </p>
-        ) : (
-          paginatedReviews.map((review) => (
-            <div key={review.id} className="bg-white border border-stone-100 rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-1.5">
-                <span className="text-sm font-medium text-stone-700">{review.customer_name}</span>
-                <div className="flex gap-0.5">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <span key={star} className={`text-[11px] ${star <= review.rating ? "text-yellow-500" : "text-stone-200"}`}>★</span>
-                  ))}
-                </div>
-                <span className="text-[10px] text-stone-300 ml-auto">
-                  {new Date(review.created_at).toLocaleDateString("fr-FR")}
-                </span>
-              </div>
-              {review.comment && (
-                <p className="text-sm text-stone-500 font-light leading-relaxed">{review.comment}</p>
-              )}
-            </div>
-          ))
-        )}
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex justify-center items-center gap-3 pt-2">
-            <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page <= 1}
-              className="text-xs text-stone-400 hover:text-stone-800 disabled:opacity-30">←</button>
-            <span className="text-xs text-stone-400">{page} / {totalPages}</span>
-            <button onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page >= totalPages}
-              className="text-xs text-stone-400 hover:text-stone-800 disabled:opacity-30">→</button>
-          </div>
-        )}
+        ))}
       </div>
     </div>
   );
 }
-
-export default Reviews;

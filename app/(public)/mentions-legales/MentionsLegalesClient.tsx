@@ -1,4 +1,3 @@
-// app/mentions-legales/MentionsLegalesClient.tsx
 
 "use client";
 
@@ -257,7 +256,6 @@ function MentionsLegalesClient() {
 
 export default MentionsLegalesClient;
 
-/* ========================= */
 
 function LegalBlock({
   title,
@@ -294,7 +292,6 @@ function LegalBlock({
   );
 }
 
-/* ========================= */
 
 function Info({
   label,

@@ -1,4 +1,3 @@
-// app/histoire/page.tsx
 import { Metadata } from "next";
 import HistoireClient from "./HistoireClient";
 

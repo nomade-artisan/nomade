@@ -1,0 +1,15 @@
+name: Build Analytics Metrics
+
+on:
+  schedule:
+    - cron: "0 1 * * *"
+  workflow_dispatch:
+
+jobs:
+  build-metrics:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger analytics build
+        run: |
+          curl -X GET https://www.preview.nomade-artisan.fr/api/analytics/build-metrics
