@@ -1,6 +1,6 @@
 
 import ProductForm from "@/components/admin/products/ProductForm";
-import { getCategories } from "@/lib/shipping/categories/queries";
+import { getCategories } from "@/lib/categories/queries";
 
 export default async function NewProductPage() {
   const categories =

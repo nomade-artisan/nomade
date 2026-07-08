@@ -16,7 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import type { Category } from "@/lib/shipping/categories/types";
+import type { Category } from "@/lib/categories/types";
 
 interface Props {
   categories: Category[];

@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { generateCategorySlug } from "@/lib/shipping/categories/queries";
-import type { Category, CategoryFormState } from "@/lib/shipping/categories/types";
+import { generateCategorySlug } from "@/lib/categories/queries";
+import type { Category, CategoryFormState } from "@/lib/categories/types";
 
 interface Props {
   initialData?: Category;

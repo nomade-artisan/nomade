@@ -1,5 +1,5 @@
 import React from "react";
-import { getCategoryById } from "@/lib/shipping/categories/queries";
+import { getCategoryById } from "@/lib/categories/queries";
 import { notFound } from "next/navigation";
 import CategoryForm from "@/components/admin/categories/CategoryForm";
 
