@@ -1,3 +1,4 @@
+//lib/orders/types.ts
 export type OrderStatus = 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled' | 'returned';
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
@@ -52,10 +53,25 @@ export interface OrderTracking {
   created_at: string;
 }
 
+export interface OrderShipment {
+  id: string;
+  order_id: string;
+  shipping_order_id: string;
+  shipment_id?: string | null;
+  label_url?: string | null;
+  tracking_number?: string | null;
+  tracking_url?: string | null;
+  status?: string | null;
+  carrier?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface OrderWithRelations extends Order {
   customer: { id: string; email: string; first_name: string; last_name: string } | null;
   items: OrderItem[];
   tracking: OrderTracking[];
+  shipment?: OrderShipment | null;
 }
 
 export interface OrderListItem {

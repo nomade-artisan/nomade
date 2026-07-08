@@ -33,13 +33,6 @@ import { toast } from "sonner";
 import type { OrderWithRelations, OrderStatus } from "@/lib/orders/types";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS } from "@/lib/orders/types";
 
-interface OrderWithShipping extends OrderWithRelations {
-  tracking_number?: string;
-  tracking_url?: string;
-  label_url?: string;
-  carrier?: string;
-}
-
 const CARRIERS: Record<string, string> = {
   colissimo: "Colissimo",
   mondialrelay: "Mondial Relay",
@@ -59,7 +52,7 @@ const NEXT_STATUS: Record<
   returned: { status: "pending", label: "Réactiver", icon: Undo2 },
 };
 
-export default function OrderDetail({ order }: { order: OrderWithShipping }) {
+export default function OrderDetail({ order }: { order: OrderWithRelations }) {
   const router = useRouter();
   const [isUpdating, setIsUpdating] = useState(false);
   const [comment, setComment] = useState("");
@@ -76,12 +69,12 @@ export default function OrderDetail({ order }: { order: OrderWithShipping }) {
     labelUrl: string;
   } | null>(null);
 
-  const hasLabel = !!(order.label_url || labelData?.labelUrl);
-  const labelUrl = labelData?.labelUrl ?? order.label_url;
-  const trackingUrl = labelData?.trackingUrl ?? order.tracking_url;
-  const trackingNumber = labelData?.trackingNumber ?? order.tracking_number;
-  const displayCarrier = order.carrier
-    ? CARRIERS[order.carrier] ?? order.carrier
+  const hasLabel = !!(order.shipment?.label_url || labelData?.labelUrl);
+  const labelUrl = labelData?.labelUrl ?? order.shipment?.label_url;
+  const trackingUrl = labelData?.trackingUrl ?? order.shipment?.tracking_url;
+  const trackingNumber = labelData?.trackingNumber ?? order.shipment?.tracking_number;
+  const displayCarrier = order.shipment?.carrier
+    ? CARRIERS[order.shipment.carrier] ?? order.shipment.carrier
     : null;
 
   async function handleStatusChange(newStatus: OrderStatus) {

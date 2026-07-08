@@ -89,5 +89,18 @@ export async function getOrderById(id: string): Promise<OrderWithRelations | nul
     return null;
   }
 
-  return order as unknown as OrderWithRelations;
+  const { data: shipment, error: shipmentError } = await supabase
+    .from("shipments")
+    .select("*")
+    .eq("order_id", id)
+    .maybeSingle();
+
+  if (shipmentError) {
+    console.error("Error fetching shipment:", shipmentError);
+  }
+
+  return {
+    ...(order as unknown as OrderWithRelations),
+    shipment: shipment ?? null,
+  };
 }
