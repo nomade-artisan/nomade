@@ -1,4 +1,4 @@
-import { getCategories } from "@/lib/categories/queries";
+import { getCategories } from "@/lib/shipping/categories/queries";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import Link from "next/link";

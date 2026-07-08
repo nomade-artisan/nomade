@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCategories } from "@/lib/categories/queries";
-import { createCategory, updateCategory, deleteCategory } from "@/lib/categories/mutations";
+import { getCategories } from "@/lib/shipping/categories/queries";
+import { createCategory, updateCategory, deleteCategory } from "@/lib/shipping/categories/mutations";
 import { revalidatePath } from "next/cache";
 
 export async function GET() {
