@@ -3,6 +3,10 @@ import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { sendOrderPreparingEmail } from "@/lib/email/order-preparing";
+import { sendOrderShippedEmail } from "@/lib/email/order-shipped";
+import { sendOrderInTransitEmail } from "@/lib/email/order-in-transit";
+import { sendOrderDeliveredEmail } from "@/lib/email/order-delivered";
 
 function verifySignature(
     body: string,
@@ -157,55 +161,59 @@ async function handleTrackingChanged(payload: any) {
     `Changement de statut : ${previousStatus} -> ${tracking.status}`
   );
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_BASE_URL ??
-    process.env.VERCEL_PROJECT_PRODUCTION_URL
+  const order = await supabaseAdmin
+    .from("orders")
+    .select("*")
+    .eq("id", shipment.order_id)
+    .single();
 
-  let endpoint: string | null = null;
-
-  switch (tracking.status) {
-    case "ANNOUNCED":
-      endpoint = "/api/email/order-preparing";
-      break;
-
-    case "SHIPPED":
-      endpoint = "/api/email/order-shipped";
-      break;
-
-    case "IN_TRANSIT":
-      endpoint = "/api/email/order-in-transit";
-      break;
-
-    case "DELIVERED":
-      endpoint = "/api/email/order-delivered";
-      break;
-  }
-
-  if (!endpoint) {
-    console.log("Aucun email à envoyer.");
+  if (order.error || !order.data) {
+    console.error("Commande introuvable pour envoi email", order.error);
     return;
   }
 
-  try {
-    const response = await fetch(`${baseUrl}${endpoint}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        orderId: shipment.order_id,
-      }),
-    });
+  const address = order.data.shipping_address;
+  const customerName = `${address.firstName} ${address.lastName}`;
+  const orderNumber = order.data.order_number;
 
-    if (!response.ok) {
-      console.error(
-        "Erreur envoi email",
-        await response.text()
-      );
-    } else {
-      console.log("Email envoyé :", endpoint);
+  try {
+    switch (tracking.status) {
+      case "ANNOUNCED":
+        await sendOrderPreparingEmail({
+          to: address.email,
+          customerName,
+          orderNumber,
+        });
+        break;
+      case "SHIPPED":
+        await sendOrderShippedEmail({
+          to: address.email,
+          customerName,
+          orderNumber,
+          carrier: shipment.carrier,
+          trackingNumber: tracking.trackingNumber,
+          trackingUrl: tracking.packageTrackingUrl,
+        });
+        break;
+      case "IN_TRANSIT":
+        await sendOrderInTransitEmail({
+          to: address.email,
+          customerName,
+          orderNumber,
+          trackingUrl: tracking.packageTrackingUrl,
+        });
+        break;
+      case "DELIVERED":
+        await sendOrderDeliveredEmail({
+          to: address.email,
+          customerName,
+          orderNumber,
+        });
+        break;
     }
+
+    console.log("Email de suivi envoyé pour le statut :", tracking.status);
   } catch (err) {
-    console.error("Erreur appel API email :", err);
+    console.error("Erreur envoi email de suivi :", err);
   }
 }
