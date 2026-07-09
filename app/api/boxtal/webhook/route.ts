@@ -159,8 +159,7 @@ async function handleTrackingChanged(payload: any) {
 
   const baseUrl =
     process.env.NEXT_PUBLIC_BASE_URL ??
-    process.env.VERCEL_PROJECT_PRODUCTION_URL ??
-    "http://localhost:3000";
+    process.env.VERCEL_PROJECT_PRODUCTION_URL
 
   let endpoint: string | null = null;
 

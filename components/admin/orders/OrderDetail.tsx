@@ -93,10 +93,15 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
       if (!res.ok) throw new Error("Erreur");
 
       if (newStatus === "shipped") {
-        await fetch("/api/send-shipping-email", {
+        await fetch("/api/shipping/send-shipping-email", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ orderId: order.id }),
+          body: JSON.stringify({
+            orderId: order.id,
+            trackingNumber: order.shipment?.tracking_number,
+            trackingUrl: order.shipment?.tracking_url,
+            carrier: order.shipment?.carrier,
+          }),
         });
       }
 

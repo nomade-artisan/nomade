@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { supabase } from "@/lib/db";
 import { Resend } from "resend";
+import { sendOrderConfirmedEmail } from "@/lib/email/order-confirmed";
 import Stripe from "stripe";
 import crypto from "crypto";
 import { revalidatePath } from "next/cache";
@@ -270,102 +271,11 @@ export async function POST(req: NextRequest) {
 
     // Email client
     if (customerEmail) {
-    await resend.emails.send({
-      from: `Nomade <${NOREPLY_EMAIL}>`,
-      to: customerEmail,
-      subject: "Votre commande Nomade est confirmée",
-      html: `
-        <div style="font-family: Inter, system-ui, sans-serif; max-width: 560px; margin: auto; padding: 36px; background: #fafaf9; border-radius: 16px; color: #1c1917;">
-
-          <h2 style="font-size: 26px; font-weight: 500; margin: 0 0 12px;">
-            Merci pour votre confiance !
-          </h2>
-
-          <p style="font-size: 15px; color: #57534e; line-height: 1.7; margin-bottom: 24px;">
-            Bonjour ${customerName || "à vous"},
-            <br><br>
-            Nous sommes ravis de vous compter parmi les clients <strong>Nomade</strong>.
-            Votre commande a bien été reçue et notre atelier va désormais préparer votre article avec le plus grand soin.
-          </p>
-
-          <div style="background: #f5f5f4; border-radius: 12px; padding: 16px; margin-bottom: 24px;">
-            <p style="margin: 0; font-size: 13px; color: #78716c;">
-              Numéro de commande
-            </p>
-            <p style="margin: 6px 0 0; font-size: 18px; font-weight: 600; color: #1c1917;">
-              ${orderNumber}
-            </p>
-          </div>
-
-          <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
-            <tbody>
-              ${itemsList}
-            </tbody>
-          </table>
-
-          <div style="background: #f5f5f4; border-radius: 12px; padding: 16px; margin-bottom: 24px;">
-            <p style="margin: 0 0 6px; font-size: 14px; font-weight: 600; color: #1c1917;">
-              Adresse de livraison
-            </p>
-
-            <p style="margin: 0; font-size: 14px; color: #57534e; line-height: 1.6;">
-              📍 ${shippingAddress}
-            </p>
-
-            <p style="margin: 10px 0 0; font-size: 13px; color: #78716c;">
-              Livraison estimée : <strong>3 à 5 jours ouvrés</strong>
-            </p>
-          </div>
-
-          <div style="border-top: 1px solid #e7e5e4; padding-top: 18px; margin-bottom: 28px;">
-            <p style="margin: 0; text-align: right; font-size: 18px;">
-              Total : <strong>${totalAmount.toFixed(2)} €</strong>
-            </p>
-          </div>
-
-          <div style="text-align: center; margin-bottom: 32px;">
-            <a
-              href="${invoiceUrl}"
-              style="display: inline-block; background: #1c1917; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 999px; font-size: 14px; font-weight: 500;"
-            >
-              Télécharger ma facture
-            </a>
-          </div>
-
-          <div style="border-top: 1px solid #e7e5e4; padding-top: 24px;">
-
-            <p style="font-size: 14px; color: #57534e; line-height: 1.7;">
-              Nous vous informerons par e-mail dès que votre commande sera expédiée.
-            </p>
-
-            <p style="font-size: 14px; color: #57534e; line-height: 1.7;">
-              Cet e-mail a été envoyé automatiquement depuis une adresse ne recevant pas de réponses.
-            </p>
-
-            <p style="font-size: 14px; color: #57534e; line-height: 1.7;">
-              Pour toute question concernant votre commande, vous pouvez nous contacter via notre formulaire en ligne ou directement par e-mail :
-            </p>
-
-            <p style="font-size: 14px; line-height: 1.8; margin-top: 10px;">
-              🌐 <a href="https://nomade-artisan.fr/contact" style="color:#1c1917;">nomade-artisan.fr/contact</a><br>
-              ✉️ <a href="mailto:contact@nomade-artisan.fr" style="color:#1c1917;">contact@nomade-artisan.fr</a>
-            </p>
-
-            <p style="margin-top: 26px; font-size: 15px; color: #1c1917;">
-              Chaque pièce est préparée avec soin. Merci de faire partie de l'aventure <strong>Nomade</strong>.
-            </p>
-
-            <p style="margin-top: 20px; color: #1c1917;">
-              À très bientôt,<br>
-              <strong>L'équipe Nomade</strong>
-            </p>
-
-          </div>
-
-        </div>
-      `,
-    });
-
+      await sendOrderConfirmedEmail({
+        to: customerEmail,
+        customerName: customerName || "Client",
+        orderNumber,
+      });
     }
 
     // Email admin
