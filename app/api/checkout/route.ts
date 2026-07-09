@@ -67,58 +67,61 @@ export async function POST(req: NextRequest) {
     }
 
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
+  payment_method_types: ["card"],
 
-      mode: "payment",
+  mode: "payment",
 
-      invoice_creation: {
-        enabled: true,
+  invoice_creation: {
+    enabled: true,
+  },
+
+  success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
+
+  cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/cart`,
+
+  shipping_address_collection: {
+    allowed_countries: ["FR", "BE", "LU", "CH"],
+  },
+
+  phone_number_collection: {
+    enabled: true,
+  },
+
+  locale: "fr",
+
+  custom_text: {
+    submit: {
+      message: "Nous préparons votre commande avec soin.",
+    },
+  },
+
+  line_items: items.map((item: any) => ({
+    price_data: {
+      currency: "eur",
+
+      product_data: {
+        name: item.name,
+        images: item.image ? [item.image] : [],
       },
 
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
+      unit_amount: Math.round(item.price * 100),
+    },
 
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/cart`,
+    quantity: item.quantity,
+  })),
 
-      shipping_address_collection: {
-        allowed_countries: ["FR", "BE", "LU", "CH"],
-      },
+  metadata: {
+    product_ids: items
+      .filter((item: any) => item.id !== "shipping")
+      .map((item: any) => item.id)
+      .join(","),
 
-      locale: "fr",
-
-      custom_text: {
-        submit: {
-          message:
-            "Nous préparons votre commande avec soin.",
-        },
-      },
-
-      line_items: items.map((item: any) => ({
-        price_data: {
-          currency: "eur",
-
-          product_data: {
-            name: item.name,
-            images: item.image ? [item.image] : [],
-          },
-
-          unit_amount: Math.round(item.price * 100),
-        },
-
-        quantity: item.quantity,
-      })),
-
-      metadata: {
-        product_ids: items
-          .filter((item: any) => item.id !== "shipping")
-          .map((item: any) => item.id)
-          .join(","),
-
-        quantities: items
-          .filter((item: any) => item.id !== "shipping")
-          .map((item: any) => item.quantity)
-          .join(","),
-      },
-    });
+    quantities: items
+      .filter((item: any) => item.id !== "shipping")
+      .map((item: any) => item.quantity)
+      .join(","),
+  },
+});
 
     return NextResponse.json({
       url: session.url,

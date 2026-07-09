@@ -65,6 +65,9 @@ export async function POST(req: NextRequest) {
     const orderNumber =
       "NOM-" + crypto.randomBytes(3).toString("hex").toUpperCase();
     const totalAmount = (session.amount_total || 0) / 100;
+    const customerName = session.customer_details?.name ?? "";
+    const [firstName = "", ...rest] = customerName.trim().split(/\s+/);
+    const lastName = rest.join(" ");
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .insert({
@@ -75,13 +78,29 @@ export async function POST(req: NextRequest) {
         total: totalAmount,
         shipping_address: shipping?.address
           ? {
+              firstName,
+              lastName,
+
+              email: session.customer_details?.email ?? "",
+
+              phone: shipping?.phone || session.customer_details?.phone || "",
+
               line1: shipping.address.line1,
               line2: shipping.address.line2 || "",
+
               city: shipping.address.city,
               postal_code: shipping.address.postal_code,
+
               country: shipping.address.country,
             }
-          : null,
+          : {
+              firstName,
+              lastName,
+
+              email: session.customer_details?.email ?? "",
+
+              phone: shipping?.phone || session.customer_details?.phone || "",
+            },
         notes: `Commande passée via Stripes`,
         payment_intent_id: session.payment_intent,
         order_number: orderNumber,
@@ -247,8 +266,6 @@ export async function POST(req: NextRequest) {
     const shippingAddress = shipping?.address
       ? `${shipping.address.line1 || ""}, ${shipping.address.postal_code || ""} ${shipping.address.city || ""}, ${shipping.address.country || ""}`
       : "Adresse communiquée";
-
-    const customerName = session.customer_details?.name || "";
     const customerEmail = session.customer_details?.email || "";
 
     // Email client
