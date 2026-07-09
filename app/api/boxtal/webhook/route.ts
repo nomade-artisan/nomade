@@ -10,7 +10,7 @@ function verifySignature(
 ) {
 
     const secret = process.env.BOXTAL_WEBHOOK_SECRET!;
-
+    console.log("🔥 BOXTAL WEBHOOK");
     const expected = crypto
         .createHmac("sha256", secret)
         .update(body)
