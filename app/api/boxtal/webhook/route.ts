@@ -3,6 +3,7 @@ import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 
 import { supabase } from "@/lib/supabase/client";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 function verifySignature(
     body: string,
@@ -63,7 +64,6 @@ export async function POST(req: NextRequest) {
         case "TRACKING_CHANGED":
 
             await handleTrackingChanged(
-                supabase,
                 payload
             );
 
@@ -101,34 +101,34 @@ async function handleDocumentCreated(
 
 }
 
-async function handleTrackingChanged(
-    supabase: any,
-    payload: any
-) {
+async function handleTrackingChanged(payload: any) {
+  const tracking = payload.payload?.trackings?.[0];
 
-    const tracking =
-        payload.payload.trackings[0];
+  if (!tracking) {
+    console.log("Aucun tracking reçu");
+    return;
+  }
 
-    await supabase
-        .from("shipments")
-        .update({
+  console.log("Shipping Order:", payload.shippingOrderId);
 
-            tracking_number:
-                tracking.trackingNumber,
+  const { data: shipment } = await supabaseAdmin
+    .from("shipments")
+    .select("*")
+    .eq("shipping_order_id", payload.shippingOrderId);
 
-            tracking_url:
-                tracking.packageTrackingUrl,
+  console.log("Shipment trouvé :", shipment);
 
-            status:
-                tracking.status,
+  const { data, error } = await supabaseAdmin
+    .from("shipments")
+    .update({
+      tracking_number: tracking.trackingNumber,
+      tracking_url: tracking.packageTrackingUrl,
+      status: tracking.status,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("shipping_order_id", payload.shippingOrderId)
+    .select();
 
-            updated_at:
-                new Date()
-
-        })
-        .eq(
-            "shipping_order_id",
-            payload.shippingOrderId
-        );
-
+  console.log("Résultat update :", data);
+  console.log("Erreur :", error);
 }
