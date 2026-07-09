@@ -40,16 +40,21 @@ export async function POST(
     let response;
     try {
       response = await Boxtal.generateLabel(order);
-    } catch (error: any) {
-      console.error("Boxtal generateLabel error:", error?.response?.data || error?.message || error);
-      return NextResponse.json(
-        {
-          error: "Échec de la création du label Boxtal.",
-          details: error?.response?.data || error?.message || null,
-        },
-        { status: 500 }
-      );
-    }
+    }catch (error: any) {
+
+  console.log(
+    JSON.stringify(error?.response?.data, null, 2)
+  );
+
+  return NextResponse.json(
+    {
+      error: "Échec de la création du label Boxtal.",
+      details: error?.response?.data || error?.message || null,
+    },
+    { status: 500 }
+  );
+
+}
 
     const shippingOrderId = response?.content?.id;
 
