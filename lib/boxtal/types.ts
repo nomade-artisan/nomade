@@ -114,11 +114,17 @@ export interface ShippingOrderResponse{
 
         status:string;
 
-        shipmentId:string;
+        shipping_order_id:string;
 
         estimatedDeliveryDate:string;
 
         expectedTakingOverDate:string;
+
+        labelUrl?:string;
+
+        trackingNumber?:string;
+
+        trackingUrl?:string;
 
     }
 
