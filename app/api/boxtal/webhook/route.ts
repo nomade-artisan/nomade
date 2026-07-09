@@ -10,7 +10,7 @@ function verifySignature(
 ) {
 
     const secret = process.env.BOXTAL_WEBHOOK_SECRET!;
-    console.log("🔥 BOXTAL WEBHOOK");
+    
     const expected = crypto
         .createHmac("sha256", secret)
         .update(body)
@@ -22,8 +22,11 @@ function verifySignature(
 
 export async function POST(req: NextRequest) {
 
+    console.log("🔥 BOXTAL WEBHOOK RECEIVED");
+
     const rawBody = await req.text();
 
+    console.log(rawBody);
     const signature = req.headers.get("x-bxt-signature");
 
     if (!signature) {
