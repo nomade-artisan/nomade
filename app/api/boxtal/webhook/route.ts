@@ -2,7 +2,6 @@ import crypto from "crypto";
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { supabase } from "@/lib/supabase/client";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 function verifySignature(
@@ -55,7 +54,7 @@ export async function POST(req: NextRequest) {
         case "DOCUMENT_CREATED":
 
             await handleDocumentCreated(
-                supabase,
+                supabaseAdmin,
                 payload
             );
 
@@ -111,12 +110,23 @@ async function handleTrackingChanged(payload: any) {
 
   console.log("Shipping Order:", payload.shippingOrderId);
 
-  const { data: shipment } = await supabaseAdmin
+  const { data: shipment, error: shipmentError } = await supabaseAdmin
     .from("shipments")
     .select("*")
-    .eq("shipping_order_id", payload.shippingOrderId);
+    .eq("shipping_order_id", payload.shippingOrderId)
+    .maybeSingle();
 
-  console.log("Shipment trouvé :", shipment);
+  if (shipmentError) {
+    console.error(shipmentError);
+    return;
+  }
+
+  if (!shipment) {
+    console.log("Shipment introuvable");
+    return;
+  }
+
+  const previousStatus = shipment.status;
 
   const { data, error } = await supabaseAdmin
     .from("shipments")
@@ -127,8 +137,76 @@ async function handleTrackingChanged(payload: any) {
       updated_at: new Date().toISOString(),
     })
     .eq("shipping_order_id", payload.shippingOrderId)
-    .select();
+    .select()
+    .single();
 
-  console.log("Résultat update :", data);
-  console.log("Erreur :", error);
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  console.log("Shipment mis à jour :", data);
+
+  // Rien n'a changé → aucun mail
+  if (previousStatus === tracking.status) {
+    console.log("Statut inchangé");
+    return;
+  }
+
+  console.log(
+    `Changement de statut : ${previousStatus} -> ${tracking.status}`
+  );
+
+  const baseUrl =
+    process.env.NEXT_PUBLIC_BASE_URL ??
+    process.env.VERCEL_PROJECT_PRODUCTION_URL ??
+    "http://localhost:3000";
+
+  let endpoint: string | null = null;
+
+  switch (tracking.status) {
+    case "ANNOUNCED":
+      endpoint = "/api/email/order-preparing";
+      break;
+
+    case "SHIPPED":
+      endpoint = "/api/email/order-shipped";
+      break;
+
+    case "IN_TRANSIT":
+      endpoint = "/api/email/order-in-transit";
+      break;
+
+    case "DELIVERED":
+      endpoint = "/api/email/order-delivered";
+      break;
+  }
+
+  if (!endpoint) {
+    console.log("Aucun email à envoyer.");
+    return;
+  }
+
+  try {
+    const response = await fetch(`${baseUrl}${endpoint}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        orderId: shipment.order_id,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error(
+        "Erreur envoi email",
+        await response.text()
+      );
+    } else {
+      console.log("Email envoyé :", endpoint);
+    }
+  } catch (err) {
+    console.error("Erreur appel API email :", err);
+  }
 }
