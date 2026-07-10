@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/db";
+import { supabase } from "@/lib/supabase/client";
 
 async function buildMetrics() {
   const today = new Date().toISOString().split("T")[0];

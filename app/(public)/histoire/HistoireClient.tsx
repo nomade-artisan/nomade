@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
-import { supabase } from "@/lib/db";
+import { supabase } from "@/lib/supabase/client";
 
 // Helper pour récupérer l'URL publique d'une image du bucket "histoire"
 const histoireImage = (filename: string) =>

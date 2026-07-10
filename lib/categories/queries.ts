@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/db";
+import { supabase } from "@/lib/supabase/client";
 import type { Category } from "./types";
 
 export async function getCategories(): Promise<Category[]> {

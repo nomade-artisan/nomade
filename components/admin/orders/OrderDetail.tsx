@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -40,12 +40,18 @@ const CARRIERS: Record<string, string> = {
   dhl: "DHL",
 };
 
+// 🔥 Nouveau flux de statuts :
+// pending → confirmed (paiement validé)
+// confirmed → preparing (génération étiquette)
+// preparing → shipped (dépôt transporteur, webhook SHIPPED)
+// shipped → delivered (webhook DELIVERED)
 const NEXT_STATUS: Record<
   OrderStatus,
   { status: OrderStatus; label: string; icon: any } | null
 > = {
   pending: { status: "confirmed", label: "Confirmer", icon: CheckCircle },
-  confirmed: { status: "shipped", label: "Expédier", icon: Truck },
+  confirmed: null, // ❌ Plus de bouton manuel, l'expédition se fait via génération d'étiquette
+  preparing: null, // ❌ Pas d'action manuelle, le webhook fera le passage à shipped
   shipped: { status: "delivered", label: "Livrer", icon: Package },
   delivered: null,
   cancelled: { status: "pending", label: "Réactiver", icon: Undo2 },
@@ -69,14 +75,36 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
     labelUrl: string;
   } | null>(null);
 
-  const hasLabel = !!(order.shipment?.label_url || labelData?.labelUrl);
-  const labelUrl = labelData?.labelUrl ?? order.shipment?.label_url;
-  const trackingUrl = labelData?.trackingUrl ?? order.shipment?.tracking_url;
-  const trackingNumber = labelData?.trackingNumber ?? order.shipment?.tracking_number;
-  const displayCarrier = order.shipment?.carrier
-    ? CARRIERS[order.shipment.carrier] ?? order.shipment.carrier
+  useEffect(() => {
+    setLabelData(
+      order.shipment
+        ? {
+            shippingOrderId: order.shipment.shipping_order_id ?? "",
+            status: order.shipment.status ?? "",
+            trackingNumber: order.shipment.tracking_number ?? "",
+            trackingUrl: order.shipment.tracking_url ?? "",
+            labelUrl: order.shipment.label_url ?? "",
+          }
+        : null
+    );
+  }, [order.shipment]);
+
+  const shipment = order.shipment ?? null;
+  const hasLabel = !!(shipment?.label_url || labelData?.labelUrl);
+  const labelUrl = labelData?.labelUrl ?? shipment?.label_url ?? null;
+  const trackingUrl = labelData?.trackingUrl ?? shipment?.tracking_url ?? null;
+  const trackingNumber = labelData?.trackingNumber ?? shipment?.tracking_number ?? null;
+  const shipmentId = labelData?.shippingOrderId ?? shipment?.shipping_order_id ?? null;
+  const shipmentStatus = labelData?.status ?? shipment?.status ?? null;
+  const displayCarrier = shipment?.carrier
+    ? CARRIERS[shipment.carrier] ?? shipment.carrier
     : null;
 
+  /**
+   * 🔥 Gestion manuelle du changement de statut (admin)
+   * - Utilisé pour "Confirmer" (pending → confirmed) et "Livrer" (shipped → delivered)
+   * - Ne gère PAS l'expédition (preparing → shipped) car c'est automatique via webhook
+   */
   async function handleStatusChange(newStatus: OrderStatus) {
     setIsUpdating(true);
     try {
@@ -92,21 +120,27 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
 
       if (!res.ok) throw new Error("Erreur");
 
-      if (newStatus === "shipped") {
-        await fetch("/api/shipping/send-shipping-email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            orderId: order.id,
-            trackingNumber: order.shipment?.tracking_number,
-            trackingUrl: order.shipment?.tracking_url,
-            carrier: order.shipment?.carrier,
-          }),
-        });
-      }
+      // ⚠️ On n'envoie plus l'email d'expédition ici car :
+      // - Le statut "shipped" est maintenant déclenché par le webhook Boxtal
+      // - L'email d'expédition est envoyé par le webhook lors du passage à SHIPPED
+      // - On conserve l'appel uniquement si on avait un mécanisme de fallback
+
+      // if (newStatus === "shipped") {
+      //   await fetch("/api/shipping/send-shipping-email", {
+      //     method: "POST",
+      //     headers: { "Content-Type": "application/json" },
+      //     body: JSON.stringify({
+      //       orderId: order.id,
+      //       trackingNumber: order.shipment?.tracking_number,
+      //       trackingUrl: order.shipment?.tracking_url,
+      //       carrier: order.shipment?.carrier,
+      //     }),
+      //   });
+      // }
 
       setComment("");
       router.refresh();
+      toast.success(`Statut mis à jour : ${ORDER_STATUS_LABELS[newStatus]}`);
     } catch (err) {
       toast.error("Échec du changement de statut");
       console.error(err);
@@ -115,6 +149,12 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
     }
   }
 
+  /**
+   * 🔥 Génération de l'étiquette d'expédition
+   * - Déclenche la création du shipment avec statut ANNOUNCED
+   * - Passe la commande en "preparing"
+   * - L'email n'est PAS envoyé ici (ce sera fait par le webhook)
+   */
   async function handleGenerateLabel() {
     setIsGenerating(true);
     try {
@@ -130,7 +170,26 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
       const payload = await res.json();
       setLabelData(payload);
       toast.success("Étiquette générée avec succès");
-      router.refresh();
+
+      // 🔥 Mise à jour du statut de la commande → "preparing"
+      if (order.status === "confirmed") {
+        const updateRes = await fetch("/api/admin/orders", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId: order.id,
+            status: "preparing",
+            comment: "Étiquette générée, en attente de dépôt transporteur",
+          }),
+        });
+
+        if (!updateRes.ok) throw new Error("Échec du changement de statut");
+        router.refresh();
+      }
+
+      // ⚠️ L'email d'expédition sera envoyé par le webhook Boxtal
+      // lors du passage à SHIPPED (dépôt transporteur)
+
     } catch (err: any) {
       toast.error(err.message ?? "Erreur lors de la génération");
       console.error(err);
@@ -298,10 +357,11 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
                 ORDER_STATUS_COLORS[order.status]
               }`}
             >
-              {ORDER_STATUS_LABELS[order.status]}
+              {ORDER_STATUS_LABELS[order.status] || order.status}
             </span>
 
-            {nextAction && (
+            {/* 🔥 Bouton d'action selon le statut */}
+            {nextAction ? (
               <Button
                 className="w-full"
                 onClick={() => handleStatusChange(nextAction.status)}
@@ -314,6 +374,13 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
                 )}
                 {nextAction.label}
               </Button>
+            ) : (
+              /* 🔥 Message informatif pour les statuts sans action */
+              order.status === "confirmed" && (
+                <p className="text-xs text-muted-foreground text-center">
+                  L'expédition sera déclenchée lors de la génération de l'étiquette.
+                </p>
+              )
             )}
 
             {order.status !== "cancelled" &&
@@ -409,6 +476,7 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
           </CardContent>
         </Card>
 
+        {/* 🔥 Carte Expédition */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -417,14 +485,47 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {hasLabel ? (
+            {shipmentId || shipmentStatus || trackingNumber || labelUrl || trackingUrl ? (
               <>
-                <div className="text-sm space-y-1">
-                  <p>
-                    Transporteur : {displayCarrier ?? "Non spécifié"}
-                  </p>
-                  <p>Tracking : {trackingNumber}</p>
+                <div className="rounded-md border bg-muted/20 p-3 text-sm space-y-2">
+                  {shipmentId && (
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="text-muted-foreground">Shipment ID</span>
+                      <span className="font-medium break-all text-right">{shipmentId}</span>
+                    </div>
+                  )}
+                  {shipmentStatus && (
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="text-muted-foreground">Statut shipment</span>
+                      <span className="font-medium">{shipmentStatus}</span>
+                    </div>
+                  )}
+                  {displayCarrier && (
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="text-muted-foreground">Transporteur</span>
+                      <span className="font-medium">{displayCarrier}</span>
+                    </div>
+                  )}
+                  {trackingNumber && (
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="text-muted-foreground">Tracking</span>
+                      <span className="font-medium break-all text-right">{trackingNumber}</span>
+                    </div>
+                  )}
+                  {trackingUrl && (
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="text-muted-foreground">Tracking URL</span>
+                      <span className="font-medium break-all text-right">{trackingUrl}</span>
+                    </div>
+                  )}
+                  {labelUrl && (
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="text-muted-foreground">Étiquette</span>
+                      <span className="font-medium break-all text-right">{labelUrl}</span>
+                    </div>
+                  )}
                 </div>
+
                 <div className="flex flex-wrap gap-2">
                   {labelUrl && (
                     <Button variant="outline" size="sm" asChild>
@@ -434,7 +535,7 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
                         rel="noopener noreferrer"
                       >
                         <ExternalLink className="mr-2 h-4 w-4" />
-                        Voir l&apos;étiquette
+                        Voir l'étiquette
                       </a>
                     </Button>
                   )}
@@ -447,7 +548,7 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
                         download
                       >
                         <Printer className="mr-2 h-4 w-4" />
-                        Télécharger l&apos;étiquette
+                        Télécharger l'étiquette
                       </a>
                     </Button>
                   )}
@@ -468,7 +569,7 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
             ) : (
               <>
                 <p className="text-sm text-muted-foreground">
-                  Aucune étiquette générée
+                  Aucune information shipment disponible
                 </p>
                 {order.status === "confirmed" && (
                   <Button
@@ -482,6 +583,20 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
                       <Printer className="mr-2 h-4 w-4" />
                     )}
                     {isGenerating ? "Génération en cours..." : "Générer l'étiquette"}
+                  </Button>
+                )}
+                {order.status === "preparing" && (
+                  <Button
+                    onClick={handleGenerateLabel}
+                    disabled={isGenerating}
+                    className="w-full"
+                  >
+                    {isGenerating ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Printer className="mr-2 h-4 w-4" />
+                    )}
+                    {isGenerating ? "Génération en cours..." : "Régénérer l'étiquette"}
                   </Button>
                 )}
               </>

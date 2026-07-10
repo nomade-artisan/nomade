@@ -1,7 +1,7 @@
 // app/api/webhook/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
-import { supabase } from "@/lib/db";
+import { supabase } from "@/lib/supabase/client";
 import { Resend } from "resend";
 import { sendOrderConfirmedEmail } from "@/lib/email/order-confirmed";
 import Stripe from "stripe";

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
     // Après la création du refund
 import { Resend } from "resend";
-import { supabase } from "@/lib/db";
+import { supabase } from "@/lib/supabase/client";
 import { stripe } from "@/lib/stripe";
 
 export async function POST(req: NextRequest) {

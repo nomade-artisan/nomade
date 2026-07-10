@@ -1,22 +1,24 @@
 //lib/orders/types.ts
-export type OrderStatus = 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled' | 'returned';
+export type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'shipped' | 'delivered' | 'cancelled' | 'returned';
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
-  pending: 'En attente',
-  confirmed: 'Confirmée',
-  shipped: 'Expédiée',
-  delivered: 'Livrée',
-  cancelled: 'Annulée',
-  returned: 'Retournée',
+  pending: "En attente",
+  confirmed: "Confirmée",
+  preparing: "En préparation",   // 👈 ajout
+  shipped: "Expédiée",
+  delivered: "Livrée",
+  cancelled: "Annulée",
+  returned: "Retournée",
 };
 
 export const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
-  pending: 'bg-yellow-100 text-yellow-800',
-  confirmed: 'bg-blue-100 text-blue-800',
-  shipped: 'bg-purple-100 text-purple-800',
-  delivered: 'bg-green-100 text-green-800',
-  cancelled: 'bg-red-100 text-red-800',
-  returned: 'bg-orange-100 text-orange-800',
+  pending: "bg-gray-100 text-gray-800",
+  confirmed: "bg-blue-100 text-blue-800",
+  preparing: "bg-amber-100 text-amber-800",  // 👈 ajout
+  shipped: "bg-indigo-100 text-indigo-800",
+  delivered: "bg-green-100 text-green-800",
+  cancelled: "bg-red-100 text-red-800",
+  returned: "bg-orange-100 text-orange-800",
 };
 
 export interface Order {
@@ -62,7 +64,7 @@ export interface OrderShipment {
   tracking_number?: string | null;
   tracking_url?: string | null;
   status?: string | null;
-  carrier?: string | null;
+  carrier?: string;
   created_at: string;
   updated_at: string;
 }

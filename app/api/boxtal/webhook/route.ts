@@ -37,6 +37,20 @@ function generateDocumentEventHash(payload: any): string {
   return crypto.createHash("sha256").update(raw).digest("hex");
 }
 
+function mapBoxtalStatusToOrderStatus(status?: string): string | null {
+  switch (status) {
+    case "ANNOUNCED":
+      return "preparing";
+    case "SHIPPED":
+    case "IN_TRANSIT":
+      return "shipped";
+    case "DELIVERED":
+      return "delivered";
+    default:
+      return null;
+  }
+}
+
 export async function POST(req: NextRequest) {
   console.log("🔥 BOXTAL WEBHOOK RECEIVED");
 
@@ -156,13 +170,25 @@ async function handleTrackingChanged(payload: any) {
 
   const previousStatus = shipment.status;
   const newStatus = tracking.status;
+  const trackingNumber =
+    tracking.trackingNumber ||
+    tracking.number ||
+    tracking.tracking_number ||
+    null;
+  const trackingUrl =
+    tracking.packageTrackingUrl ||
+    tracking.trackingUrl ||
+    tracking.url ||
+    tracking.tracking_url ||
+    null;
 
   // Mettre à jour le shipment
   const { data: updated, error: updateError } = await supabaseAdmin
     .from("shipments")
     .update({
-      tracking_number: tracking.trackingNumber,
-      tracking_url: tracking.packageTrackingUrl,
+      tracking_number: trackingNumber,
+      tracking_url: trackingUrl,
+      carrier: shipment.carrier || tracking.carrier || null,
       status: newStatus,
       updated_at: new Date().toISOString(),
     })
@@ -177,14 +203,6 @@ async function handleTrackingChanged(payload: any) {
 
   console.log("Shipment mis à jour :", updated);
 
-  // Si le statut n'a pas changé, on ne réenvoie pas d'email
-  if (previousStatus === newStatus) {
-    console.log("Statut inchangé, pas d'email");
-    return;
-  }
-
-  console.log(`Changement de statut : ${previousStatus} -> ${newStatus}`);
-
   // Récupérer la commande associée
   const { data: order, error: orderError } = await supabaseAdmin
     .from("orders")
@@ -197,9 +215,58 @@ async function handleTrackingChanged(payload: any) {
     return;
   }
 
+  const mappedOrderStatus = mapBoxtalStatusToOrderStatus(newStatus);
+  const shipmentStatusChanged = previousStatus !== newStatus;
+
+  if (shipmentStatusChanged && mappedOrderStatus) {
+    const orderStatusChanged = order.status !== mappedOrderStatus;
+
+    if (orderStatusChanged) {
+      const { error: orderStatusError } = await supabaseAdmin
+        .from("orders")
+        .update({
+          status: mappedOrderStatus,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", order.id);
+
+      if (orderStatusError) {
+        console.error("Erreur mise à jour order.status :", orderStatusError);
+      } else {
+        console.log(
+          `orders.status mis à jour : ${order.status} -> ${mappedOrderStatus}`
+        );
+      }
+    }
+
+    const { error: trackingInsertError } = await supabaseAdmin
+      .from("order_tracking")
+      .insert({
+        order_id: order.id,
+        status: mappedOrderStatus,
+        comment: `Boxtal tracking: ${newStatus}`,
+        created_at: new Date().toISOString(),
+      });
+
+    if (trackingInsertError) {
+      console.error(
+        "Erreur insertion order_tracking :",
+        trackingInsertError
+      );
+    }
+  }
+
   const address = order.shipping_address;
-  const customerName = `${address.firstName} ${address.lastName}`;
+  const customerName = `${address?.firstName || address?.first_name || ""} ${address?.lastName || address?.last_name || ""}`.trim();
   const orderNumber = order.order_number;
+
+  // Si le statut shipment n'a pas changé, on ne réenvoie pas d'email
+  if (!shipmentStatusChanged) {
+    console.log("Statut shipment inchangé, pas d'email");
+    return;
+  }
+
+  console.log(`Changement de statut : ${previousStatus} -> ${newStatus}`);
 
   // Envoyer l'email correspondant au nouveau statut
   try {
@@ -217,8 +284,8 @@ async function handleTrackingChanged(payload: any) {
           customerName,
           orderNumber,
           carrier: shipment.carrier,
-          trackingNumber: tracking.trackingNumber,
-          trackingUrl: tracking.packageTrackingUrl,
+          trackingNumber,
+          trackingUrl,
         });
         break;
       case "IN_TRANSIT":
@@ -226,7 +293,7 @@ async function handleTrackingChanged(payload: any) {
           to: address.email,
           customerName,
           orderNumber,
-          trackingUrl: tracking.packageTrackingUrl,
+          trackingUrl,
         });
         break;
       case "DELIVERED":

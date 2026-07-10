@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { supabase } from "@/lib/db";
+import { supabase } from "@/lib/supabase/client"; 
 
 // Helper pour récupérer l'URL publique d'une image du bucket "contact"
 const contactImage = (filename: string) =>

@@ -1,3 +1,4 @@
+// lib/boxtal/types.ts
 export interface Money {
 
     value:number;

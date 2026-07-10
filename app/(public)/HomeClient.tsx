@@ -6,7 +6,7 @@ import Image from "next/image";
 import { motion, useScroll, useTransform } from "framer-motion";
 import ProductCard from "@/components/ProductCard";
 
-import { supabase } from "@/lib/db";
+import { supabase } from "@/lib/supabase/client";
 
 interface Product {
   id: number | string;

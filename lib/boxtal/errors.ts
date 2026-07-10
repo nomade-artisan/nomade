@@ -1,3 +1,4 @@
+//lib/boxtal/errors.ts
 export class BoxtalError extends Error{
 
     constructor(

@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/db";
+import { supabase } from "@/lib/supabase/client";
 import type { CategoryFormState, Category } from "./types";
 
 export async function createCategory(data: CategoryFormState): Promise<Category> {
