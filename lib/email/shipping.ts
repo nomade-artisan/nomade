@@ -1,4 +1,5 @@
-import { Resend } from 'resend';
+import { Resend } from "resend";
+import { escapeHtml, renderEmailTemplate } from "./template";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const NOREPLY_EMAIL = process.env.NOREPLY_EMAIL!;
@@ -18,17 +19,36 @@ export async function sendShippingEmail({
   trackingUrl: string;
   carrier: string;
 }) {
+  const hasTrackingUrl = Boolean(trackingUrl && trackingUrl.trim());
+
   await resend.emails.send({
     from: `Nomade <${NOREPLY_EMAIL}>`,
     to,
     subject: `Votre commande ${orderNumber} est en route`,
-    html: `
-      <h2>Votre colis arrive !</h2>
-      <p>Bonjour ${customerName},</p>
-      <p>Votre commande a été expédiée avec ${carrier}.</p>
-      <p>Numéro de suivi : <strong>${trackingNumber}</strong></p>
-      <p><a href="${trackingUrl}">Suivre mon colis</a></p>
-    `,
+    html: renderEmailTemplate({
+      title: "Votre colis est en route",
+      preheader: `Expedition en cours pour ${orderNumber}`,
+      customerName,
+      intro:
+        "Votre commande a ete expediee et remise au transporteur. Vous pouvez suivre le colis a tout moment.",
+      details: [
+        { label: "Commande", value: orderNumber },
+        { label: "Transporteur", value: carrier || "Non precise" },
+        { label: "Numero de suivi", value: trackingNumber || "A venir" },
+      ],
+      cta: hasTrackingUrl
+        ? {
+            label: "Suivre mon colis",
+            href: trackingUrl,
+          }
+        : undefined,
+      secondaryHtml: hasTrackingUrl
+        ? ""
+        : '<p style="margin:0;font-size:13px;color:#6b7280;line-height:1.7;">Le lien de suivi sera disponible des son activation par le transporteur.</p>',
+      mainHtml: `<p style="margin:0 0 16px;font-size:13px;line-height:1.7;color:#374151;">Reference utile: <strong>${escapeHtml(
+        trackingNumber || ""
+      )}</strong></p>`,
+    }),
   });
 }
 
@@ -45,11 +65,18 @@ export async function sendDeliveryEmail({
     from: `Nomade <${NOREPLY_EMAIL}>`,
     to,
     subject: `Votre commande ${orderNumber} a été livrée`,
-    html: `
-      <h2>Commande livrée</h2>
-      <p>Bonjour ${customerName},</p>
-      <p>Votre commande a bien été livrée.</p>
-      <p>Merci pour votre confiance.</p>
-    `,
+    html: renderEmailTemplate({
+      title: "Commande livree",
+      preheader: `Confirmation de livraison pour ${orderNumber}`,
+      customerName,
+      intro:
+        "Votre commande a bien ete livree. Merci pour votre confiance.",
+      details: [
+        { label: "Commande", value: orderNumber },
+        { label: "Etat", value: "Livree" },
+      ],
+      secondaryHtml:
+        '<p style="margin:0;font-size:13px;color:#374151;line-height:1.7;">En cas de souci, repondez directement a cet email pour etre accompagne rapidement.</p>',
+    }),
   });
 }

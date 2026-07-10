@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { renderEmailTemplate } from "./template";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const NOREPLY_EMAIL = process.env.NOREPLY_EMAIL!;
@@ -16,18 +17,18 @@ export async function sendOrderCancelledEmail({
     from: `Nomade <${NOREPLY_EMAIL}>`,
     to,
     subject: `Commande ${orderNumber} annulée`,
-    html: `
-      <h2>Commande annulée</h2>
-
-      <p>Bonjour ${customerName},</p>
-
-      <p>
-        Votre commande a été annulée.
-      </p>
-
-      <p>
-        Si un remboursement est prévu, il sera effectué automatiquement.
-      </p>
-    `,
+    html: renderEmailTemplate({
+      title: "Commande annulee",
+      preheader: `Mise a jour de la commande ${orderNumber}`,
+      customerName,
+      intro:
+        "Votre commande a ete annulee. Si un remboursement est prevu, il sera initie automatiquement selon le mode de paiement utilise.",
+      details: [
+        { label: "Commande", value: orderNumber },
+        { label: "Etat", value: "Annulee" },
+      ],
+      secondaryHtml:
+        '<p style="margin:0;font-size:13px;line-height:1.7;color:#374151;">Le delai de remboursement depend de votre banque et peut prendre quelques jours ouvres.</p>',
+    }),
   });
 }
