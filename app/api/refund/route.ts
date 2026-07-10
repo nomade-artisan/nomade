@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-
-    // Après la création du refund
-import { Resend } from "resend";
-import { supabase } from "@/lib/supabase/client";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { stripe } from "@/lib/stripe";
+import { sendOrderRefundedEmail } from "@/lib/email/order-refunded";
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,7 +11,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "ID de commande manquant" }, { status: 400 });
     }
 
-    const { data: order, error } = await supabase
+    const { data: order, error } = await supabaseAdmin
       .from("orders")
       .select("*")
       .eq("id", orderId)
@@ -35,48 +33,30 @@ export async function POST(req: NextRequest) {
     const refund = await stripe.refunds.create({
       payment_intent: paymentIntentId,
     });
-    
-    const noreplyEmail = process.env.NOREPLY_EMAIL
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+    const shippingAddress = order.shipping_address || {};
+    const customerEmail =
+      order.customer_email || shippingAddress.email || null;
+    const customerName =
+      order.customer_name ||
+      `${shippingAddress.firstName || shippingAddress.first_name || ""} ${
+        shippingAddress.lastName || shippingAddress.last_name || ""
+      }`.trim() ||
+      "Client";
 
-// Envoyer l'email de remboursement
-if (order.customer_email) {
-  await resend.emails.send({
-    from: noreplyEmail || "ne-pas-repondre@nomade-artisan.fr",
-    to: order.customer_email,
-    subject: "Votre commande Nomade a été remboursée",
-    html: `
-      <div style="font-family: Inter, system-ui, sans-serif; max-width: 500px; margin: auto; padding: 30px; background: #fafaf9; border-radius: 12px;">
-        <h2 style="font-weight: 400; color: #1c1917; font-size: 20px; margin-bottom: 16px;">
-          Votre commande a été remboursée
-        </h2>
-        <p style="color: #78716c; font-size: 14px; line-height: 1.6;">
-          Bonjour ${order.customer_name},
-        </p>
-        <p style="color: #44403c; font-size: 14px; line-height: 1.6;">
-          Votre commande #${order.id} d'un montant de <strong>${order.total.toFixed(2)} €</strong> a été remboursée.
-        </p>
-        <p style="color: #78716c; font-size: 14px; line-height: 1.6;">
-          Le remboursement apparaîtra sur votre compte sous 5 à 10 jours ouvrés, selon votre banque.
-        </p>
-        <p style="color: #78716c; font-size: 14px; line-height: 1.6;">
-          Si vous avez la moindre question, répondez simplement à cet email.
-        </p>
-        <hr style="border: none; border-top: 1px solid #e7e5e4; margin: 20px 0;" />
-        <p style="color: #a8a29e; font-size: 12px; text-align: center;">
-          Nomade — L&apos;essentiel est à l&apos;intérieur
-        </p>
-      </div>
-    `,
-  });
-}
+    if (customerEmail) {
+      await sendOrderRefundedEmail({
+        to: customerEmail,
+        customerName,
+        orderNumber: order.order_number || String(order.id).slice(0, 8),
+        total: Number(order.total || 0),
+      });
+    }
 
     return NextResponse.json({ success: true, refundId: refund.id });
 
-
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Erreur refund:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Erreur lors du remboursement" }, { status: 500 });
   }
 }
