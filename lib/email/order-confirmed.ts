@@ -28,13 +28,13 @@ export async function sendOrderConfirmedEmail({
     .map(
       (item) => `
       <tr>
-        <td style="padding: 16px 0; border-bottom: 1px solid #E8E3DA; font-size: 15px; color: #3F2F25;">
+        <td style="padding: 14px 0; border-bottom: 1px solid #E5E5E5; font-size: 15px; color: #222222;">
           ${item.name}
         </td>
-        <td style="padding: 16px 0; border-bottom: 1px solid #E8E3DA; font-size: 15px; color: #3F2F25; text-align: center;">
+        <td style="padding: 14px 0; border-bottom: 1px solid #E5E5E5; font-size: 15px; color: #222222; text-align: center;">
           x${item.quantity}
         </td>
-        <td style="padding: 16px 0; border-bottom: 1px solid #E8E3DA; font-size: 15px; color: #3F2F25; text-align: right;">
+        <td style="padding: 14px 0; border-bottom: 1px solid #E5E5E5; font-size: 15px; color: #222222; text-align: right;">
           ${(item.price * item.quantity).toFixed(2)} €
         </td>
       </tr>
@@ -45,8 +45,8 @@ export async function sendOrderConfirmedEmail({
   // Bouton facture (si disponible)
   const invoiceButton = invoicePdfUrl
     ? `
-    <div style="text-align: center; margin: 32px 0 24px;">
-      <a href="${invoicePdfUrl}" style="display: inline-block; background: #A66A3F; color: #FFFFFF; padding: 14px 36px; border-radius: 40px; text-decoration: none; font-size: 16px; font-weight: 500; letter-spacing: 0.5px; box-shadow: 0 4px 8px rgba(166,106,63,0.2);">
+    <div style="text-align: center; margin: 28px 0 20px;">
+      <a href="${invoicePdfUrl}" style="display: inline-block; background: #1A1A1A; color: #FFFFFF; padding: 12px 32px; border-radius: 4px; text-decoration: none; font-size: 15px; font-weight: 500; letter-spacing: 0.3px;">
         Télécharger ma facture
       </a>
     </div>
@@ -55,54 +55,28 @@ export async function sendOrderConfirmedEmail({
 
   // Timeline
   const timeline = `
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin: 28px 0 10px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin: 24px 0 8px;">
       <tr>
-        <td style="padding: 8px 0; font-size: 14px; color: #3F2F25;">
-          <span style="display:inline-block; width:20px; text-align:center;">✅</span> Commande confirmée
+        <td style="padding: 6px 0; font-size: 14px; color: #222222;">
+          <span style="display:inline-block; width:20px; text-align:center; font-weight:700; color:#666666;">—</span> Commande confirmée
         </td>
       </tr>
       <tr>
-        <td style="padding: 8px 0; font-size: 14px; color: #3F2F25;">
-          <span style="display:inline-block; width:20px; text-align:center;">🧵</span> Préparation dans notre atelier
+        <td style="padding: 6px 0; font-size: 14px; color: #222222;">
+          <span style="display:inline-block; width:20px; text-align:center; font-weight:700; color:#666666;">—</span> Préparation en cours
         </td>
       </tr>
       <tr>
-        <td style="padding: 8px 0; font-size: 14px; color: #3F2F25;">
-          <span style="display:inline-block; width:20px; text-align:center;">📦</span> Expédition
+        <td style="padding: 6px 0; font-size: 14px; color: #222222;">
+          <span style="display:inline-block; width:20px; text-align:center; font-weight:700; color:#666666;">—</span> Expédition
         </td>
       </tr>
       <tr>
-        <td style="padding: 8px 0; font-size: 14px; color: #3F2F25;">
-          <span style="display:inline-block; width:20px; text-align:center;">🚚</span> Livraison
+        <td style="padding: 6px 0; font-size: 14px; color: #222222;">
+          <span style="display:inline-block; width:20px; text-align:center; font-weight:700; color:#666666;">—</span> Livraison
         </td>
       </tr>
     </table>
-  `;
-
-  // Bloc artisanat
-  const artisanBlock = `
-    <div style="background: #F8F6F2; border-radius: 16px; padding: 24px 20px; margin: 28px 0; text-align: center; border-left: 3px solid #A66A3F;">
-      <div style="font-size: 22px; margin-bottom: 8px;">🤎</div>
-      <p style="margin: 0; font-size: 15px; color: #3F2F25; line-height: 1.6;">
-        Chez Nomade, chaque pièce est préparée avec le plus grand soin dans notre atelier.<br>
-        Merci de soutenir une fabrication artisanale française.
-      </p>
-    </div>
-  `;
-
-  // Bloc assistance
-  const assistanceBlock = `
-    <div style="background: #FFFFFF; border-radius: 16px; padding: 24px 20px; margin: 28px 0; box-shadow: 0 2px 8px rgba(63,47,37,0.04);">
-      <h3 style="margin: 0 0 8px; font-size: 18px; font-weight: 500; color: #3F2F25;">Une question ?</h3>
-      <p style="margin: 0 0 12px; font-size: 15px; color: #5C4B3A; line-height: 1.6;">
-        Notre atelier reste à votre disposition.
-      </p>
-      <p style="margin: 0; font-size: 15px; color: #3F2F25;">
-        <a href="mailto:${CONTACT_EMAIL}" style="color: #A66A3F; text-decoration: none; font-weight: 500;">
-          ${CONTACT_EMAIL}
-        </a>
-      </p>
-    </div>
   `;
 
   // Corps de l'email
@@ -114,31 +88,23 @@ export async function sendOrderConfirmedEmail({
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Confirmation de commande</title>
     </head>
-    <body style="margin: 0; padding: 0; background: #F8F6F2; font-family: Georgia, 'Times New Roman', serif; color: #3F2F25;">
+    <body style="margin: 0; padding: 0; background: #F5F5F5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; color: #222222;">
 
       <!-- CONTENEUR PRINCIPAL -->
-      <table width="100%" cellpadding="0" cellspacing="0" style="background: #F8F6F2; padding: 40px 20px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background: #F5F5F5; padding: 40px 20px;">
         <tr>
           <td align="center">
-            <table width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; width: 100%; background: #FFFFFF; border-radius: 24px; box-shadow: 0 4px 20px rgba(63,47,37,0.06); overflow: hidden;">
+            <table width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; width: 100%; background: #FFFFFF; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); overflow: hidden;">
 
               <!-- HEADER -->
               <tr>
-                <td style="padding: 48px 40px 32px; text-align: center; background: #FFFFFF; border-bottom: 1px solid #E8E3DA;">
-                  <h1 style="margin: 0; font-size: 38px; font-weight: 400; letter-spacing: 4px; color: #3F2F25; font-family: Georgia, serif;">
+                <td style="padding: 40px 40px 24px; text-align: center; background: #FFFFFF; border-bottom: 1px solid #E5E5E5;">
+                  <h1 style="margin: 0; font-size: 32px; font-weight: 300; letter-spacing: 6px; color: #1A1A1A; text-transform: uppercase;">
                     Nomade
                   </h1>
-                  <p style="margin: 8px 0 0; font-size: 15px; color: #A66A3F; font-style: italic; letter-spacing: 1px;">
-                    L'essentiel est à l'intérieur.
+                  <p style="margin: 8px 0 0; font-size: 13px; color: #888888; letter-spacing: 1px; text-transform: uppercase;">
+                    Confirmation de commande
                   </p>
-                  <div style="margin-top: 28px; padding-top: 20px; border-top: 1px solid #E8E3DA;">
-                    <p style="margin: 0; font-size: 22px; font-weight: 300; color: #3F2F25; line-height: 1.4;">
-                      Merci pour votre confiance.
-                    </p>
-                    <p style="margin: 6px 0 0; font-size: 16px; color: #7B8B73; font-style: italic;">
-                      Votre aventure commence aujourd'hui.
-                    </p>
-                  </div>
                 </td>
               </tr>
 
@@ -147,43 +113,40 @@ export async function sendOrderConfirmedEmail({
                 <td style="padding: 40px 40px 32px; background: #FFFFFF;">
 
                   <!-- MESSAGE PERSONNALISÉ -->
-                  <p style="margin: 0 0 24px; font-size: 17px; line-height: 1.8; color: #3F2F25; font-family: Georgia, serif;">
+                  <p style="margin: 0 0 20px; font-size: 16px; line-height: 1.7; color: #333333;">
                     Bonjour <strong>${customerName}</strong>,
                   </p>
-                  <p style="margin: 0 0 18px; font-size: 16px; line-height: 1.8; color: #3F2F25;">
-                    Merci d'avoir choisi Nomade. Votre commande est maintenant confirmée et notre atelier va commencer sa préparation avec le plus grand soin.
+                  <p style="margin: 0 0 16px; font-size: 15px; line-height: 1.7; color: #444444;">
+                    Nous confirmons la réception de votre commande. Celle-ci sera traitée dans les plus brefs délais.
                   </p>
-                  <p style="margin: 0 0 18px; font-size: 16px; line-height: 1.8; color: #3F2F25;">
-                    Chaque création est réalisée avec passion afin de vous accompagner pendant de nombreuses années.
-                  </p>
-                  <p style="margin: 0 0 28px; font-size: 16px; line-height: 1.8; color: #3F2F25;">
-                    Nous vous informerons dès que votre colis sera confié au transporteur.
+                  <p style="margin: 0 0 24px; font-size: 15px; line-height: 1.7; color: #444444;">
+                    Vous recevrez un email dès l'expédition de votre colis.
                   </p>
 
                   <!-- BLOC COMMANDE -->
-                  <div style="background: #F8F6F2; border-radius: 16px; padding: 24px 20px; margin-bottom: 32px; border: 1px solid #E8E3DA;">
-                    <p style="margin: 0 0 4px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #7B8B73;">
+                  <div style="background: #F9F9F9; border-radius: 6px; padding: 20px 20px; margin-bottom: 28px; border: 1px solid #EEEEEE;">
+                    <p style="margin: 0 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: #888888;">
                       Commande confirmée
                     </p>
-                    <p style="margin: 0; font-size: 20px; font-weight: 500; color: #3F2F25;">
+                    <p style="margin: 0; font-size: 18px; font-weight: 500; color: #1A1A1A;">
                       ${orderNumber}
                     </p>
-                    <p style="margin: 6px 0 0; font-size: 14px; color: #5C4B3A;">
+                    <p style="margin: 6px 0 0; font-size: 13px; color: #888888;">
                       ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
                     </p>
                   </div>
 
                   <!-- TABLEAU PRODUITS -->
-                  <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
+                  <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 20px;">
                     <thead>
                       <tr>
-                        <th style="padding: 0 0 12px; text-align: left; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; color: #7B8B73; font-weight: 500; border-bottom: 1px solid #E8E3DA;">
+                        <th style="padding: 0 0 10px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: #888888; font-weight: 500; border-bottom: 1px solid #E5E5E5;">
                           Article
                         </th>
-                        <th style="padding: 0 0 12px; text-align: center; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; color: #7B8B73; font-weight: 500; border-bottom: 1px solid #E8E3DA;">
+                        <th style="padding: 0 0 10px; text-align: center; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: #888888; font-weight: 500; border-bottom: 1px solid #E5E5E5;">
                           Qté
                         </th>
-                        <th style="padding: 0 0 12px; text-align: right; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; color: #7B8B73; font-weight: 500; border-bottom: 1px solid #E8E3DA;">
+                        <th style="padding: 0 0 10px; text-align: right; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: #888888; font-weight: 500; border-bottom: 1px solid #E5E5E5;">
                           Prix
                         </th>
                       </tr>
@@ -194,29 +157,29 @@ export async function sendOrderConfirmedEmail({
                   </table>
 
                   <!-- TOTAUX -->
-                  <div style="background: #F8F6F2; border-radius: 16px; padding: 20px 24px; margin-bottom: 8px;">
+                  <div style="border-top: 2px solid #E5E5E5; padding-top: 16px;">
                     <table width="100%" cellpadding="0" cellspacing="0">
                       <tr>
-                        <td style="padding: 6px 0; font-size: 15px; color: #3F2F25;">
+                        <td style="padding: 4px 0; font-size: 14px; color: #444444;">
                           Sous-total
                         </td>
-                        <td style="padding: 6px 0; font-size: 15px; color: #3F2F25; text-align: right;">
+                        <td style="padding: 4px 0; font-size: 14px; color: #444444; text-align: right;">
                           ${subtotal.toFixed(2)} €
                         </td>
                       </tr>
                       <tr>
-                        <td style="padding: 6px 0; font-size: 15px; color: #3F2F25;">
+                        <td style="padding: 4px 0; font-size: 14px; color: #444444;">
                           Livraison
                         </td>
-                        <td style="padding: 6px 0; font-size: 15px; color: #3F2F25; text-align: right;">
+                        <td style="padding: 4px 0; font-size: 14px; color: #444444; text-align: right;">
                           ${shipping.toFixed(2)} €
                         </td>
                       </tr>
                       <tr>
-                        <td style="padding: 12px 0 0; font-size: 19px; font-weight: 600; color: #3F2F25; border-top: 2px solid #D6B48A;">
+                        <td style="padding: 12px 0 0; font-size: 18px; font-weight: 600; color: #1A1A1A;">
                           Total
                         </td>
-                        <td style="padding: 12px 0 0; font-size: 19px; font-weight: 600; color: #3F2F25; text-align: right; border-top: 2px solid #D6B48A;">
+                        <td style="padding: 12px 0 0; font-size: 18px; font-weight: 600; color: #1A1A1A; text-align: right;">
                           ${total.toFixed(2)} €
                         </td>
                       </tr>
@@ -227,35 +190,26 @@ export async function sendOrderConfirmedEmail({
                   ${invoiceButton}
 
                   <!-- TIMELINE -->
-                  <div style="background: #FFFFFF; border-radius: 16px; padding: 20px 20px 8px; margin: 28px 0; border: 1px solid #E8E3DA;">
-                    <p style="margin: 0 0 4px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; color: #7B8B73; font-weight: 500;">
-                      Suivi de votre commande
+                  <div style="background: #F9F9F9; border-radius: 6px; padding: 20px 20px 12px; margin: 28px 0 0; border: 1px solid #EEEEEE;">
+                    <p style="margin: 0 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: #888888; font-weight: 500;">
+                      Suivi de commande
                     </p>
                     ${timeline}
                   </div>
-
-                  <!-- BLOC ARTISANAT -->
-                  ${artisanBlock}
-
-                  <!-- BLOC ASSISTANCE -->
-                  ${assistanceBlock}
 
                 </td>
               </tr>
 
               <!-- FOOTER -->
               <tr>
-                <td style="background: #3F2F25; padding: 40px 40px 32px; text-align: center; color: #FFFFFF;">
-                  <p style="margin: 0; font-size: 22px; font-weight: 400; letter-spacing: 2px; font-family: Georgia, serif;">
+                <td style="background: #1A1A1A; padding: 32px 40px 28px; text-align: center; color: #FFFFFF;">
+                  <p style="margin: 0; font-size: 18px; font-weight: 300; letter-spacing: 4px; text-transform: uppercase;">
                     Nomade
                   </p>
-                  <p style="margin: 6px 0 0; font-size: 14px; color: #D6B48A; font-style: italic; letter-spacing: 0.5px;">
-                    Maroquinerie artisanale française
+                  <p style="margin: 8px 0 0; font-size: 12px; color: #999999; letter-spacing: 0.5px;">
+                    Contact : <a href="mailto:${CONTACT_EMAIL}" style="color: #CCCCCC; text-decoration: none;">${CONTACT_EMAIL}</a>
                   </p>
-                  <p style="margin: 16px 0 0; font-size: 13px; color: #D6B48A; font-style: italic;">
-                    L'essentiel est à l'intérieur.
-                  </p>
-                  <p style="margin: 24px 0 0; font-size: 13px; color: rgba(255,255,255,0.5);">
+                  <p style="margin: 16px 0 0; font-size: 12px; color: #666666;">
                     © ${new Date().getFullYear()} Nomade
                   </p>
                 </td>
@@ -270,6 +224,7 @@ export async function sendOrderConfirmedEmail({
     </html>
   `;
 
+  // Envoi de l'email (inchangé)
   return resend.emails.send({
     from: `Nomade <${NOREPLY_EMAIL}>`,
     to,
