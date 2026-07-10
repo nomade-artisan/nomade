@@ -45,7 +45,7 @@ export async function sendShippingEmail({
     )}</strong></p>`,
   });
 
-  await resend.emails.send({
+  return resend.emails.send({
     from: `Nomade <${NOREPLY_EMAIL}>`,
     to,
     subject: `Votre commande ${orderNumber} est en route`,
@@ -77,7 +77,7 @@ export async function sendDeliveryEmail({
       '<p style="margin:0;font-size:13px;color:#374151;line-height:1.7;">En cas de souci, repondez directement a cet email pour etre accompagne rapidement.</p>',
   });
 
-  await resend.emails.send({
+  return resend.emails.send({
     from: `Nomade <${NOREPLY_EMAIL}>`,
     to,
     subject: `Votre commande ${orderNumber} a été livrée`,
