@@ -1,5 +1,4 @@
-import { supabase } from "@/lib/supabase/client";
-import type {
+import { supabase } from "@/lib/supabase/client";import { supabaseAdmin } from "@/lib/supabase/admin";import type {
   OrderWithRelations,
   OrderListItem,
   OrderTracking,
@@ -71,7 +70,7 @@ export async function getOrdersList(
 }
 
 export async function getOrderById(id: string): Promise<OrderWithRelations | null> {
-  const { data: order, error } = await supabase
+  const { data: order, error } = await supabaseAdmin
     .from("orders")
     .select(
       `
@@ -89,7 +88,7 @@ export async function getOrderById(id: string): Promise<OrderWithRelations | nul
     return null;
   }
 
-  const { data: shipment, error: shipmentError } = await supabase
+  const { data: shipment, error: shipmentError } = await supabaseAdmin
     .from("shipments")
     .select("*")
     .eq("order_id", id)

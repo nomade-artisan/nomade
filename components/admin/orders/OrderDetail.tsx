@@ -76,18 +76,52 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
   } | null>(null);
 
   useEffect(() => {
-    setLabelData(
-      order.shipment
-        ? {
-            shippingOrderId: order.shipment.shipping_order_id ?? "",
-            status: order.shipment.status ?? "",
-            trackingNumber: order.shipment.tracking_number ?? "",
-            trackingUrl: order.shipment.tracking_url ?? "",
-            labelUrl: order.shipment.label_url ?? "",
-          }
-        : null
-    );
-  }, [order.shipment]);
+    let ignore = false;
+
+    const syncFromServerShipment = () => {
+      setLabelData(
+        order.shipment
+          ? {
+              shippingOrderId: order.shipment.shipping_order_id ?? "",
+              status: order.shipment.status ?? "",
+              trackingNumber: order.shipment.tracking_number ?? "",
+              trackingUrl: order.shipment.tracking_url ?? "",
+              labelUrl: order.shipment.label_url ?? "",
+            }
+          : null
+      );
+    };
+
+    syncFromServerShipment();
+
+    async function fetchLatestShipment() {
+      try {
+        const res = await fetch(`/api/admin/orders/${order.id}/shipment`);
+        if (!res.ok) return;
+
+        const payload = await res.json();
+        const shipment = payload.shipment;
+
+        if (!ignore && shipment) {
+          setLabelData({
+            shippingOrderId: shipment.shipping_order_id ?? "",
+            status: shipment.status ?? "",
+            trackingNumber: shipment.tracking_number ?? "",
+            trackingUrl: shipment.tracking_url ?? "",
+            labelUrl: shipment.label_url ?? "",
+          });
+        }
+      } catch (err) {
+        console.error("Erreur rechargement shipment", err);
+      }
+    }
+
+    fetchLatestShipment();
+
+    return () => {
+      ignore = true;
+    };
+  }, [order.id, order.shipment]);
 
   const shipment = order.shipment ?? null;
   const hasLabel = !!(shipment?.label_url || labelData?.labelUrl);
@@ -171,21 +205,9 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
       setLabelData(payload);
       toast.success("Étiquette générée avec succès");
 
-      // 🔥 Mise à jour du statut de la commande → "preparing"
-      if (order.status === "confirmed") {
-        const updateRes = await fetch("/api/admin/orders", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            orderId: order.id,
-            status: "preparing",
-            comment: "Étiquette générée, en attente de dépôt transporteur",
-          }),
-        });
-
-        if (!updateRes.ok) throw new Error("Échec du changement de statut");
-        router.refresh();
-      }
+      // 🔥 L'API de génération de label gère déjà la mise à jour de l'historique
+      // et le passage en status "preparing".
+      router.refresh();
 
       // ⚠️ L'email d'expédition sera envoyé par le webhook Boxtal
       // lors du passage à SHIPPED (dépôt transporteur)
@@ -510,18 +532,6 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
                     <div className="flex items-start justify-between gap-3">
                       <span className="text-muted-foreground">Tracking</span>
                       <span className="font-medium break-all text-right">{trackingNumber}</span>
-                    </div>
-                  )}
-                  {trackingUrl && (
-                    <div className="flex items-start justify-between gap-3">
-                      <span className="text-muted-foreground">Tracking URL</span>
-                      <span className="font-medium break-all text-right">{trackingUrl}</span>
-                    </div>
-                  )}
-                  {labelUrl && (
-                    <div className="flex items-start justify-between gap-3">
-                      <span className="text-muted-foreground">Étiquette</span>
-                      <span className="font-medium break-all text-right">{labelUrl}</span>
                     </div>
                   )}
                 </div>
