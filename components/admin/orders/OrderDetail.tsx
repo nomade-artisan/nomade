@@ -52,7 +52,7 @@ const NEXT_STATUS: Record<
   pending: { status: "confirmed", label: "Confirmer", icon: CheckCircle },
   confirmed: null, // ❌ Plus de bouton manuel, l'expédition se fait via génération d'étiquette
   preparing: null, // ❌ Pas d'action manuelle, le webhook fera le passage à shipped
-  shipped: { status: "delivered", label: "Livrer", icon: Package },
+  shipped: null, // ❌ Le passage à delivered est automatique via webhook
   delivered: null,
   cancelled: { status: "pending", label: "Réactiver", icon: Undo2 },
   returned: { status: "pending", label: "Réactiver", icon: Undo2 },
