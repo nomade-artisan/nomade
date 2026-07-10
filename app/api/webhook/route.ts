@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { supabase } from "@/lib/db";
 import { Resend } from "resend";
-import { sendOrderConfirmedEmail } from "@/lib/email/order-confirmed"; // 👈 import
+import { sendOrderConfirmedEmail } from "@/lib/email/order-confirmed";
 import Stripe from "stripe";
 import crypto from "crypto";
 import { revalidatePath } from "next/cache";
