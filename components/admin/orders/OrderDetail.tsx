@@ -245,8 +245,12 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
         )}
 
         <Card>
-          <CardHeader>
+          <CardHeader className="flex items-center justify-between">
             <CardTitle>Historique</CardTitle>
+            <Button variant="outline" size="sm" onClick={() => router.refresh()}>
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Actualiser
+            </Button>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -429,6 +433,19 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
                         target="_blank"
                         rel="noopener noreferrer"
                       >
+                        <ExternalLink className="mr-2 h-4 w-4" />
+                        Voir l&apos;étiquette
+                      </a>
+                    </Button>
+                  )}
+                  {labelUrl && (
+                    <Button variant="outline" size="sm" asChild>
+                      <a
+                        href={labelUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        download
+                      >
                         <Printer className="mr-2 h-4 w-4" />
                         Télécharger l&apos;étiquette
                       </a>
@@ -444,21 +461,6 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
                         <ExternalLink className="mr-2 h-4 w-4" />
                         Voir le suivi
                       </a>
-                    </Button>
-                  )}
-                  {order.status === "confirmed" && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleGenerateLabel}
-                      disabled={isGenerating}
-                    >
-                      {isGenerating ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <RefreshCw className="mr-2 h-4 w-4" />
-                      )}
-                      Regénérer
                     </Button>
                   )}
                 </div>

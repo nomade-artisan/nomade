@@ -26,6 +26,11 @@ export async function POST(req: NextRequest) {
       to: address.email,
       customerName: `${address.firstName} ${address.lastName}`,
       orderNumber: order.order_number,
+        items: order.items,
+        subtotal: order.subtotal,
+        shipping: order.shipping,
+        total: order.total,
+        invoicePdfUrl: order.invoice_pdf_url,
     });
 
     return NextResponse.json({ success: true });

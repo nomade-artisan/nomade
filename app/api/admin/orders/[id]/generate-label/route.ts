@@ -121,6 +121,19 @@ export async function POST(
       }
     }
 
+    const { error: trackingError } = await supabaseAdmin
+      .from("order_tracking")
+      .insert({
+        order_id: order.id,
+        status: order.status,
+        comment: "Étiquette générée",
+        created_at: new Date().toISOString(),
+      });
+
+    if (trackingError) {
+      console.error("Erreur ajout historique :", trackingError);
+    }
+
     return NextResponse.json(response);
 
 }

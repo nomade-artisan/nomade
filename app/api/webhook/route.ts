@@ -1,8 +1,9 @@
+// app/api/webhook/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { supabase } from "@/lib/db";
 import { Resend } from "resend";
-import { sendOrderConfirmedEmail } from "@/lib/email/order-confirmed";
+import { sendOrderConfirmedEmail } from "@/lib/email/order-confirmed"; // 👈 import
 import Stripe from "stripe";
 import crypto from "crypto";
 import { revalidatePath } from "next/cache";
@@ -31,11 +32,13 @@ export async function POST(req: NextRequest) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as any;
 
+    // --- 1. Métadonnées produits ---
     const productIds: string[] =
       session.metadata?.product_ids?.split(",").filter(Boolean) || [];
     const quantities: number[] =
       session.metadata?.quantities?.split(",").map(Number).filter(Boolean) || [];
 
+    // --- 2. Mise à jour des stocks (inchangée, mais on pourrait l'améliorer) ---
     const { data: products } = await supabase
       .from("products")
       .select("id, stock")
@@ -44,9 +47,7 @@ export async function POST(req: NextRequest) {
     const updates = productIds
       .map((id: string, i: number) => {
         const product = products?.find((p) => p.id === Number(id));
-        if (!product) {
-          return null;
-        }
+        if (!product) return null;
         const qty = quantities[i] ?? 1;
         return {
           id: Number(id),
@@ -61,48 +62,49 @@ export async function POST(req: NextRequest) {
       )
     );
 
+    // --- 3. Récupération des line items ---
     const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
     const shipping = session.shipping_details || session.customer_details;
-    const orderNumber =
-      "NOM-" + crypto.randomBytes(3).toString("hex").toUpperCase();
+    const orderNumber = "NOM-" + crypto.randomBytes(3).toString("hex").toUpperCase();
     const totalAmount = (session.amount_total || 0) / 100;
+
+    // --- 4. Calcul du sous-total et des frais de port ---
+    // Récupération du montant de la livraison
+    const shippingAmount = (session.total_details?.amount_shipping || session.shipping_cost?.amount_total || 0) / 100;
+    const subtotal = totalAmount - shippingAmount;
+
     const customerName = session.customer_details?.name ?? "";
     const [firstName = "", ...rest] = customerName.trim().split(/\s+/);
     const lastName = rest.join(" ");
+
+    // --- 5. Création de la commande ---
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .insert({
         customer_id: null,
         status: "confirmed",
-        subtotal: totalAmount,
-        shipping: 0,
+        subtotal: subtotal,        
+        shipping: shippingAmount,
         total: totalAmount,
         shipping_address: shipping?.address
           ? {
               firstName,
               lastName,
-
               email: session.customer_details?.email ?? "",
-
               phone: shipping?.phone || session.customer_details?.phone || "",
-
               line1: shipping.address.line1,
               line2: shipping.address.line2 || "",
-
               city: shipping.address.city,
               postal_code: shipping.address.postal_code,
-
               country: shipping.address.country,
             }
           : {
               firstName,
               lastName,
-
               email: session.customer_details?.email ?? "",
-
               phone: shipping?.phone || session.customer_details?.phone || "",
             },
-        notes: `Commande passée via Stripes`,
+        notes: `Commande passée via Stripe`,
         payment_intent_id: session.payment_intent,
         order_number: orderNumber,
       })
@@ -111,7 +113,9 @@ export async function POST(req: NextRequest) {
 
     if (orderError || !order) {
       console.error("❌ Erreur création commande :", orderError);
+      // On continue quand même, mais on ne pourra pas envoyer d'email avec order.id
     } else {
+      // --- 6. Insertion des order_items ---
       const orderItems = lineItems.data.map((item: any, index: number) => {
         const productId = Number(productIds[index]) || 0;
         return {
@@ -128,20 +132,20 @@ export async function POST(req: NextRequest) {
         const { error: itemsError } = await supabase
           .from("order_items")
           .insert(orderItems);
-
         if (itemsError) {
           console.error("❌ Erreur order_items :", itemsError);
         }
       }
 
+      // --- 7. Tracking ---
       await supabase.from("order_tracking").insert({
         order_id: order.id,
         status: "confirmed",
         comment: "Paiement validé via Stripe",
       });
 
-      const customerEmail =
-        session.customer_details?.email || session.customer?.email || "";
+      // --- 8. Gestion client (inchangée) ---
+      const customerEmail = session.customer_details?.email || session.customer?.email || "";
       const customerName = session.customer_details?.name || "";
 
       if (customerEmail) {
@@ -161,7 +165,6 @@ export async function POST(req: NextRequest) {
         }
 
         if (existingCustomer) {
-          // Mettre à jour les infos
           await supabase
             .from("customers")
             .update({
@@ -183,17 +186,11 @@ export async function POST(req: NextRequest) {
             })
             .eq("id", existingCustomer.id);
 
-          // Lier la commande
-          const { error: linkError } = await supabase
+          await supabase
             .from("orders")
             .update({ customer_id: existingCustomer.id })
             .eq("id", order.id);
-
-          if (linkError) {
-            console.error("❌ Erreur liaison commande-client :", linkError);
-          }
         } else {
-          // Nouveau client
           const { data: newCustomer, error: customerError } = await supabase
             .from("customers")
             .insert({
@@ -225,9 +222,9 @@ export async function POST(req: NextRequest) {
             console.error("❌ Erreur création client :", customerError);
           }
         }
-      } else {
       }
 
+      // --- 9. Analytics ---
       await supabase.from("analytics_events").insert({
         event_type: "purchase_completed",
         product_id: productIds.join(","),
@@ -241,6 +238,7 @@ export async function POST(req: NextRequest) {
         },
       });
 
+      // --- 10. Revalidation ---
       for (const id of productIds) {
         revalidatePath(`/boutique/${id}`);
       }
@@ -250,9 +248,40 @@ export async function POST(req: NextRequest) {
       revalidatePath("/");
     }
 
-    const invoice = await stripe.invoices.retrieve(session.invoice as string);
-    const invoiceUrl = invoice.hosted_invoice_url;
+    // --- 11. Récupération de la facture (si disponible) ---
+    let invoiceUrl: string | null = null;
+    if (session.invoice) {
+      try {
+        const invoice = await stripe.invoices.retrieve(session.invoice as string);
+        invoiceUrl = invoice.hosted_invoice_url || null;
+      } catch (e) {
+        console.warn("⚠️ Impossible de récupérer la facture :", e);
+      }
+    }
 
+    // --- 12. Envoi de l'email client via la fonction centralisée ---
+    const customerEmail = session.customer_details?.email || "";
+    if (customerEmail && order) {
+      // Transformer les lineItems en items pour la fonction
+      const itemsForEmail = lineItems.data.map((item: any) => ({
+        name: item.description || "Produit",
+        quantity: item.quantity || 1,
+        price: (item.amount_total || 0) / 100 / (item.quantity || 1),
+      }));
+
+      await sendOrderConfirmedEmail({
+        to: customerEmail,
+        customerName: customerName || "Client",
+        orderNumber,
+        items: itemsForEmail,
+        subtotal: subtotal,         // ✅ sous-total hors livraison
+        shipping: shippingAmount,    // ✅ frais de port
+        total: totalAmount,
+        invoicePdfUrl: invoiceUrl,   // ✅ peut être null
+      });
+    }
+
+    // --- 13. Email admin (inchangé) ---
     const itemsList = lineItems.data
       .map(
         (item: any) =>
@@ -267,21 +296,10 @@ export async function POST(req: NextRequest) {
     const shippingAddress = shipping?.address
       ? `${shipping.address.line1 || ""}, ${shipping.address.postal_code || ""} ${shipping.address.city || ""}, ${shipping.address.country || ""}`
       : "Adresse communiquée";
-    const customerEmail = session.customer_details?.email || "";
 
-    // Email client
-    if (customerEmail) {
-      await sendOrderConfirmedEmail({
-        to: customerEmail,
-        customerName: customerName || "Client",
-        orderNumber,
-      });
-    }
-
-    // Email admin
     await resend.emails.send({
       from: `Nomade <${NOREPLY_EMAIL}>`,
-      to: `${ADMIN_EMAIL}`,
+      to: '${ADMIN_EMAIL}',
       subject: `Nouvelle commande ${orderNumber} — ${totalAmount.toFixed(2)} €`,
       html: `
         <div style="font-family: Inter, system-ui, sans-serif; max-width: 520px; margin: auto; padding: 30px; background: #fafaf9; border-radius: 12px;">
