@@ -2,9 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { createCompleteProduct, updateCompleteProduct } from "@/lib/products/services";
 import { generateSlug } from "@/lib/products/queries";
 import type { ProductFormState } from "@/lib/products/types";
+import { requireAdminAuthorization } from "@/lib/security/admin-auth";
+import { enforceRateLimit } from "@/lib/security/rate-limit";
 
 
 export async function POST(request: NextRequest) {
+  const rateLimitError = await enforceRateLimit(request, "admin-products-post", {
+    windowMs: 60_000,
+    maxRequests: 30,
+  });
+  if (rateLimitError) return rateLimitError;
+
+  const authError = requireAdminAuthorization(request);
+  if (authError) return authError;
+
   try {
     const formData = await request.formData();
 
@@ -70,6 +81,15 @@ export async function POST(request: NextRequest) {
 
 
 export async function PUT(request: NextRequest) {
+  const rateLimitError = await enforceRateLimit(request, "admin-products-put", {
+    windowMs: 60_000,
+    maxRequests: 30,
+  });
+  if (rateLimitError) return rateLimitError;
+
+  const authError = requireAdminAuthorization(request);
+  if (authError) return authError;
+
   try {
     const formData = await request.formData();
 
@@ -143,6 +163,15 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const rateLimitError = await enforceRateLimit(request, "admin-products-delete", {
+    windowMs: 60_000,
+    maxRequests: 30,
+  });
+  if (rateLimitError) return rateLimitError;
+
+  const authError = requireAdminAuthorization(request);
+  if (authError) return authError;
+
   try {
     const { searchParams } = new URL(request.url);
     const productId = Number(searchParams.get("id"));

@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/client";
 import { Resend } from "resend";
+import { enforceRateLimit } from "@/lib/security/rate-limit";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const NOREPLY_EMAIL = process.env.NOREPLY_EMAIL;
 const CONTACT_EMAIL = process.env.CONTACT_EMAIL?.split(",").map((e) => e.trim()) || [];
 
 export async function POST(req: NextRequest) {
+  const rateLimitError = await enforceRateLimit(req, "contact", {
+    windowMs: 60_000,
+    maxRequests: 5,
+  });
+  if (rateLimitError) return rateLimitError;
+
   try {
     const { name, email, message } = await req.json();
 

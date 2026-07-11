@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { supabase } from "@/lib/supabase/client";
 import { validatePromoCode } from "@/lib/promotions";
+import { enforceRateLimit } from "@/lib/security/rate-limit";
 
 function parseEnvNumber(value: string | undefined, fallback: number) {
   if (!value) return fallback;
@@ -10,6 +11,12 @@ function parseEnvNumber(value: string | undefined, fallback: number) {
 }
 
 export async function POST(req: NextRequest) {
+  const rateLimitError = await enforceRateLimit(req, "checkout", {
+    windowMs: 60_000,
+    maxRequests: 20,
+  });
+  if (rateLimitError) return rateLimitError;
+
   try {
     
     const { items, promoCode } = await req.json();

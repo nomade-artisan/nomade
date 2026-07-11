@@ -3,9 +3,20 @@ import { getOrdersList } from "@/lib/orders/queries";
 import { updateOrderStatus, deleteOrder } from "@/lib/orders/mutations";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { Boxtal } from "@/lib/boxtal";
+import { requireAdminAuthorization } from "@/lib/security/admin-auth";
+import { enforceRateLimit } from "@/lib/security/rate-limit";
 
 // GET : liste des commandes
 export async function GET(request: NextRequest) {
+  const rateLimitError = await enforceRateLimit(request, "admin-orders-get", {
+    windowMs: 60_000,
+    maxRequests: 120,
+  });
+  if (rateLimitError) return rateLimitError;
+
+  const authError = requireAdminAuthorization(request);
+  if (authError) return authError;
+
   try {
     const { searchParams } = new URL(request.url);
     const page = Number(searchParams.get("page")) || 1;
@@ -23,6 +34,15 @@ export async function GET(request: NextRequest) {
 
 // PUT : changer le statut
 export async function PUT(request: NextRequest) {
+  const rateLimitError = await enforceRateLimit(request, "admin-orders-put", {
+    windowMs: 60_000,
+    maxRequests: 60,
+  });
+  if (rateLimitError) return rateLimitError;
+
+  const authError = requireAdminAuthorization(request);
+  if (authError) return authError;
+
   try {
     const body = await request.json();
     const { orderId, status, comment, adminPassword } = body;
@@ -135,6 +155,15 @@ export async function PUT(request: NextRequest) {
 
 // DELETE : supprimer une commande
 export async function DELETE(request: NextRequest) {
+  const rateLimitError = await enforceRateLimit(request, "admin-orders-delete", {
+    windowMs: 60_000,
+    maxRequests: 30,
+  });
+  if (rateLimitError) return rateLimitError;
+
+  const authError = requireAdminAuthorization(request);
+  if (authError) return authError;
+
   try {
     const { searchParams } = new URL(request.url);
     const orderId = searchParams.get("id");

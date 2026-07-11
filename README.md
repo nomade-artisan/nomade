@@ -34,3 +34,20 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Security Environment Variables
+
+Set these variables in your deployment platform before going live:
+
+- `ADMIN_PASSWORD`: Required for admin and sensitive API Basic auth.
+- `ADMIN_CANCEL_PASSWORD`: Required to confirm cancellation actions.
+- `ENABLE_TEST_EMAIL_ENDPOINT`: Keep unset or set to `false` in production.
+- `ENABLE_BOXTAL_TEST_ENDPOINT`: Keep unset or set to `false` in production.
+- `UPSTASH_REDIS_REST_URL`: Required for distributed rate limiting in production.
+- `UPSTASH_REDIS_REST_TOKEN`: Required for distributed rate limiting in production.
+
+Notes:
+
+- Test endpoints return `404` in production unless explicitly enabled.
+- Sensitive endpoints are rate-limited (`429` with `Retry-After`).
+- In production, admin and sensitive routes require HTTPS (except localhost).

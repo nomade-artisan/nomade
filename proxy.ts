@@ -6,6 +6,14 @@ export function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
+  const host = req.headers.get("host") || "";
+  const forwardedProto = req.headers.get("x-forwarded-proto") || req.nextUrl.protocol.replace(":", "");
+  const isLocalHost = host.includes("localhost") || host.startsWith("127.0.0.1") || host.startsWith("::1");
+
+  if (!isLocalHost && forwardedProto !== "https") {
+    return new NextResponse("HTTPS requis", { status: 400 });
+  }
+
   if (!process.env.ADMIN_PASSWORD) {
     return new NextResponse("ADMIN_PASSWORD non configuré", {
       status: 503,

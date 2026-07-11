@@ -8,6 +8,8 @@ import { sendOrderCancelledEmail } from "@/lib/email/order-cancelled";
 import { sendOrderRefundedEmail } from "@/lib/email/order-refunded";
 import { sendShippingEmail, sendDeliveryEmail } from "@/lib/email/shipping";
 import { requireAdminAuthorization } from "@/lib/security/admin-auth";
+import { blockInProductionUnlessEnabled } from "@/lib/security/route-guards";
+import { enforceRateLimit } from "@/lib/security/rate-limit";
 
 type SendResult = {
   step: string;
@@ -23,6 +25,15 @@ function getRecipient(req: NextRequest): string {
 }
 
 export async function GET(req: NextRequest) {
+  const disabledError = blockInProductionUnlessEnabled("ENABLE_TEST_EMAIL_ENDPOINT");
+  if (disabledError) return disabledError;
+
+  const rateLimitError = await enforceRateLimit(req, "test-email", {
+    windowMs: 60_000,
+    maxRequests: 5,
+  });
+  if (rateLimitError) return rateLimitError;
+
   const authError = requireAdminAuthorization(req);
   if (authError) return authError;
 

@@ -1,5 +1,23 @@
 /** @type {import('next').NextConfig} */
+const isProd = process.env.NODE_ENV === 'production';
+
+const cspDirectives = [
+  "default-src 'self'",
+  "img-src 'self' data: https: blob:",
+  `script-src 'self' 'unsafe-inline' ${isProd ? '' : "'unsafe-eval'"} https://js.stripe.com https://va.vercel-scripts.com`.replace(/\s+/g, ' ').trim(),
+  "style-src 'self' 'unsafe-inline'",
+  "frame-src https://js.stripe.com https://hooks.stripe.com",
+  "connect-src 'self' https://api.stripe.com https://js.stripe.com https://*.supabase.co https://*.vercel-insights.com https://vitals.vercel-insights.com",
+  "font-src 'self' data:",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+  'upgrade-insecure-requests',
+];
+
 const nextConfig = {
+  poweredByHeader: false,
   output: 'standalone',
   images: {
     qualities: [75],
@@ -11,6 +29,39 @@ const nextConfig = {
         pathname: "/storage/v1/object/public/**",
       },
     ],
+  },
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()'
+          },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=31536000; includeSubDomains; preload',
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: cspDirectives.join('; '),
+          },
+        ],
+      },
+    ];
   },
 };
 
