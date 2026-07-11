@@ -21,6 +21,8 @@ export async function getOrdersList(
       id,
       status,
       total,
+      discount_amount,
+      promo_code,
       order_number,
       created_at,
       customer:customers(id, first_name, last_name),
@@ -56,6 +58,8 @@ export async function getOrdersList(
       : "Client invité",
     status: order.status,
     total: order.total,
+    discount_amount: order.discount_amount ?? 0,
+    promo_code: order.promo_code ?? null,
     items_count: order.items?.[0]?.count || 0,
     created_at: order.created_at,
   }));

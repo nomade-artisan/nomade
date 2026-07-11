@@ -572,6 +572,20 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
               <span className="text-muted-foreground">Livraison</span>
               <span>{order.shipping.toFixed(2)} €</span>
             </div>
+            {(order.discount_amount ?? 0) > 0 && (
+              <>
+                <div className="flex justify-between text-emerald-700">
+                  <span className="text-muted-foreground">
+                    Réduction{order.promo_code ? ` (${order.promo_code})` : ""}
+                  </span>
+                  <span>-{(order.discount_amount ?? 0).toFixed(2)} €</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Total avant réduction</span>
+                  <span>{(order.total + (order.discount_amount ?? 0)).toFixed(2)} €</span>
+                </div>
+              </>
+            )}
             <div className="flex justify-between font-medium text-base border-t pt-2">
               <span>Total</span>
               <span>{order.total.toFixed(2)} €</span>

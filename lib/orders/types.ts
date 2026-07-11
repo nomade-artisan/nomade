@@ -29,6 +29,8 @@ export interface Order {
   status: OrderStatus;
   subtotal: number;
   shipping: number;
+  discount_amount?: number;
+  promo_code?: string | null;
   total: number;
   shipping_address: any;
   notes: string | null;
@@ -82,6 +84,8 @@ export interface OrderListItem {
   customer_name: string | null;
   status: OrderStatus;
   total: number;
+  discount_amount?: number;
+  promo_code?: string | null;
   items_count: number;
   created_at: string;
 }

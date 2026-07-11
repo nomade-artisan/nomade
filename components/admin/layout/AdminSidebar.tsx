@@ -5,6 +5,7 @@ import {
   ShoppingCart,
   Users,
   Settings,
+  Ticket,
 } from "lucide-react";
 
 const links = [
@@ -32,6 +33,11 @@ const links = [
     label: "Catégories",
     href: "/admin/categories",
     icon: Package,
+  },
+  {
+    label: "Codes promo",
+    href: "/admin/promo-codes",
+    icon: Ticket,
   },
   {
     label: "Paramètres",

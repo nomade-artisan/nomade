@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { supabase } from "@/lib/supabase/client";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { Resend } from "resend";
 import { sendOrderConfirmedEmail } from "@/lib/email/order-confirmed";
 import Stripe from "stripe";
@@ -68,10 +69,14 @@ export async function POST(req: NextRequest) {
     const orderNumber = "NOM-" + crypto.randomBytes(3).toString("hex").toUpperCase();
     const totalAmount = (session.amount_total || 0) / 100;
 
-    // --- 4. Calcul du sous-total et des frais de port ---
-    // Récupération du montant de la livraison
+    // --- 4. Calcul du sous-total, remise et frais de port ---
     const shippingAmount = (session.total_details?.amount_shipping || session.shipping_cost?.amount_total || 0) / 100;
-    const subtotal = totalAmount - shippingAmount;
+    const discountAmount = (session.total_details?.amount_discount || 0) / 100;
+    const subtotal = totalAmount - shippingAmount + discountAmount;
+    const appliedPromoCode =
+      typeof session.metadata?.promo_code === "string" && session.metadata.promo_code.trim()
+        ? session.metadata.promo_code.trim().toUpperCase()
+        : null;
 
     const customerName = session.customer_details?.name ?? "";
     const [firstName = "", ...rest] = customerName.trim().split(/\s+/);
@@ -85,6 +90,8 @@ export async function POST(req: NextRequest) {
         status: "confirmed",
         subtotal: subtotal,        
         shipping: shippingAmount,
+        discount_amount: discountAmount,
+        promo_code: appliedPromoCode,
         total: totalAmount,
         shipping_address: shipping?.address
           ? {
@@ -115,6 +122,20 @@ export async function POST(req: NextRequest) {
       console.error("❌ Erreur création commande :", orderError);
       // On continue quand même, mais on ne pourra pas envoyer d'email avec order.id
     } else {
+      // Double sécurité: force la persistance des infos promo même si l'insert
+      // initial a été limité par des policies/contraintes de schéma.
+      const { error: promoTraceError } = await supabaseAdmin
+        .from("orders")
+        .update({
+          discount_amount: discountAmount,
+          promo_code: appliedPromoCode,
+        })
+        .eq("id", order.id);
+
+      if (promoTraceError) {
+        console.error("❌ Erreur persistance trace promo sur order:", promoTraceError);
+      }
+
       // --- 6. Insertion des order_items ---
       const orderItems = lineItems.data.map((item: any, index: number) => {
         const productId = Number(productIds[index]) || 0;
@@ -232,11 +253,61 @@ export async function POST(req: NextRequest) {
           order_id: order.id,
           order_number: orderNumber,
           amount: totalAmount,
+          shipping: shippingAmount,
+          discount: discountAmount,
+          promo_code: session.metadata?.promo_code || "",
           products: productIds,
           quantities,
           customer_email: customerEmail,
         },
       });
+
+      const promoIdRaw = session.metadata?.promo_id;
+      const promoCodeRaw = session.metadata?.promo_code;
+      const promoId = promoIdRaw ? Number(promoIdRaw) : NaN;
+
+      if (Number.isFinite(promoId) || promoCodeRaw) {
+        let promoCodeRecord: { id: number; used_count: number } | null = null;
+
+        if (Number.isFinite(promoId)) {
+          const { data, error } = await supabaseAdmin
+            .from("promo_codes")
+            .select("id, used_count")
+            .eq("id", promoId)
+            .maybeSingle();
+
+          if (error) {
+            console.error("❌ Erreur lecture promo_code par id:", error);
+          } else {
+            promoCodeRecord = data;
+          }
+        }
+
+        if (!promoCodeRecord && promoCodeRaw) {
+          const { data, error } = await supabaseAdmin
+            .from("promo_codes")
+            .select("id, used_count")
+            .eq("code", String(promoCodeRaw).trim().toUpperCase())
+            .maybeSingle();
+
+          if (error) {
+            console.error("❌ Erreur lecture promo_code par code:", error);
+          } else {
+            promoCodeRecord = data;
+          }
+        }
+
+        if (promoCodeRecord) {
+          const { error } = await supabaseAdmin
+            .from("promo_codes")
+            .update({ used_count: (promoCodeRecord.used_count || 0) + 1 })
+            .eq("id", promoCodeRecord.id);
+
+          if (error) {
+            console.error("❌ Erreur increment used_count promo_code:", error);
+          }
+        }
+      }
 
       // --- 10. Revalidation ---
       for (const id of productIds) {

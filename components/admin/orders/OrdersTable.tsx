@@ -79,6 +79,7 @@ export default function OrdersTable({ orders }: Props) {
               <th className="text-left p-4 text-sm font-medium">Client</th>
               <th className="text-left p-4 text-sm font-medium">Articles</th>
               <th className="text-left p-4 text-sm font-medium">Total</th>
+              <th className="text-left p-4 text-sm font-medium">Réduction</th>
               <th className="text-left p-4 text-sm font-medium">Statut</th>
               <th className="text-left p-4 text-sm font-medium">Date</th>
               <th className="text-left p-4"></th>
@@ -87,7 +88,7 @@ export default function OrdersTable({ orders }: Props) {
           <tbody>
             {orders.length === 0 ? (
               <tr>
-                <td colSpan={7} className="p-12 text-center text-muted-foreground">
+                <td colSpan={8} className="p-12 text-center text-muted-foreground">
                   Aucune commande trouvée
                 </td>
               </tr>
@@ -101,6 +102,11 @@ export default function OrdersTable({ orders }: Props) {
                   <td className="p-4 text-sm">{order.items_count}</td>
                   <td className="p-4 text-sm font-medium">
                     {order.total.toFixed(2)} €
+                  </td>
+                  <td className="p-4 text-sm">
+                    {(order.discount_amount ?? 0) > 0
+                      ? `-${(order.discount_amount ?? 0).toFixed(2)} €${order.promo_code ? ` (${order.promo_code})` : ""}`
+                      : "—"}
                   </td>
                   <td className="p-4">
                     <span
