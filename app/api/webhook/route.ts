@@ -33,6 +33,32 @@ export async function POST(req: NextRequest) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as any;
 
+    // Resolve shipping details reliably. Depending on Stripe payload shape,
+    // shipping data may be present in different nested fields.
+    const resolvedSession = (await stripe.checkout.sessions.retrieve(
+      session.id
+    )) as any;
+    const shippingAddress =
+      session?.shipping_details?.address ||
+      session?.collected_information?.shipping_details?.address ||
+      resolvedSession?.shipping_details?.address ||
+      (resolvedSession as any)?.collected_information?.shipping_details?.address ||
+      session?.customer_details?.address ||
+      resolvedSession?.customer_details?.address ||
+      null;
+    const shippingPhone =
+      session?.shipping_details?.phone ||
+      resolvedSession?.shipping_details?.phone ||
+      session?.customer_details?.phone ||
+      resolvedSession?.customer_details?.phone ||
+      "";
+    const shippingName =
+      session?.shipping_details?.name ||
+      resolvedSession?.shipping_details?.name ||
+      session?.customer_details?.name ||
+      resolvedSession?.customer_details?.name ||
+      "";
+
     // --- 1. Métadonnées produits ---
     const productIds: string[] =
       session.metadata?.product_ids?.split(",").filter(Boolean) || [];
@@ -65,7 +91,6 @@ export async function POST(req: NextRequest) {
 
     // --- 3. Récupération des line items ---
     const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
-    const shipping = session.shipping_details || session.customer_details;
     const orderNumber = "NOM-" + crypto.randomBytes(3).toString("hex").toUpperCase();
     const totalAmount = (session.amount_total || 0) / 100;
 
@@ -78,7 +103,7 @@ export async function POST(req: NextRequest) {
         ? session.metadata.promo_code.trim().toUpperCase()
         : null;
 
-    const customerName = session.customer_details?.name ?? "";
+    const customerName = shippingName || session.customer_details?.name || "";
     const [firstName = "", ...rest] = customerName.trim().split(/\s+/);
     const lastName = rest.join(" ");
 
@@ -93,23 +118,23 @@ export async function POST(req: NextRequest) {
         discount_amount: discountAmount,
         promo_code: appliedPromoCode,
         total: totalAmount,
-        shipping_address: shipping?.address
+        shipping_address: shippingAddress
           ? {
               firstName,
               lastName,
               email: session.customer_details?.email ?? "",
-              phone: shipping?.phone || session.customer_details?.phone || "",
-              line1: shipping.address.line1,
-              line2: shipping.address.line2 || "",
-              city: shipping.address.city,
-              postal_code: shipping.address.postal_code,
-              country: shipping.address.country,
+              phone: shippingPhone || session.customer_details?.phone || "",
+              line1: shippingAddress.line1 || "",
+              line2: shippingAddress.line2 || "",
+              city: shippingAddress.city || "",
+              postal_code: shippingAddress.postal_code || "",
+              country: shippingAddress.country || "",
             }
           : {
               firstName,
               lastName,
               email: session.customer_details?.email ?? "",
-              phone: shipping?.phone || session.customer_details?.phone || "",
+              phone: shippingPhone || session.customer_details?.phone || "",
             },
         notes: `Commande passée via Stripe`,
         payment_intent_id: session.payment_intent,
@@ -191,14 +216,14 @@ export async function POST(req: NextRequest) {
             .update({
               first_name: firstName || existingCustomer.first_name,
               last_name: lastName || existingCustomer.last_name,
-              phone: shipping?.phone || existingCustomer.phone,
-              address: shipping?.address
+              phone: shippingPhone || existingCustomer.phone,
+              address: shippingAddress
                 ? {
-                    line1: shipping.address.line1,
-                    line2: shipping.address.line2 || "",
-                    city: shipping.address.city,
-                    postal_code: shipping.address.postal_code,
-                    country: shipping.address.country,
+                    line1: shippingAddress.line1 || "",
+                    line2: shippingAddress.line2 || "",
+                    city: shippingAddress.city || "",
+                    postal_code: shippingAddress.postal_code || "",
+                    country: shippingAddress.country || "",
                   }
                 : existingCustomer.address,
               total_orders: existingCustomer.total_orders + 1,
@@ -218,14 +243,14 @@ export async function POST(req: NextRequest) {
               email: normalizedEmail,
               first_name: firstName,
               last_name: lastName,
-              phone: shipping?.phone || null,
-              address: shipping?.address
+              phone: shippingPhone || null,
+              address: shippingAddress
                 ? {
-                    line1: shipping.address.line1,
-                    line2: shipping.address.line2 || "",
-                    city: shipping.address.city,
-                    postal_code: shipping.address.postal_code,
-                    country: shipping.address.country,
+                    line1: shippingAddress.line1 || "",
+                    line2: shippingAddress.line2 || "",
+                    city: shippingAddress.city || "",
+                    postal_code: shippingAddress.postal_code || "",
+                    country: shippingAddress.country || "",
                   }
                 : null,
               total_orders: 1,
@@ -364,8 +389,8 @@ export async function POST(req: NextRequest) {
       )
       .join("");
 
-    const shippingAddress = shipping?.address
-      ? `${shipping.address.line1 || ""}, ${shipping.address.postal_code || ""} ${shipping.address.city || ""}, ${shipping.address.country || ""}`
+    const shippingAddressText = shippingAddress
+      ? `${shippingAddress.line1 || ""}, ${shippingAddress.postal_code || ""} ${shippingAddress.city || ""}, ${shippingAddress.country || ""}`
       : "Adresse communiquée";
 
     await resend.emails.send({
@@ -381,7 +406,7 @@ export async function POST(req: NextRequest) {
           </div>
           <p><strong>${customerName}</strong><br/>${customerEmail}</p>
           <table style="width:100%;">${itemsList}</table>
-          <p>📍 ${shippingAddress}</p>
+          <p>📍 ${shippingAddressText}</p>
           <a href="${process.env.NEXT_PUBLIC_BASE_URL}/admin/orders/${order?.id}" style="display: inline-block; background: #1c1917; color: white; padding: 10px 20px; border-radius: 24px; text-decoration: none;">Voir dans l'admin</a>
         </div>`,
     });

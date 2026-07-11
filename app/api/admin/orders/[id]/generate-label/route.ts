@@ -4,6 +4,37 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { BOXTAL } from "@/lib/boxtal/constants";
 import { Boxtal } from "@/lib/boxtal";
 
+function normalizeShippingAddress(value: any) {
+  const address = value || {};
+
+  return {
+    line1: String(address.line1 || address.street || "").trim(),
+    city: String(address.city || "").trim(),
+    postalCode: String(address.postal_code || address.postalCode || "").trim(),
+    country: String(address.country || "FR").trim(),
+  };
+}
+
+function mapBoxtalValidation(details: any): string[] {
+  const groups = details?.errors;
+  if (!Array.isArray(groups)) return [];
+
+  const messages: string[] = [];
+  for (const group of groups) {
+    const parameters = group?.parameters;
+    if (!Array.isArray(parameters)) continue;
+
+    for (const parameter of parameters) {
+      const field = String(parameter?.field || "").trim();
+      const message = String(parameter?.message || "valeur invalide").trim();
+      if (!field) continue;
+      messages.push(`${field}: ${message}`);
+    }
+  }
+
+  return messages;
+}
+
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -31,18 +62,54 @@ export async function POST(
     );
   }
 
+  const shippingAddress = normalizeShippingAddress(order.shipping_address);
+  const missingFields: string[] = [];
+
+  if (!shippingAddress.line1) missingFields.push("line1/street");
+  if (!shippingAddress.city) missingFields.push("city");
+  if (!shippingAddress.postalCode) missingFields.push("postal_code");
+
+  if (missingFields.length > 0) {
+    return NextResponse.json(
+      {
+        error:
+          "Adresse de livraison incomplète. Complète les informations manquantes avant de générer l'étiquette.",
+        details: {
+          missingFields,
+          address: shippingAddress,
+        },
+      },
+      { status: 422 }
+    );
+  }
+
   // 2. Appeler Boxtal pour générer l'étiquette
   let response;
   try {
     response = await Boxtal.generateLabel(order);
   } catch (error: any) {
-    console.log(
-      JSON.stringify(error?.response?.data, null, 2)
-    );
+    const boxtalStatus = error?.response?.status;
+    const boxtalDetails = error?.response?.data || null;
+    console.log(JSON.stringify(boxtalDetails, null, 2));
+
+    if (boxtalStatus === 422) {
+      return NextResponse.json(
+        {
+          error:
+            "Boxtal refuse l'adresse d'expédition. Vérifie rue, ville et code postal.",
+          details: {
+            validation: mapBoxtalValidation(boxtalDetails),
+            boxtal: boxtalDetails,
+          },
+        },
+        { status: 422 }
+      );
+    }
+
     return NextResponse.json(
       {
         error: "Échec de la création du label Boxtal.",
-        details: error?.response?.data || error?.message || null,
+        details: boxtalDetails || error?.message || null,
       },
       { status: 500 }
     );

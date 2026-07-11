@@ -127,7 +127,22 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error ?? "Erreur inconnue");
+        const missing = Array.isArray(data?.details?.missingFields)
+          ? data.details.missingFields.join(", ")
+          : "";
+        const validation = Array.isArray(data?.details?.validation)
+          ? data.details.validation.join(" | ")
+          : "";
+
+        const message = [
+          data?.error,
+          missing ? `Champs manquants: ${missing}` : "",
+          validation ? `Détail Boxtal: ${validation}` : "",
+        ]
+          .filter(Boolean)
+          .join("\n");
+
+        throw new Error(message || "Erreur inconnue");
       }
 
       const payload = await res.json();
