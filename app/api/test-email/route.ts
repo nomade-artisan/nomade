@@ -7,6 +7,7 @@ import { sendOrderDeliveredEmail } from "@/lib/email/order-delivered";
 import { sendOrderCancelledEmail } from "@/lib/email/order-cancelled";
 import { sendOrderRefundedEmail } from "@/lib/email/order-refunded";
 import { sendShippingEmail, sendDeliveryEmail } from "@/lib/email/shipping";
+import { requireAdminAuthorization } from "@/lib/security/admin-auth";
 
 type SendResult = {
   step: string;
@@ -22,6 +23,9 @@ function getRecipient(req: NextRequest): string {
 }
 
 export async function GET(req: NextRequest) {
+  const authError = requireAdminAuthorization(req);
+  if (authError) return authError;
+
   try {
     const to = getRecipient(req);
     const runAll = req.nextUrl.searchParams.get("all") === "1";

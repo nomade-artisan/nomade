@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isAdminAuthorized } from "@/lib/security/admin-auth";
 
 export function proxy(req: NextRequest) {
-  const auth = req.headers.get("authorization");
+  if (req.method === "OPTIONS") {
+    return NextResponse.next();
+  }
 
-  if (auth !== `Basic ${btoa(`admin:${process.env.ADMIN_PASSWORD || "nomade2026_test"}`)}`) {
+  if (!process.env.ADMIN_PASSWORD) {
+    return new NextResponse("ADMIN_PASSWORD non configuré", {
+      status: 503,
+    });
+  }
+
+  if (!isAdminAuthorized(req)) {
     return new NextResponse("Accès refusé", {
       status: 401,
       headers: {
@@ -16,5 +25,10 @@ export function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: "/admin/:path*",
+  matcher: [
+    "/admin/:path*",
+    "/api/admin/:path*",
+    "/api/refund",
+    "/api/test-email",
+  ],
 };

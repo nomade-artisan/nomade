@@ -2,8 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { stripe } from "@/lib/stripe";
 import { sendOrderRefundedEmail } from "@/lib/email/order-refunded";
+import { requireAdminAuthorization } from "@/lib/security/admin-auth";
 
 export async function POST(req: NextRequest) {
+  const authError = requireAdminAuthorization(req);
+  if (authError) return authError;
+
   try {
     const { orderId } = await req.json();
 
