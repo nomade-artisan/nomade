@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getOrdersList } from "@/lib/orders/queries";
 import { updateOrderStatus, deleteOrder } from "@/lib/orders/mutations";
+import { supabaseAdmin } from "@/lib/supabase/admin";
+import { Boxtal } from "@/lib/boxtal";
 
 // GET : liste des commandes
 export async function GET(request: NextRequest) {
@@ -23,7 +25,101 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { orderId, status, comment } = body;
+    const { orderId, status, comment, adminPassword } = body;
+
+    if (status === "cancelled") {
+      const configuredPassword = process.env.ADMIN_CANCEL_PASSWORD;
+
+      if (!configuredPassword) {
+        return NextResponse.json(
+          { error: "ADMIN_CANCEL_PASSWORD non configuré" },
+          { status: 500 }
+        );
+      }
+
+      if (!adminPassword || adminPassword !== configuredPassword) {
+        return NextResponse.json(
+          { error: "Mot de passe administrateur invalide" },
+          { status: 403 }
+        );
+      }
+
+      const { data: order, error: orderError } = await supabaseAdmin
+        .from("orders")
+        .select("id, status")
+        .eq("id", orderId)
+        .single();
+
+      if (orderError || !order) {
+        return NextResponse.json(
+          { error: "Commande introuvable" },
+          { status: 404 }
+        );
+      }
+
+      const { data: shipment, error: shipmentError } = await supabaseAdmin
+        .from("shipments")
+        .select("id, shipping_order_id, status")
+        .eq("order_id", orderId)
+        .maybeSingle();
+
+      if (shipmentError) {
+        return NextResponse.json(
+          { error: "Erreur de lecture shipment" },
+          { status: 500 }
+        );
+      }
+
+      const shipmentStatus = (shipment?.status || "").toUpperCase();
+      const depositedStatuses = new Set(["SHIPPED", "IN_TRANSIT", "DELIVERED"]);
+
+      if (
+        order.status === "shipped" ||
+        order.status === "delivered" ||
+        depositedStatuses.has(shipmentStatus)
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "Annulation impossible: le colis est deja depose chez le transporteur. Utilisez le retour.",
+          },
+          { status: 409 }
+        );
+      }
+
+      if (shipment?.shipping_order_id) {
+        try {
+          await Boxtal.cancel(shipment.shipping_order_id);
+
+          await supabaseAdmin
+            .from("shipments")
+            .update({
+              status: "CANCELLED",
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", shipment.id);
+        } catch (boxtalError: any) {
+          const boxtalStatus = boxtalError?.response?.status;
+
+          if (boxtalStatus === 400) {
+            return NextResponse.json(
+              {
+                error:
+                  "Annulation Boxtal impossible: le transporteur ne permet plus l'annulation de cette expedition.",
+              },
+              { status: 409 }
+            );
+          }
+
+          return NextResponse.json(
+            {
+              error: "Echec de l'annulation Boxtal. Reessayez plus tard.",
+            },
+            { status: 502 }
+          );
+        }
+      }
+    }
 
     await updateOrderStatus(orderId, status, comment);
 

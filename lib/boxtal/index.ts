@@ -1,7 +1,7 @@
 // lib/boxtal/index.ts
 
 import { mapOrderToBoxtal } from "./mapper";
-import { createShippingOrder } from "./shippingOrders";
+import { cancelShippingOrder, createShippingOrder } from "./shippingOrders";
 import { getShippingDocuments } from "./documents";
 import { getTracking } from "./tracking";
 
@@ -26,6 +26,12 @@ export class BoxtalService {
     async tracking(shippingOrderId: string) {
 
         return await getTracking(shippingOrderId);
+
+    }
+
+    async cancel(shippingOrderId: string) {
+
+        return await cancelShippingOrder(shippingOrderId);
 
     }
 

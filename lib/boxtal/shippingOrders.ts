@@ -1,3 +1,4 @@
+// lib/boxtal/shippingOrders.ts
 import { boxtal } from "./client";
 
 import {
@@ -24,4 +25,12 @@ export async function createShippingOrder(
 
     return data;
 
+}
+
+export async function cancelShippingOrder(shippingOrderId: string) {
+    const { data } = await boxtal.delete(
+        `/shipping/v3.1/shipping-order/${shippingOrderId}`
+    );
+
+    return data;
 }

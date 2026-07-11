@@ -87,9 +87,22 @@ function CartClient() {
   );
 
   // Nouveaux frais de livraison
-  const FREE_SHIPPING_THRESHOLD = process.env.FREE_SHIPPING_THRESHOLD ? parseFloat(process.env.FREE_SHIPPING_THRESHOLD) : 120;
-  const SHIPPING_COST = process.env.SHIPPING_COST ? parseFloat(process.env.SHIPPING_COST) : 0;
-  const shipping = subtotal > FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+  const parseEnvNumber = (value: string | undefined, fallback: number) => {
+    if (!value) return fallback;
+    const parsed = parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  };
+
+  const FREE_SHIPPING_THRESHOLD = parseEnvNumber(
+    process.env.NEXT_PUBLIC_FREE_SHIPPING_THRESHOLD,
+    120
+  );
+  const SHIPPING_COST = parseEnvNumber(
+    process.env.NEXT_PUBLIC_SHIPPING_COST,
+    7
+  );
+  const hasFreeShipping = subtotal >= FREE_SHIPPING_THRESHOLD;
+  const shipping = hasFreeShipping ? 0 : SHIPPING_COST;
   const total = subtotal + shipping - promoDiscount;
 
   const handleApplyPromo = (e: React.FormEvent) => {
@@ -388,7 +401,7 @@ function CartClient() {
                   </span>
 
                   <span>
-                    {shipping === 0 ? (
+                    {hasFreeShipping ? (
                       <span className="text-emerald-700">
                         Offerte
                       </span>

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,13 +17,10 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
-  Trash2,
   Loader2,
-  Truck,
   Package,
-  CheckCircle,
   XCircle,
-  Undo2,
+  RotateCcw,
   MapPin,
   Printer,
   ExternalLink,
@@ -40,31 +37,12 @@ const CARRIERS: Record<string, string> = {
   dhl: "DHL",
 };
 
-// 🔥 Nouveau flux de statuts :
-// pending → confirmed (paiement validé)
-// confirmed → preparing (génération étiquette)
-// preparing → shipped (dépôt transporteur, webhook SHIPPED)
-// shipped → delivered (webhook DELIVERED)
-const NEXT_STATUS: Record<
-  OrderStatus,
-  { status: OrderStatus; label: string; icon: any } | null
-> = {
-  pending: { status: "confirmed", label: "Confirmer", icon: CheckCircle },
-  confirmed: null, // ❌ Plus de bouton manuel, l'expédition se fait via génération d'étiquette
-  preparing: null, // ❌ Pas d'action manuelle, le webhook fera le passage à shipped
-  shipped: null, // ❌ Le passage à delivered est automatique via webhook
-  delivered: null,
-  cancelled: { status: "pending", label: "Réactiver", icon: Undo2 },
-  returned: { status: "pending", label: "Réactiver", icon: Undo2 },
-};
-
 export default function OrderDetail({ order }: { order: OrderWithRelations }) {
   const router = useRouter();
   const [isUpdating, setIsUpdating] = useState(false);
-  const [comment, setComment] = useState("");
-  const [showDelete, setShowDelete] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelWithRefund, setCancelWithRefund] = useState(true);
+  const [adminCancelPassword, setAdminCancelPassword] = useState("");
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [labelData, setLabelData] = useState<{
@@ -135,55 +113,6 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
     : null;
 
   /**
-   * 🔥 Gestion manuelle du changement de statut (admin)
-   * - Utilisé pour "Confirmer" (pending → confirmed) et "Livrer" (shipped → delivered)
-   * - Ne gère PAS l'expédition (preparing → shipped) car c'est automatique via webhook
-   */
-  async function handleStatusChange(newStatus: OrderStatus) {
-    setIsUpdating(true);
-    try {
-      const res = await fetch("/api/admin/orders", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orderId: order.id,
-          status: newStatus,
-          comment: comment || undefined,
-        }),
-      });
-
-      if (!res.ok) throw new Error("Erreur");
-
-      // ⚠️ On n'envoie plus l'email d'expédition ici car :
-      // - Le statut "shipped" est maintenant déclenché par le webhook Boxtal
-      // - L'email d'expédition est envoyé par le webhook lors du passage à SHIPPED
-      // - On conserve l'appel uniquement si on avait un mécanisme de fallback
-
-      // if (newStatus === "shipped") {
-      //   await fetch("/api/shipping/send-shipping-email", {
-      //     method: "POST",
-      //     headers: { "Content-Type": "application/json" },
-      //     body: JSON.stringify({
-      //       orderId: order.id,
-      //       trackingNumber: order.shipment?.tracking_number,
-      //       trackingUrl: order.shipment?.tracking_url,
-      //       carrier: order.shipment?.carrier,
-      //     }),
-      //   });
-      // }
-
-      setComment("");
-      router.refresh();
-      toast.success(`Statut mis à jour : ${ORDER_STATUS_LABELS[newStatus]}`);
-    } catch (err) {
-      toast.error("Échec du changement de statut");
-      console.error(err);
-    } finally {
-      setIsUpdating(false);
-    }
-  }
-
-  /**
    * 🔥 Génération de l'étiquette d'expédition
    * - Déclenche la création du shipment avec statut ANNOUNCED
    * - Passe la commande en "preparing"
@@ -223,53 +152,90 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
   async function handleCancelOrder() {
     setIsUpdating(true);
     try {
-      if (cancelWithRefund && (order as any).payment_intent_id) {
-        const refundRes = await fetch("/api/refund", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ orderId: order.id }),
-        });
-        if (!refundRes.ok) throw new Error("Échec du remboursement");
+      if (!adminCancelPassword.trim()) {
+        throw new Error("Mot de passe administrateur requis");
       }
 
-      await fetch("/api/admin/orders", {
+      const cancelRes = await fetch("/api/admin/orders", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           orderId: order.id,
           status: "cancelled",
+          adminPassword: adminCancelPassword,
           comment: cancelWithRefund
             ? "Annulée avec remboursement"
             : "Annulée sans remboursement",
         }),
       });
 
+      if (!cancelRes.ok) {
+        const data = await cancelRes.json().catch(() => ({}));
+        throw new Error(data.error || "Échec de l'annulation");
+      }
+
+      if (cancelWithRefund && (order as any).payment_intent_id) {
+        const refundRes = await fetch("/api/refund", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderId: order.id }),
+        });
+        if (!refundRes.ok) {
+          toast.error("Commande annulée mais remboursement en échec");
+        }
+      }
+
       setShowCancelDialog(false);
+      setAdminCancelPassword("");
       router.refresh();
     } catch (err) {
-      toast.error("Erreur lors de l'annulation");
+      toast.error(err instanceof Error ? err.message : "Erreur lors de l'annulation");
       console.error(err);
     } finally {
       setIsUpdating(false);
     }
   }
 
-  async function handleDelete() {
+  async function handleReturnOrder() {
+    setIsUpdating(true);
     try {
-      const res = await fetch(`/api/admin/orders?id=${order.id}`, {
-        method: "DELETE",
+      const res = await fetch("/api/admin/orders", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: order.id,
+          status: "returned",
+          comment: "Commande retournee apres depot transporteur",
+        }),
       });
-      if (!res.ok) throw new Error("Erreur");
-      router.push("/admin/orders");
+
+      if (!res.ok) throw new Error("Erreur retour commande");
+      toast.success("Commande marquee comme retournee");
       router.refresh();
     } catch (err) {
-      toast.error("Erreur lors de la suppression");
+      toast.error("Erreur lors du passage en retour");
       console.error(err);
+    } finally {
+      setIsUpdating(false);
     }
   }
 
-  const nextAction = NEXT_STATUS[order.status];
   const shippingAddress = order.shipping_address;
+  const depositedToCarrier =
+    order.status === "shipped" ||
+    order.status === "delivered" ||
+    shipmentStatus === "SHIPPED" ||
+    shipmentStatus === "IN_TRANSIT" ||
+    shipmentStatus === "DELIVERED";
+  const canCancel =
+    !depositedToCarrier &&
+    order.status !== "cancelled" &&
+    order.status !== "delivered" &&
+    order.status !== "returned";
+  const canReturn =
+    depositedToCarrier &&
+    order.status !== "returned" &&
+    order.status !== "cancelled";
 
   return (
     <div className="grid lg:grid-cols-3 gap-6">
@@ -382,32 +348,13 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
               {ORDER_STATUS_LABELS[order.status] || order.status}
             </span>
 
-            {/* 🔥 Bouton d'action selon le statut */}
-            {nextAction ? (
-              <Button
-                className="w-full"
-                onClick={() => handleStatusChange(nextAction.status)}
-                disabled={isUpdating}
-              >
-                {isUpdating ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <nextAction.icon className="mr-2 h-4 w-4" />
-                )}
-                {nextAction.label}
-              </Button>
-            ) : (
-              /* 🔥 Message informatif pour les statuts sans action */
-              order.status === "confirmed" && (
-                <p className="text-xs text-muted-foreground text-center">
-                  L'expédition sera déclenchée lors de la génération de l'étiquette.
-                </p>
-              )
+            {order.status === "confirmed" && (
+              <p className="text-xs text-muted-foreground text-center">
+                L'expedition est declenchee lors de la generation de l'etiquette.
+              </p>
             )}
 
-            {order.status !== "cancelled" &&
-              order.status !== "delivered" &&
-              order.status !== "returned" && (
+            {canCancel && (
                 <Button
                   variant="outline"
                   className="w-full"
@@ -419,17 +366,30 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
                 </Button>
               )}
 
-            <Textarea
-              placeholder="Commentaire (optionnel)..."
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              rows={2}
-              className="text-sm"
-            />
+            {canReturn && (
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={handleReturnOrder}
+                disabled={isUpdating}
+              >
+                <RotateCcw className="mr-2 h-4 w-4" />
+                Passer en retour
+              </Button>
+            )}
+
+            {depositedToCarrier && order.status !== "returned" && (
+              <p className="text-xs text-muted-foreground text-center">
+                Le colis est depose chez le transporteur: l'annulation est desactivee, utilisez le retour.
+              </p>
+            )}
 
             <AlertDialog
               open={showCancelDialog}
-              onOpenChange={setShowCancelDialog}
+              onOpenChange={(open) => {
+                setShowCancelDialog(open);
+                if (!open) setAdminCancelPassword("");
+              }}
             >
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -453,6 +413,18 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
                     </label>
                   </div>
                 )}
+                <div className="space-y-2 py-2">
+                  <label className="text-sm font-medium">
+                    Mot de passe administrateur
+                  </label>
+                  <Input
+                    type="password"
+                    value={adminCancelPassword}
+                    onChange={(e) => setAdminCancelPassword(e.target.value)}
+                    placeholder="Saisir le mot de passe"
+                    autoComplete="off"
+                  />
+                </div>
                 <AlertDialogFooter>
                   <AlertDialogCancel disabled={isUpdating}>
                     Revenir
@@ -468,33 +440,6 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
               </AlertDialogContent>
             </AlertDialog>
 
-            <AlertDialog open={showDelete} onOpenChange={setShowDelete}>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" className="w-full">
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Supprimer
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>
-                    Supprimer cette commande ?
-                  </AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Cette action est irréversible.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Annuler</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={handleDelete}
-                    className="bg-destructive"
-                  >
-                    Supprimer
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
           </CardContent>
         </Card>
 
