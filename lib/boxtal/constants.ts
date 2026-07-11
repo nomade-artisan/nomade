@@ -1,3 +1,4 @@
+//lib/boxtal/constants.ts
 export const BOXTAL = {
 
     API_VERSION: "v3.1",
@@ -14,7 +15,7 @@ export const BOXTAL = {
 
         type: "PARCEL",
 
-        weight: 1,
+        weight: 0.9,
 
         length: 35,
 
