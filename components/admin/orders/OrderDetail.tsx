@@ -43,6 +43,7 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelWithRefund, setCancelWithRefund] = useState(true);
   const [adminCancelPassword, setAdminCancelPassword] = useState("");
+  const [cancelError, setCancelError] = useState("");
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [labelData, setLabelData] = useState<{
@@ -166,6 +167,7 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
 
   async function handleCancelOrder() {
     setIsUpdating(true);
+    setCancelError("");
     try {
       if (!adminCancelPassword.trim()) {
         throw new Error("Mot de passe administrateur requis");
@@ -202,9 +204,13 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
 
       setShowCancelDialog(false);
       setAdminCancelPassword("");
+      setCancelError("");
       router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erreur lors de l'annulation");
+      const message =
+        err instanceof Error ? err.message : "Erreur lors de l'annulation";
+      setCancelError(message);
+      toast.error(message);
       console.error(err);
     } finally {
       setIsUpdating(false);
@@ -403,7 +409,10 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
               open={showCancelDialog}
               onOpenChange={(open) => {
                 setShowCancelDialog(open);
-                if (!open) setAdminCancelPassword("");
+                if (!open) {
+                  setAdminCancelPassword("");
+                  setCancelError("");
+                }
               }}
             >
               <AlertDialogContent>
@@ -435,10 +444,16 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
                   <Input
                     type="password"
                     value={adminCancelPassword}
-                    onChange={(e) => setAdminCancelPassword(e.target.value)}
+                    onChange={(e) => {
+                      setAdminCancelPassword(e.target.value);
+                      if (cancelError) setCancelError("");
+                    }}
                     placeholder="Saisir le mot de passe"
                     autoComplete="off"
                   />
+                  {cancelError && (
+                    <p className="text-sm text-red-500">{cancelError}</p>
+                  )}
                 </div>
                 <AlertDialogFooter>
                   <AlertDialogCancel disabled={isUpdating}>

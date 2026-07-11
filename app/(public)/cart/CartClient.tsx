@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/components/CartContext";
 import { trackEvent } from "@/lib/analytics/tracking";
+import { toast } from "sonner";
 
 const isMaintenance =
   process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "true";
@@ -77,7 +78,7 @@ function CartClient() {
     }
 
     if (!res.ok) {
-      alert(data.error || "Erreur lors du paiement");
+      toast.error(data.error || "Erreur lors du paiement");
       setCheckoutLoading(false);
       return;
     }
@@ -85,7 +86,7 @@ function CartClient() {
     if (data.url) {
       window.location.href = data.url;
     } else {
-      alert(data.error || "Erreur lors du paiement");
+      toast.error(data.error || "Erreur lors du paiement");
       setCheckoutLoading(false);
     }
   };
