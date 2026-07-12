@@ -1,23 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-
-function encodeBase64(value: string): string {
-  if (typeof btoa === "function") {
-    return btoa(value);
-  }
-
-  return Buffer.from(value).toString("base64");
-}
+import { isAdminSessionValid } from "@/lib/security/admin-session";
 
 export function isAdminAuthorized(request: NextRequest): boolean {
-  const adminPassword = process.env.ADMIN_PASSWORD;
-
-  if (!adminPassword) {
-    return false;
-  }
-
-  const auth = request.headers.get("authorization");
-  const expected = `Basic ${encodeBase64(`admin:${adminPassword}`)}`;
-  return auth === expected;
+  return isAdminSessionValid(request);
 }
 
 export function requireAdminAuthorization(

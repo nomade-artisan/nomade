@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Pencil, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,13 +16,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import type { Category } from "@/lib/categories/types";
+import type { Collection } from "@/lib/collections/types";
 
 interface Props {
-  categories: Category[];
+  collections: Collection[];
 }
 
-export default function CategoriesTable({ categories }: Props) {
+export default function CollectionsTable({ collections }: Props) {
   const router = useRouter();
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -31,7 +31,7 @@ export default function CategoriesTable({ categories }: Props) {
     if (!deleteId) return;
     setIsDeleting(true);
     try {
-      await fetch(`/api/admin/categories?id=${deleteId}`, { method: "DELETE" });
+      await fetch(`/api/admin/collections?id=${deleteId}`, { method: "DELETE" });
       router.refresh();
     } finally {
       setIsDeleting(false);
@@ -45,31 +45,25 @@ export default function CategoriesTable({ categories }: Props) {
         <table className="w-full">
           <thead>
             <tr className="border-b bg-muted/30">
-              <th className="text-left p-4 text-sm">Collection</th>
-              <th className="text-left p-4 text-sm">Nom</th>
-              <th className="text-left p-4 text-sm">Slug</th>
-              <th className="text-left p-4 text-sm">Description</th>
-              <th className="text-left p-4"></th>
+              <th className="p-4 text-left text-sm">Nom</th>
+              <th className="p-4 text-left text-sm">Slug</th>
+              <th className="p-4 text-left text-sm">Description</th>
+              <th className="p-4"></th>
             </tr>
           </thead>
           <tbody>
-            {categories.map((cat) => (
-              <tr key={cat.id} className="border-b hover:bg-muted/50">
-                <td className="p-4 text-sm text-muted-foreground">{cat.collection?.name || "—"}</td>
-                <td className="p-4 font-medium">{cat.name}</td>
-                <td className="p-4 text-sm text-muted-foreground">{cat.slug}</td>
-                <td className="p-4 text-sm">{cat.description || "—"}</td>
-                <td className="p-4 text-right space-x-2">
+            {collections.map((collection) => (
+              <tr key={collection.id} className="border-b hover:bg-muted/50">
+                <td className="p-4 font-medium">{collection.name}</td>
+                <td className="p-4 text-sm text-muted-foreground">{collection.slug}</td>
+                <td className="p-4 text-sm">{collection.description || "—"}</td>
+                <td className="space-x-2 p-4 text-right">
                   <Button asChild variant="outline" size="sm">
-                    <Link href={`/admin/categories/${cat.id}`}>
+                    <Link href={`/admin/collections/${collection.id}`}>
                       <Pencil className="mr-2 h-4 w-4" />Éditer
                     </Link>
                   </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => setDeleteId(cat.id)}
-                  >
+                  <Button variant="destructive" size="sm" onClick={() => setDeleteId(collection.id)}>
                     <Trash2 className="mr-2 h-4 w-4" />Supprimer
                   </Button>
                 </td>
@@ -82,18 +76,14 @@ export default function CategoriesTable({ categories }: Props) {
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer la catégorie ?</AlertDialogTitle>
+            <AlertDialogTitle>Supprimer la collection ?</AlertDialogTitle>
             <AlertDialogDescription>
               Cette action est irréversible.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              disabled={isDeleting}
-              className="bg-destructive"
-            >
+            <AlertDialogAction onClick={handleDelete} disabled={isDeleting} className="bg-destructive">
               {isDeleting ? "Suppression..." : "Supprimer"}
             </AlertDialogAction>
           </AlertDialogFooter>

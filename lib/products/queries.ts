@@ -1,6 +1,6 @@
+// lib/products/queries.ts
 import { supabase } from "@/lib/supabase/client";
-import type { ProductWithImages, Category } from "./types";
-
+import type { ProductWithImages, Category, Review, CreateReviewInput, ProductRating } from "./types";
 
 export interface ProductListItem {
   id: number;
@@ -10,7 +10,10 @@ export interface ProductListItem {
   stock: number;
   status: string;
   is_new: boolean;
+  category_slug: string | null;
   category_name: string | null;
+  collection_slug: string | null;
+  collection_name: string | null;
   cover_image: string | null;
   created_at: string;
 }
@@ -28,11 +31,11 @@ export interface ProductListOptions {
   pageSize?: number;
   search?: string;
   status?: "all" | "draft" | "active" | "archived";
+  collection?: string;
   category?: string;
   sortField?: "name" | "price" | "stock" | "created_at";
   sortDirection?: "asc" | "desc";
 }
-
 
 export async function getProductsList(
   options: ProductListOptions = {}
@@ -42,6 +45,7 @@ export async function getProductsList(
     pageSize = 10,
     search = "",
     status = "all",
+    collection = "all",
     category = "all",
     sortField = "created_at",
     sortDirection = "desc",
@@ -50,7 +54,6 @@ export async function getProductsList(
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
-  // Construire la requête de base
   let query = supabase
     .from("products")
     .select(
@@ -63,37 +66,35 @@ export async function getProductsList(
       status,
       is_new,
       created_at,
-      category:categories(name),
+      category:categories(
+        name,
+        slug,
+        collection:collections(name, slug)
+      ),
       images:product_images(image_url, position)
     `,
       { count: "exact" }
     );
 
-  // Filtre recherche textuelle
   if (search) {
     query = query.ilike("name", `%${search}%`);
   }
 
-  // Filtre statut
   if (status !== "all") {
     query = query.eq("status", status);
   }
 
-  // Filtre catégorie (via le nom de la catégorie liée)
-  if (category !== "all") {
-    query = query.filter("category.name", "eq", category);
+  if (collection !== "all") {
+    query = query.filter("category.collection.slug", "eq", collection);
   }
 
-  // Tri principal
+  if (category !== "all") {
+    query = query.filter("category.slug", "eq", category);
+  }
+
   query = query.order(sortField, { ascending: sortDirection === "asc" });
-
-  // Tri secondaire des images par position
   query = query.order("position", { referencedTable: "product_images" });
-
-  // Une seule image (la première = couverture)
   query = query.limit(1, { referencedTable: "product_images" });
-
-  // Pagination
   query = query.range(from, to);
 
   const { data, error, count } = await query;
@@ -118,7 +119,10 @@ export async function getProductsList(
     status: product.status,
     is_new: product.is_new,
     created_at: product.created_at,
+    category_slug: product.category?.slug || null,
     category_name: product.category?.name || null,
+    collection_slug: product.category?.collection?.slug || null,
+    collection_name: product.category?.collection?.name || null,
     cover_image: product.images?.[0]?.image_url || null,
   }));
 
@@ -131,10 +135,7 @@ export async function getProductsList(
   };
 }
 
-
-export async function getProductById(
-  id: number
-): Promise<ProductWithImages | null> {
+export async function getProductById(id: number): Promise<ProductWithImages | null> {
   const { data: product, error } = await supabase
     .from("products")
     .select(`
@@ -153,10 +154,7 @@ export async function getProductById(
   return product as unknown as ProductWithImages;
 }
 
-
-export async function getProductForEdit(
-  id: number
-): Promise<ProductWithImages | null> {
+export async function getProductForEdit(id: number): Promise<ProductWithImages | null> {
   // Vérifier si le produit existe
   const { data: exists, error: existError } = await supabase
     .from("products")
@@ -182,9 +180,9 @@ export async function getProductForEdit(
       is_new,
       details,
       category_id,
-      images:product_images(*),
-      category:categories(*)
-    `)
+      category:categories(*, collection:collections(*)),
+      images:product_images(*)
+    `)   // ✅ plus de virgule en trop
     .eq("id", id)
     .single();
 
@@ -196,14 +194,13 @@ export async function getProductForEdit(
   return product as unknown as ProductWithImages;
 }
 
-
 export async function getAllProducts(): Promise<ProductWithImages[]> {
   const { data, error } = await supabase
     .from("products")
     .select(`
       *,
       images:product_images(*),
-      category:categories(*)
+      category:categories(*, collection:collections(*))
     `)
     .order("created_at", { ascending: false });
 
@@ -215,11 +212,13 @@ export async function getAllProducts(): Promise<ProductWithImages[]> {
   return data as unknown as ProductWithImages[];
 }
 
-
 export async function getCategories(): Promise<Category[]> {
   const { data, error } = await supabase
     .from("categories")
-    .select("*")
+    .select(`
+      *,
+      collection:collections(*)
+    `)
     .order("name");
 
   if (error) {
@@ -244,7 +243,6 @@ export async function getCategoryNames(): Promise<string[]> {
   return (data || []).map((c: any) => c.name);
 }
 
-
 export function generateSlug(name: string): string {
   const base = name
     .toLowerCase()
@@ -259,11 +257,8 @@ export function generateSlug(name: string): string {
   return `${base}-${suffix}`;
 }
 
-// Ajoute à la fin du fichier
+// ===================== REVIEWS =====================
 
-import type { Review, CreateReviewInput, ProductRating } from "./types";
-
-// Récupérer les avis d'un produit
 export async function getProductReviews(productId: number): Promise<Review[]> {
   const { data, error } = await supabase
     .from("reviews")
@@ -279,7 +274,6 @@ export async function getProductReviews(productId: number): Promise<Review[]> {
   return data as Review[];
 }
 
-// Récupérer la note moyenne et la distribution
 export async function getProductRating(productId: number): Promise<ProductRating> {
   const { data, error } = await supabase
     .from("reviews")
@@ -305,7 +299,6 @@ export async function getProductRating(productId: number): Promise<ProductRating
   };
 }
 
-// Créer un avis
 export async function createReview(input: CreateReviewInput): Promise<Review> {
   const { data, error } = await supabase
     .from("reviews")

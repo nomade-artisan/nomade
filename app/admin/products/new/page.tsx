@@ -7,7 +7,7 @@ export default async function NewProductPage() {
     await getCategories();
 
   return (
-    <div className="flex h-full flex-col max-w-5xl">
+    <div className="flex flex-col max-w-5xl">
       <ProductForm
         categories={categories}
       />

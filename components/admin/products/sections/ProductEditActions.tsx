@@ -53,62 +53,72 @@ export default function ProductEditActions({
   }
 
   return (
-    <div className="flex justify-between gap-4 pt-6 border-t">
-      <AlertDialog open={open} onOpenChange={setOpen}>
-        <AlertDialogTrigger asChild>
-          <Button
-            type="button"
-            variant="destructive"
-            disabled={isSubmitting}
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            Supprimer
-          </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer ce produit ?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Cette action est <span className="font-semibold text-destructive">irréversible</span>.
-              Le produit et toutes ses images seront définitivement supprimés.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
-            {/* ✅ Bouton custom au lieu de AlertDialogAction */}
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={isDeleting}
-            >
-              {isDeleting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Suppression...
-                </>
-              ) : (
-                <>
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Supprimer
-                </>
-              )}
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+    <div className="sticky bottom-4 z-20 mt-8 rounded-2xl border border-border/80 bg-background/98 p-3 shadow-lg shadow-black/5 backdrop-blur supports-backdrop-filter:bg-background/90">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-foreground">Actions sur le produit</p>
+          <p className="text-xs text-muted-foreground">
+            Enregistre tes modifications ou supprime definitivement cette fiche.
+          </p>
+        </div>
 
-      <div className="flex gap-4">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => router.back()}
-          disabled={isSubmitting}
-        >
-          Annuler
-        </Button>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Enregistrement..." : "Enregistrer"}
-        </Button>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+          <AlertDialog open={open} onOpenChange={setOpen}>
+            <AlertDialogTrigger asChild>
+              <Button
+                type="button"
+                variant="destructive"
+                disabled={isSubmitting}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Supprimer
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Supprimer ce produit ?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Cette action est <span className="font-semibold text-destructive">irréversible</span>.
+                  Le produit et toutes ses images seront définitivement supprimés.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
+                <Button
+                  variant="destructive"
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Suppression...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Supprimer
+                    </>
+                  )}
+                </Button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          <div className="flex gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.back()}
+              disabled={isSubmitting}
+            >
+              Annuler
+            </Button>
+            <Button type="submit" disabled={isSubmitting} className="min-w-37.5">
+              {isSubmitting ? "Enregistrement..." : "Enregistrer"}
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );

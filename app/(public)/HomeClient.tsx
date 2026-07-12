@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, useScroll, useTransform } from "framer-motion";
 import ProductCard from "@/components/ProductCard";
 
 import { supabase } from "@/lib/supabase/client";
+import type { Collection } from "@/lib/collections/types";
 
 interface Product {
   id: number | string;
@@ -19,13 +20,51 @@ interface Product {
   reviews?: number;
 }
 
+interface HomeCategoryCard {
+  name: string;
+  slug: string;
+  img: string;
+}
+
 const homeImage = (filename: string) =>
   supabase.storage.from("home").getPublicUrl(`home/${filename}`).data.publicUrl;
 
 const homeVideo = (filename: string) =>
   supabase.storage.from("home").getPublicUrl(`home/${filename}`).data.publicUrl;
 
-function HomeClient() {
+const categoryImageMap: Record<string, string> = {
+  cuir: "cat-cuir.webp",
+  minimal: "cat-minimal.webp",
+  bandouliere: "cat-bandouliere.webp",
+  aventure: "cat-aventure.webp",
+  route: "cat-aventure.webp",
+  accessoires: "cat-minimal.webp",
+};
+
+function normalizeCategory(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
+
+function buildHomeCategoryCards(collections: Collection[]): HomeCategoryCard[] {
+  return collections
+    .map((collection) => {
+      const normalizedSlug = normalizeCategory(collection.slug || collection.name);
+      const imageFile = categoryImageMap[normalizedSlug] || "cat-minimal.webp";
+
+      return {
+        name: collection.name,
+        slug: collection.slug,
+        img: homeImage(imageFile),
+      };
+    })
+    .slice(0, 4);
+}
+
+function HomeClient({ collections }: { collections: Collection[] }) {
   const { scrollY } = useScroll();
   const heroY = useTransform(scrollY, [0, 500], [0, 150]);
   const [isVisible, setIsVisible] = useState<Record<string, boolean>>({});
@@ -78,13 +117,7 @@ function HomeClient() {
   const newProducts = products.filter((p) => p.isNew).slice(0, 4);
   const bestProducts = products.filter((p) => (p.rating || 0) >= 4.7).slice(0, 4);
 
-
-  const categories = [
-    { name: "Cuir", slug: "Cuir", img: homeImage("cat-cuir.webp") },
-    { name: "Minimal", slug: "Minimal", img: homeImage("cat-minimal.webp") },
-    { name: "Bandoulière", slug: "Bandouliere", img: homeImage("cat-bandouliere.webp") },
-    { name: "Route", slug: "Aventure", img: homeImage("cat-aventure.webp") },
-  ];
+  const categoryCards = useMemo(() => buildHomeCategoryCards(collections), [collections]);
 
   const values = [
     {
@@ -322,17 +355,18 @@ function HomeClient() {
             </h2>
           </motion.div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-            {categories.map((cat, index) => (
+          <div className="flex flex-wrap justify-center gap-4 md:gap-6">
+            {categoryCards.map((cat, index) => (
               <motion.div
                 key={cat.slug}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
+                className="w-[calc(50%-0.5rem)] max-w-[220px] md:w-[calc(25%-1.125rem)] md:max-w-[260px]"
               >
                 <Link
-                  href={`/boutique?category=${cat.slug}`}
+                  href={`/boutique?collection=${cat.slug}`}
                   className="group block relative overflow-hidden rounded-2xl aspect-square"
                 >
                   <Image

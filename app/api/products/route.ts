@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
       pageSize: Number(searchParams.get("pageSize")) || 50,
       search: searchParams.get("search") || "",
       status: "active" as const, 
+      collection: searchParams.get("collection") || "all",
       category: searchParams.get("category") || "all",
       sortField: (searchParams.get("sortField") as any) || "created_at",
       sortDirection: (searchParams.get("sortDirection") as any) || "desc",

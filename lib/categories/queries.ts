@@ -4,7 +4,10 @@ import type { Category } from "./types";
 export async function getCategories(): Promise<Category[]> {
   const { data, error } = await supabase
     .from("categories")
-    .select("*")
+    .select(`
+      *,
+      collection:collections(*)
+    `)
     .order("name");
 
   if (error) {
@@ -17,7 +20,10 @@ export async function getCategories(): Promise<Category[]> {
 export async function getCategoryById(id: number): Promise<Category | null> {
   const { data, error } = await supabase
     .from("categories")
-    .select("*")
+    .select(`
+      *,
+      collection:collections(*)
+    `)
     .eq("id", id)
     .single();
 

@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
     // Extraire les données
     const name = formData.get("name") as string;
     const description = formData.get("description") as string;
+    const collectionId = formData.get("collectionId") ? Number(formData.get("collectionId")) : null;
     const categoryId = formData.get("categoryId") ? Number(formData.get("categoryId")) : null;
     const price = Number(formData.get("price"));
     const stock = Number(formData.get("stock"));
@@ -54,6 +55,7 @@ export async function POST(request: NextRequest) {
       name,
       slug,
       description,
+      collectionId,
       categoryId,
       price,
       stock,
@@ -105,6 +107,7 @@ export async function PUT(request: NextRequest) {
     // Extraire les données
     const name = formData.get("name") as string;
     const description = formData.get("description") as string;
+    const collectionId = formData.get("collectionId") ? Number(formData.get("collectionId")) : null;
     const categoryId = formData.get("categoryId") ? Number(formData.get("categoryId")) : null;
     const price = Number(formData.get("price"));
     const stock = Number(formData.get("stock"));
@@ -137,6 +140,7 @@ export async function PUT(request: NextRequest) {
       name,
       slug,
       description,
+      collectionId,
       categoryId,
       price,
       stock,

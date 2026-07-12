@@ -8,17 +8,33 @@ import { sendOrderConfirmedEmail } from "@/lib/email/order-confirmed";
 import Stripe from "stripe";
 import crypto from "crypto";
 import { revalidatePath } from "next/cache";
+import { Redis } from "@upstash/redis";
 
+const redis = Redis.fromEnv();
 const resend = new Resend(process.env.RESEND_API_KEY);
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const NOREPLY_EMAIL = process.env.NOREPLY_EMAIL;
 
 export async function POST(req: NextRequest) {
+  // --- Rate limiting ---
+  const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
+  const rateKey = `stripe-webhook:rate:${ip}`;
+  const rateLimit = 10;
+  const rateWindow = 60;
+  const current = await redis.incr(rateKey);
+  if (current === 1) await redis.expire(rateKey, rateWindow);
+  if (current > rateLimit) {
+    console.warn(`🚫 Rate limit dépassé pour IP ${ip}`);
+    return NextResponse.json(
+      { error: "Trop de requêtes, veuillez réessayer dans une minute." },
+      { status: 429 }
+    );
+  }
+
+  // --- Vérification signature ---
   const body = await req.text();
   const signature = req.headers.get("stripe-signature")!;
-
   let event: Stripe.Event;
-
   try {
     event = stripe.webhooks.constructEvent(
       body,
@@ -30,11 +46,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 
+  // --- Idempotence ---
+  const eventKey = `stripe:event:${event.id}`;
+  const alreadyProcessed = await redis.get(eventKey);
+  if (alreadyProcessed) {
+    console.log(`♻️ Événement ${event.id} déjà traité, ignoré.`);
+    return NextResponse.json({ received: true, alreadyProcessed: true });
+  }
+
+  // --- Traitement de l'événement ---
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as any;
 
-    // Resolve shipping details reliably. Depending on Stripe payload shape,
-    // shipping data may be present in different nested fields.
+    // Récupération des détails de livraison
     const resolvedSession = (await stripe.checkout.sessions.retrieve(
       session.id
     )) as any;
@@ -59,13 +83,13 @@ export async function POST(req: NextRequest) {
       resolvedSession?.customer_details?.name ||
       "";
 
-    // --- 1. Métadonnées produits ---
+    // Métadonnées produits
     const productIds: string[] =
       session.metadata?.product_ids?.split(",").filter(Boolean) || [];
     const quantities: number[] =
       session.metadata?.quantities?.split(",").map(Number).filter(Boolean) || [];
 
-    // --- 2. Mise à jour des stocks (inchangée, mais on pourrait l'améliorer) ---
+    // Mise à jour des stocks
     const { data: products } = await supabase
       .from("products")
       .select("id, stock")
@@ -89,12 +113,10 @@ export async function POST(req: NextRequest) {
       )
     );
 
-    // --- 3. Récupération des line items ---
+    // Line items
     const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
     const orderNumber = "NOM-" + crypto.randomBytes(3).toString("hex").toUpperCase();
     const totalAmount = (session.amount_total || 0) / 100;
-
-    // --- 4. Calcul du sous-total, remise et frais de port ---
     const shippingAmount = (session.total_details?.amount_shipping || session.shipping_cost?.amount_total || 0) / 100;
     const discountAmount = (session.total_details?.amount_discount || 0) / 100;
     const subtotal = totalAmount - shippingAmount + discountAmount;
@@ -107,13 +129,13 @@ export async function POST(req: NextRequest) {
     const [firstName = "", ...rest] = customerName.trim().split(/\s+/);
     const lastName = rest.join(" ");
 
-    // --- 5. Création de la commande ---
+    // Création de la commande
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .insert({
         customer_id: null,
         status: "confirmed",
-        subtotal: subtotal,        
+        subtotal: subtotal,
         shipping: shippingAmount,
         discount_amount: discountAmount,
         promo_code: appliedPromoCode,
@@ -145,10 +167,8 @@ export async function POST(req: NextRequest) {
 
     if (orderError || !order) {
       console.error("❌ Erreur création commande :", orderError);
-      // On continue quand même, mais on ne pourra pas envoyer d'email avec order.id
     } else {
-      // Double sécurité: force la persistance des infos promo même si l'insert
-      // initial a été limité par des policies/contraintes de schéma.
+      // Persistance promo (sécurité)
       const { error: promoTraceError } = await supabaseAdmin
         .from("orders")
         .update({
@@ -156,12 +176,11 @@ export async function POST(req: NextRequest) {
           promo_code: appliedPromoCode,
         })
         .eq("id", order.id);
-
       if (promoTraceError) {
         console.error("❌ Erreur persistance trace promo sur order:", promoTraceError);
       }
 
-      // --- 6. Insertion des order_items ---
+      // Order items
       const orderItems = lineItems.data.map((item: any, index: number) => {
         const productId = Number(productIds[index]) || 0;
         return {
@@ -183,17 +202,15 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // --- 7. Tracking ---
+      // Tracking
       await supabase.from("order_tracking").insert({
         order_id: order.id,
         status: "confirmed",
         comment: "Paiement validé via Stripe",
       });
 
-      // --- 8. Gestion client (inchangée) ---
+      // Gestion client
       const customerEmail = session.customer_details?.email || session.customer?.email || "";
-      const customerName = session.customer_details?.name || "";
-
       if (customerEmail) {
         const normalizedEmail = customerEmail.toLowerCase().trim();
         const nameParts = customerName.trim().split(" ");
@@ -270,7 +287,7 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // --- 9. Analytics ---
+      // Analytics
       await supabase.from("analytics_events").insert({
         event_type: "purchase_completed",
         product_id: productIds.join(","),
@@ -287,54 +304,37 @@ export async function POST(req: NextRequest) {
         },
       });
 
+      // Incrémenter l'utilisation du code promo
       const promoIdRaw = session.metadata?.promo_id;
       const promoCodeRaw = session.metadata?.promo_code;
       const promoId = promoIdRaw ? Number(promoIdRaw) : NaN;
-
       if (Number.isFinite(promoId) || promoCodeRaw) {
         let promoCodeRecord: { id: number; used_count: number } | null = null;
-
         if (Number.isFinite(promoId)) {
           const { data, error } = await supabaseAdmin
             .from("promo_codes")
             .select("id, used_count")
             .eq("id", promoId)
             .maybeSingle();
-
-          if (error) {
-            console.error("❌ Erreur lecture promo_code par id:", error);
-          } else {
-            promoCodeRecord = data;
-          }
+          if (!error) promoCodeRecord = data;
         }
-
         if (!promoCodeRecord && promoCodeRaw) {
           const { data, error } = await supabaseAdmin
             .from("promo_codes")
             .select("id, used_count")
             .eq("code", String(promoCodeRaw).trim().toUpperCase())
             .maybeSingle();
-
-          if (error) {
-            console.error("❌ Erreur lecture promo_code par code:", error);
-          } else {
-            promoCodeRecord = data;
-          }
+          if (!error) promoCodeRecord = data;
         }
-
         if (promoCodeRecord) {
-          const { error } = await supabaseAdmin
+          await supabaseAdmin
             .from("promo_codes")
             .update({ used_count: (promoCodeRecord.used_count || 0) + 1 })
             .eq("id", promoCodeRecord.id);
-
-          if (error) {
-            console.error("❌ Erreur increment used_count promo_code:", error);
-          }
         }
       }
 
-      // --- 10. Revalidation ---
+      // Revalidation
       for (const id of productIds) {
         revalidatePath(`/boutique/${id}`);
       }
@@ -344,7 +344,7 @@ export async function POST(req: NextRequest) {
       revalidatePath("/");
     }
 
-    // --- 11. Récupération de la facture (si disponible) ---
+    // --- Récupération de la facture Stripe ---
     let invoiceUrl: string | null = null;
     if (session.invoice) {
       try {
@@ -355,10 +355,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // --- 12. Envoi de l'email client via la fonction centralisée ---
+    // --- Email client ---
     const customerEmail = session.customer_details?.email || "";
     if (customerEmail && order) {
-      // Transformer les lineItems en items pour la fonction
       const itemsForEmail = lineItems.data.map((item: any) => ({
         name: item.description || "Produit",
         quantity: item.quantity || 1,
@@ -370,14 +369,14 @@ export async function POST(req: NextRequest) {
         customerName: customerName || "Client",
         orderNumber,
         items: itemsForEmail,
-        subtotal: subtotal,         // ✅ sous-total hors livraison
-        shipping: shippingAmount,    // ✅ frais de port
+        subtotal: subtotal,
+        shipping: shippingAmount,
         total: totalAmount,
-        invoicePdfUrl: invoiceUrl,   // ✅ peut être null
+        invoicePdfUrl: invoiceUrl,
       });
     }
 
-    // --- 13. Email admin (inchangé) ---
+    // --- Email admin ---
     const itemsList = lineItems.data
       .map(
         (item: any) =>
@@ -395,7 +394,7 @@ export async function POST(req: NextRequest) {
 
     await resend.emails.send({
       from: `Nomade <${NOREPLY_EMAIL}>`,
-      to: '${ADMIN_EMAIL}',
+      to: `${ADMIN_EMAIL}`,
       subject: `Nouvelle commande ${orderNumber} — ${totalAmount.toFixed(2)} €`,
       html: `
         <div style="font-family: Inter, system-ui, sans-serif; max-width: 520px; margin: auto; padding: 30px; background: #fafaf9; border-radius: 12px;">
@@ -411,6 +410,9 @@ export async function POST(req: NextRequest) {
         </div>`,
     });
   }
+
+  // --- Marquer l'événement comme traité ---
+  await redis.set(eventKey, "processed", { ex: 86400 });
 
   return NextResponse.json({ received: true });
 }

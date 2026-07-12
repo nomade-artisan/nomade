@@ -8,6 +8,7 @@ export async function createCategory(data: CategoryFormState): Promise<Category>
       name: data.name,
       slug: data.slug,
       description: data.description || null,
+      collection_id: data.collectionId,
     })
     .select()
     .single();
@@ -23,6 +24,7 @@ export async function updateCategory(id: number, data: CategoryFormState): Promi
       name: data.name,
       slug: data.slug,
       description: data.description || null,
+      collection_id: data.collectionId,
     })
     .eq("id", id)
     .select()

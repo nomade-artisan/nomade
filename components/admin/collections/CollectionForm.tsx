@@ -3,42 +3,40 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { generateCategorySlug } from "@/lib/categories/queries";
-import type { Category, CategoryFormState } from "@/lib/categories/types";
-import type { Collection } from "@/lib/collections/types";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import type { Collection, CollectionFormState } from "@/lib/collections/types";
 
-interface Props {
-  initialData?: Category;
-  collections: Collection[];
+// ✅ Fonction pure de génération de slug (sans effet de bord, sans dépendance serveur)
+function generateSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // supprime les accents
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
-export default function CategoryForm({ initialData, collections }: Props) {
+interface Props {
+  initialData?: Collection;
+}
+
+export default function CollectionForm({ initialData }: Props) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [form, setForm] = useState<CategoryFormState>({
+  const [form, setForm] = useState<CollectionFormState>({
     name: initialData?.name || "",
     slug: initialData?.slug || "",
     description: initialData?.description || "",
-    collectionId: initialData?.collection_id || collections[0]?.id || null,
   });
 
   function handleNameChange(name: string) {
     setForm((prev) => ({
       ...prev,
       name,
-      slug: initialData ? prev.slug : generateCategorySlug(name),
+      slug: initialData ? prev.slug : generateSlug(name),
     }));
   }
 
@@ -47,23 +45,19 @@ export default function CategoryForm({ initialData, collections }: Props) {
     setIsLoading(true);
     setError(null);
 
-    const url = initialData
-      ? "/api/admin/categories"
-      : "/api/admin/categories";
-    const method = initialData ? "PUT" : "POST";
-    const body = initialData ? { id: initialData.id, ...form } : form;
-
     try {
-      const res = await fetch(url, {
-        method,
+      const res = await fetch("/api/admin/collections", {
+        method: initialData ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify(initialData ? { id: initialData.id, ...form } : form),
       });
+
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || "Erreur");
       }
-      router.push("/admin/categories");
+
+      router.push("/admin/collections");
       router.refresh();
     } catch (err: any) {
       setError(err.message);
@@ -75,31 +69,15 @@ export default function CategoryForm({ initialData, collections }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{initialData ? "Modifier la catégorie" : "Nouvelle catégorie"}</CardTitle>
+        <CardTitle>{initialData ? "Modifier la collection" : "Nouvelle collection"}</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
-            <div className="bg-red-50 text-red-700 px-4 py-3 rounded text-sm">{error}</div>
+            <div className="rounded bg-red-50 px-4 py-3 text-sm text-red-700">
+              {error}
+            </div>
           )}
-          <div>
-            <Label className="text-sm font-medium">Collection</Label>
-            <Select
-              value={form.collectionId?.toString() || ""}
-              onValueChange={(value) => setForm({ ...form, collectionId: Number(value) })}
-            >
-              <SelectTrigger className="mt-2 w-full">
-                <SelectValue placeholder="Choisir une collection" />
-              </SelectTrigger>
-              <SelectContent>
-                {collections.map((collection) => (
-                  <SelectItem key={collection.id} value={collection.id.toString()}>
-                    {collection.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
           <div>
             <label className="text-sm font-medium">Nom</label>
             <Input

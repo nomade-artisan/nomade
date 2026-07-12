@@ -14,19 +14,35 @@ interface Product {
   price: number;
   images: string[];
   category: string;
+  categorySlug: string;
+  collection: string;
+  collectionSlug: string;
   isNew?: boolean;
   rating?: number;
 }
 
-// Constantes
-const categories = [
-  "Tous",
-  "Cuir",
-  "Minimal",
-  "Bandoulière",
-  "Aventure",
-  "Accessoires",
-];
+interface CategoryFilter {
+  id: number;
+  name: string;
+  slug: string;
+  collectionId: number;
+  collectionName: string;
+  collectionSlug: string;
+}
+
+interface CollectionFilter {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+function normalizeCategory(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
 
 const sortOptions = [
   { label: "Par défaut", value: "default" },
@@ -35,12 +51,36 @@ const sortOptions = [
   { label: "Nouveautés", value: "newest" },
 ];
 
-function BoutiqueClient({ products }: { products: Product[] }) {
+function BoutiqueClient({
+  products,
+  categories,
+  collections,
+}: {
+  products: Product[];
+  categories: CategoryFilter[];
+  collections: CollectionFilter[];
+}) {
   const searchParams = useSearchParams();
+  const collectionParam = searchParams.get("collection");
   const categoryParam = searchParams.get("category");
   const filterParam = searchParams.get("filter");
 
+  const availableCollections = useMemo(() => collections, [collections]);
+
+  const availableCategories = useMemo(() => {
+    const seen = new Set<string>();
+    return categories.filter((category) => {
+      const normalized = normalizeCategory(category.slug);
+      if (!normalized || seen.has(normalized)) {
+        return false;
+      }
+      seen.add(normalized);
+      return true;
+    });
+  }, [categories]);
+
   // États
+  const [activeCollection, setActiveCollection] = useState("Tous");
   const [activeCategory, setActiveCategory] = useState("Tous");
   const [sortBy, setSortBy] = useState("default");
   const [searchTerm, setSearchTerm] = useState("");
@@ -52,9 +92,9 @@ function BoutiqueClient({ products }: { products: Product[] }) {
   useEffect(() => {
     if (activeCategory === "Tous") return;
     trackEvent("category_view", {
-      metadata: { category: activeCategory },
+      metadata: { collection: activeCollection, category: activeCategory },
     });
-  }, [activeCategory]);
+  }, [activeCategory, activeCollection]);
 
   useEffect(() => {
     if (searchTerm.trim().length < 2) return;
@@ -69,14 +109,25 @@ function BoutiqueClient({ products }: { products: Product[] }) {
   // Initialisation depuis les paramètres d'URL
   useMemo(() => {
     let category = "Tous";
+    let collection = "Tous";
     let filter: string | null = null;
     let sort = "default";
 
-    if (categoryParam) {
-      const cat = categories.find(
-        (c) => c.toLowerCase() === categoryParam.toLowerCase()
+    if (collectionParam) {
+      const collectionMatch = availableCollections.find(
+        (item) => normalizeCategory(item.slug) === normalizeCategory(collectionParam)
       );
-      if (cat) category = cat;
+      if (collectionMatch) collection = collectionMatch.name;
+    }
+
+    if (categoryParam) {
+      const cat = availableCategories.find(
+        (c) => normalizeCategory(c.slug) === normalizeCategory(categoryParam)
+      );
+      if (cat) {
+        category = cat.name;
+        if (cat.collectionName) collection = cat.collectionName;
+      }
     }
 
     if (filterParam) {
@@ -90,10 +141,11 @@ function BoutiqueClient({ products }: { products: Product[] }) {
       }
     }
 
+    setActiveCollection(collection);
     setActiveCategory(category);
     setActiveFilter(filter);
     setSortBy(sort);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [availableCategories, availableCollections, categoryParam, collectionParam, filterParam]);
 
   // Filtrage et tri (côté client car données déjà chargées)
   const filteredProducts = useMemo(() => {
@@ -104,6 +156,9 @@ function BoutiqueClient({ products }: { products: Product[] }) {
     }
     if (activeFilter === "nouveautes") {
       filtered = filtered.filter((p) => p.isNew);
+    }
+    if (activeCollection !== "Tous") {
+      filtered = filtered.filter((p) => p.collection === activeCollection);
     }
     if (activeCategory !== "Tous") {
       filtered = filtered.filter((p) => p.category === activeCategory);
@@ -130,9 +185,28 @@ function BoutiqueClient({ products }: { products: Product[] }) {
     }
 
     return filtered;
-  }, [activeCategory, sortBy, searchTerm, activeFilter, products]);
+  }, [activeCategory, activeCollection, sortBy, searchTerm, activeFilter, products]);
+
+  const visibleCategories = useMemo(() => {
+    if (activeCollection === "Tous") return availableCategories;
+    return availableCategories.filter((category) => category.collectionName === activeCollection);
+  }, [activeCollection, availableCategories]);
 
   // Handlers
+  const handleCollectionChange = useCallback(
+    (collection: string) => {
+      if (collection === activeCollection && activeCategory === "Tous" && !activeFilter) return;
+      setTransitioning(true);
+      setTimeout(() => {
+        setActiveCollection(collection);
+        setActiveCategory("Tous");
+        setActiveFilter(null);
+        setTransitioning(false);
+      }, 150);
+    },
+    [activeCategory, activeCollection, activeFilter]
+  );
+
   const handleCategoryChange = useCallback(
     (cat: string) => {
       if (cat === activeCategory && !activeFilter) return;
@@ -140,10 +214,14 @@ function BoutiqueClient({ products }: { products: Product[] }) {
       setTimeout(() => {
         setActiveCategory(cat);
         setActiveFilter(null);
+        const found = availableCategories.find((category) => category.name === cat);
+        if (found?.collectionName) {
+          setActiveCollection(found.collectionName);
+        }
         setTransitioning(false);
       }, 150);
     },
-    [activeCategory, activeFilter]
+    [activeCategory, activeFilter, availableCategories]
   );
 
   const handleNewFilter = useCallback(() => {
@@ -151,6 +229,7 @@ function BoutiqueClient({ products }: { products: Product[] }) {
     setTransitioning(true);
     setTimeout(() => {
       setActiveFilter("nouveautes");
+        setActiveCollection("Tous");
       setActiveCategory("Tous");
       setSortBy("newest");
       setTransitioning(false);
@@ -162,6 +241,7 @@ function BoutiqueClient({ products }: { products: Product[] }) {
     setTransitioning(true);
     setTimeout(() => {
       setActiveFilter("best");
+        setActiveCollection("Tous");
       setActiveCategory("Tous");
       setTransitioning(false);
     }, 150);
@@ -175,6 +255,8 @@ function BoutiqueClient({ products }: { products: Product[] }) {
         ? "Essentiels"
         : activeCategory !== "Tous"
           ? activeCategory
+          : activeCollection !== "Tous"
+            ? activeCollection
           : "La collection";
 
   const pageSubtitle =
@@ -184,6 +266,8 @@ function BoutiqueClient({ products }: { products: Product[] }) {
         ? "Les modèles les plus appréciés."
         : activeCategory !== "Tous"
           ? `Une sélection ${activeCategory.toLowerCase()}.`
+          : activeCollection !== "Tous"
+            ? `Explore la collection ${activeCollection.toLowerCase()}.`
           : "Des objets pensés pour durer";
 
   const currentSortLabel =
@@ -205,20 +289,38 @@ function BoutiqueClient({ products }: { products: Product[] }) {
         {/* Barre de filtres */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-12 border-b border-stone-200/70 pb-8">
           {/* Catégories */}
-          <div className="flex flex-wrap gap-2">
-            {categories.map((cat) => (
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              {availableCollections.map((collection) => (
+                <button
+                  key={collection.slug}
+                  onClick={() => handleCollectionChange(collection.name)}
+                  className={`text-[11px] uppercase tracking-[0.18em] font-light px-3 py-1.5 rounded-full border transition-all duration-300 ${
+                    activeCollection === collection.name && !activeFilter
+                      ? "bg-stone-900 text-white border-stone-900"
+                      : "bg-white/70 backdrop-blur-sm text-stone-500 border-stone-200 hover:border-stone-400 hover:text-stone-800"
+                  }`}
+                >
+                  {collection.name}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+            {visibleCategories.map((cat) => (
               <button
-                key={cat}
-                onClick={() => handleCategoryChange(cat)}
+                key={cat.slug}
+                onClick={() => handleCategoryChange(cat.name)}
                 className={`text-[11px] uppercase tracking-[0.18em] font-light px-3 py-1.5 rounded-full border transition-all duration-300 ${
-                  activeCategory === cat && !activeFilter
+                  activeCategory === cat.name && !activeFilter
                     ? "bg-stone-900 text-white border-stone-900"
                     : "bg-white/70 backdrop-blur-sm text-stone-500 border-stone-200 hover:border-stone-400 hover:text-stone-800"
                 }`}
               >
-                {cat}
+                {cat.name}
               </button>
             ))}
+            </div>
 
             <button
               onClick={handleNewFilter}
