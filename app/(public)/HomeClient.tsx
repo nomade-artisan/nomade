@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, useScroll, useTransform } from "framer-motion";
@@ -26,11 +26,12 @@ interface HomeCategoryCard {
   img: string;
 }
 
-const homeImage = (filename: string) =>
-  supabase.storage.from("home").getPublicUrl(`home/${filename}`).data.publicUrl;
+const homeAsset = (filename: string, useNestedPath = true) =>
+  supabase.storage
+    .from("home")
+    .getPublicUrl(useNestedPath ? `home/${filename}` : filename).data.publicUrl;
 
-const homeVideo = (filename: string) =>
-  supabase.storage.from("home").getPublicUrl(`home/${filename}`).data.publicUrl;
+const homeImage = (filename: string) => homeAsset(filename, true);
 
 const categoryImageMap: Record<string, string> = {
   cuir: "cat-cuir.webp",
@@ -69,6 +70,38 @@ function HomeClient({ collections }: { collections: Collection[] }) {
   const heroY = useTransform(scrollY, [0, 500], [0, 150]);
   const [isVisible, setIsVisible] = useState<Record<string, boolean>>({});
   const [products, setProducts] = useState<Product[]>([]);
+  const [isVideoReady, setIsVideoReady] = useState(false);
+  const [videoPathMode, setVideoPathMode] = useState<"nested" | "root">("nested");
+  const [videoUnavailable, setVideoUnavailable] = useState(false);
+  const heroVideoRef = useRef<HTMLVideoElement | null>(null);
+
+  const videoSources = useMemo(() => {
+    const useNestedPath = videoPathMode === "nested";
+
+    return {
+      webm: homeAsset("hero.webm", useNestedPath),
+      mp4: homeAsset("hero.mp4", useNestedPath),
+    };
+  }, [videoPathMode]);
+
+  useEffect(() => {
+    const video = heroVideoRef.current;
+    if (!video) return;
+
+    // Trigger playback explicitly for browsers that defer autoplay.
+    video.play().catch(() => {
+      // Keep image fallback; autoplay can be blocked depending on device policy.
+    });
+  }, [videoPathMode]);
+
+  const handleHeroVideoError = () => {
+    if (videoPathMode === "nested") {
+      setVideoPathMode("root");
+      return;
+    }
+
+    setVideoUnavailable(true);
+  };
 
  useEffect(() => {
   fetch("/api/products?pageSize=50&status=active")
@@ -166,35 +199,27 @@ function HomeClient({ collections }: { collections: Collection[] }) {
   {/* Vidéo en fond */}
   <motion.div
     style={{ y: heroY }}
-    className="absolute inset-0 opacity-0 transition-opacity duration-1000"
-    id="hero-video-wrapper"
+    className={`absolute inset-0 transition-opacity duration-700 ${
+      isVideoReady && !videoUnavailable ? "opacity-100" : "opacity-0"
+    }`}
   >
     <video
-  autoPlay
-  loop
-  muted
-  playsInline
-  preload="auto"
-  onCanPlay={() => {
-    setTimeout(() => {
-      const wrapper = document.getElementById("hero-video-wrapper");
-      if (wrapper) wrapper.classList.add("opacity-100");
-    }, 2000);
-  }}
-  // Affiche la vidéo après 5s si nécessaire
-  onLoadedMetadata={() => {
-    setTimeout(() => {
-      const wrapper = document.getElementById("hero-video-wrapper");
-      if (wrapper && !wrapper.classList.contains("opacity-100")) {
-        wrapper.classList.add("opacity-100");
-      }
-    }, 5000);
-  }}
-  className="absolute inset-0 w-full h-full object-cover"
->
-  <source src={homeVideo("hero.webm")} type="video/webm" />
-  <source src={homeVideo("hero.mp4")} type="video/mp4" />
-</video>
+      key={videoPathMode}
+      ref={heroVideoRef}
+      autoPlay
+      loop
+      muted
+      playsInline
+      preload="metadata"
+      poster={homeImage("hero.webp")}
+      onLoadedData={() => setIsVideoReady(true)}
+      onCanPlay={() => setIsVideoReady(true)}
+      onError={handleHeroVideoError}
+      className="absolute inset-0 w-full h-full object-cover"
+    >
+      <source src={videoSources.webm} type="video/webm" />
+      <source src={videoSources.mp4} type="video/mp4" />
+    </video>
   </motion.div>
 
   <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-black/70" />

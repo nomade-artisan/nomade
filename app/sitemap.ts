@@ -3,20 +3,7 @@ import { MetadataRoute } from "next";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://www.nomade-artisan.fr";
 
-  const res = await fetch(`${baseUrl}/api/products`, {
-    cache: "no-store",
-  });
-
-  const products = res.ok ? await res.json() : [];
-
-  const productUrls = products.map((product: any) => ({
-    url: `${baseUrl}/boutique/${product.id}`,
-    lastModified: new Date(),
-    changeFrequency: "weekly" as const,
-    priority: 0.8,
-  }));
-
-  return [
+  const staticUrls: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
       lastModified: new Date(),
@@ -80,6 +67,33 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.3,
     },
 
-    ...productUrls,
   ];
+
+  try {
+    const res = await fetch(`${baseUrl}/api/products?pageSize=1000`, {
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      return staticUrls;
+    }
+
+    const payload = await res.json();
+    const products = Array.isArray(payload)
+      ? payload
+      : Array.isArray(payload?.data)
+      ? payload.data
+      : [];
+
+    const productUrls = products.map((product: any) => ({
+      url: `${baseUrl}/boutique/${product.id}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    }));
+
+    return [...staticUrls, ...productUrls];
+  } catch {
+    return staticUrls;
+  }
 }

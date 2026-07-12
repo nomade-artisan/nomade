@@ -4,6 +4,7 @@ const isProd = process.env.NODE_ENV === 'production';
 const cspDirectives = [
   "default-src 'self'",
   "img-src 'self' data: https: blob:",
+  "media-src 'self' data: blob: https://*.supabase.co",
   `script-src 'self' 'unsafe-inline' ${isProd ? '' : "'unsafe-eval'"} https://js.stripe.com https://va.vercel-scripts.com`.replace(/\s+/g, ' ').trim(),
   "style-src 'self' 'unsafe-inline'",
   "frame-src https://js.stripe.com https://hooks.stripe.com",
