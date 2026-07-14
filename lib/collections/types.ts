@@ -16,6 +16,8 @@ export interface Collection {
   name: string;
   slug: string;
   description: string | null;
+  image_path: string;
+  video_path: string;
   created_at: string;
 }
 
