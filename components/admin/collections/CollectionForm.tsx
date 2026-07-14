@@ -82,34 +82,32 @@ export default function CollectionForm({ initialData }: Props) {
    * Compresse une vidéo en WebM avec FFmpeg.wasm et retourne un Blob
    */
   async function compressVideo(file: File): Promise<Blob> {
-    const ffmpeg = ffmpegRef.current;
-    if (!ffmpeg) throw new Error("FFmpeg n'est pas encore prêt.");
+  const ffmpeg = ffmpegRef.current;
+  if (!ffmpeg) throw new Error("FFmpeg n'est pas encore prêt.");
 
-    setCompressing(true);
-    try {
-      // Écrire le fichier original
-      await ffmpeg.writeFile("input.mp4", await fetchFile(file));
+  setCompressing(true);
+  try {
+    await ffmpeg.writeFile("input.mp4", await fetchFile(file));
 
-      // Compression : VP8, résolution max 1280x720, qualité correcte
-      await ffmpeg.exec([
-        "-i", "input.mp4",
-        "-c:v", "libvpx",
-        "-crf", "30",
-        "-b:v", "1M",
-        "-c:a", "libvorbis",
-        "-vf", "scale='min(1280,iw)':'min(720,ih)':force_original_aspect_ratio=decrease",
-        "output.webm",
-      ]);
+    await ffmpeg.exec([
+      "-i", "input.mp4",
+      "-c:v", "libvpx",
+      "-crf", "30",
+      "-b:v", "1M",
+      "-c:a", "libvorbis",
+      "-vf", "scale='min(1280,iw)':'min(720,ih)':force_original_aspect_ratio=decrease",
+      "output.webm",
+    ]);
 
-      const data = await ffmpeg.readFile("output.webm");
-return new Blob([new Uint8Array(data)], { type: "video/webm" });
-    } finally {
-      setCompressing(false);
-      // Nettoyage
-      try { await ffmpeg.deleteFile("input.mp4"); } catch {}
-      try { await ffmpeg.deleteFile("output.webm"); } catch {}
-    }
+    const data = await ffmpeg.readFile("output.webm");
+    // 👇 Fix : on crée un Uint8Array normal
+    return new Blob([new Uint8Array(data)], { type: "video/webm" });
+  } finally {
+    setCompressing(false);
+    try { await ffmpeg.deleteFile("input.mp4"); } catch {}
+    try { await ffmpeg.deleteFile("output.webm"); } catch {}
   }
+}
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

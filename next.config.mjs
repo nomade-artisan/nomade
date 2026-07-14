@@ -16,19 +16,6 @@ const cspDirectives = [
   "frame-ancestors 'none'",
   'upgrade-insecure-requests',
 ];
-module.exports = {
-  async headers() {
-    return [
-      {
-        source: "/(.*)",
-        headers: [
-          { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
-          { key: "Cross-Origin-Embedder-Policy", value: "require-corp" },
-        ],
-      },
-    ];
-  },
-};
 
 const nextConfig = {
   poweredByHeader: false,
