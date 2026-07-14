@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,9 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase/client";
 import type { Collection, CollectionFormState } from "@/lib/collections/types";
 
-// FFmpeg.wasm
-import { FFmpeg } from "@ffmpeg/ffmpeg";
-import { fetchFile, toBlobURL } from "@ffmpeg/util";
+// Hook personnalisé pour la compression vidéo
+import { useVideoCompressor } from "@/lib/video/compressor";
 
 function generateSlug(name: string): string {
   return name
@@ -30,9 +29,14 @@ export default function CollectionForm({ initialData }: Props) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [compressing, setCompressing] = useState(false);
 
-  const ffmpegRef = useRef<FFmpeg | null>(null);
+  // Récupération des états et fonctions depuis le hook
+  const {
+    ready: ffmpegReady,
+    error: ffmpegError,
+    compressing,
+    compress,
+  } = useVideoCompressor();
 
   const [form, setForm] = useState<CollectionFormState>({
     name: initialData?.name || "",
@@ -46,29 +50,10 @@ export default function CollectionForm({ initialData }: Props) {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
 
-  // Aperçu image existante
+  // Aperçu de l'image existante
   const currentImageUrl = initialData?.image_path
     ? supabase.storage.from("collections").getPublicUrl(initialData.image_path).data.publicUrl
     : null;
-
-  // Charger FFmpeg une seule fois
-  useEffect(() => {
-    const load = async () => {
-      const ffmpeg = new FFmpeg();
-      await ffmpeg.load({
-        coreURL: await toBlobURL(
-          "https://unpkg.com/@ffmpeg/core@0.12.6/dist/ffmpeg-core.js",
-          "text/javascript"
-        ),
-        wasmURL: await toBlobURL(
-          "https://unpkg.com/@ffmpeg/core@0.12.6/dist/ffmpeg-core.wasm",
-          "application/wasm"
-        ),
-      });
-      ffmpegRef.current = ffmpeg;
-    };
-    load();
-  }, []);
 
   function handleNameChange(name: string) {
     setForm((prev) => ({
@@ -78,44 +63,13 @@ export default function CollectionForm({ initialData }: Props) {
     }));
   }
 
-  /**
-   * Compresse une vidéo en WebM avec FFmpeg.wasm et retourne un Blob
-   */
-  async function compressVideo(file: File): Promise<Blob> {
-  const ffmpeg = ffmpegRef.current;
-  if (!ffmpeg) throw new Error("FFmpeg n'est pas encore prêt.");
-
-  setCompressing(true);
-  try {
-    await ffmpeg.writeFile("input.mp4", await fetchFile(file));
-
-    await ffmpeg.exec([
-      "-i", "input.mp4",
-      "-c:v", "libvpx",
-      "-crf", "30",
-      "-b:v", "1M",
-      "-c:a", "libvorbis",
-      "-vf", "scale='min(1280,iw)':'min(720,ih)':force_original_aspect_ratio=decrease",
-      "output.webm",
-    ]);
-
-    const data = await ffmpeg.readFile("output.webm");
-    // 👇 Fix : on crée un Uint8Array normal
-    return new Blob([new Uint8Array(data)], { type: "video/webm" });
-  } finally {
-    setCompressing(false);
-    try { await ffmpeg.deleteFile("input.mp4"); } catch {}
-    try { await ffmpeg.deleteFile("output.webm"); } catch {}
-  }
-}
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
 
     try {
-      // 1. Upload image (via API ou direct, on garde l'existant)
+      // 1. Upload image
       let finalImagePath = form.image_path;
       if (imageFile) {
         const imageFormData = new FormData();
@@ -135,10 +89,13 @@ export default function CollectionForm({ initialData }: Props) {
         finalImagePath = fileName;
       }
 
-      // 2. Compression vidéo côté client, puis upload via API
+      // 2. Compression vidéo + upload
       let finalVideoPath = form.video_path;
       if (videoFile) {
-        const compressedBlob = await compressVideo(videoFile);
+        if (ffmpegError) throw new Error(ffmpegError);
+
+        const compressedBlob = await compress(videoFile);
+        if (!compressedBlob) throw new Error("La compression a échoué.");
 
         const videoFormData = new FormData();
         videoFormData.append("video", compressedBlob, "video.webm");
@@ -200,6 +157,7 @@ export default function CollectionForm({ initialData }: Props) {
             </div>
           )}
 
+          {/* Nom */}
           <div>
             <label className="text-sm font-medium">Nom</label>
             <Input
@@ -209,6 +167,7 @@ export default function CollectionForm({ initialData }: Props) {
             />
           </div>
 
+          {/* Slug */}
           <div>
             <label className="text-sm font-medium">Slug</label>
             <Input
@@ -218,6 +177,7 @@ export default function CollectionForm({ initialData }: Props) {
             />
           </div>
 
+          {/* Description */}
           <div>
             <label className="text-sm font-medium">Description</label>
             <Textarea
@@ -246,7 +206,7 @@ export default function CollectionForm({ initialData }: Props) {
             />
           </div>
 
-          {/* Vidéo avec compression navigateur puis API */}
+          {/* Vidéo avec compression navigateur */}
           <div>
             <label className="text-sm font-medium">Vidéo (optionnelle)</label>
             <Input
@@ -257,11 +217,20 @@ export default function CollectionForm({ initialData }: Props) {
             <p className="text-xs text-muted-foreground mt-1">
               La vidéo sera compressée en WebM dans le navigateur, puis uploadée via l’API.
             </p>
+            {!ffmpegReady && !ffmpegError && (
+              <p className="text-xs text-amber-700 mt-1">
+                Préparation du moteur de compression…
+              </p>
+            )}
+            {ffmpegError && (
+              <p className="text-xs text-red-600 mt-1">{ffmpegError}</p>
+            )}
             {compressing && (
               <p className="text-xs text-blue-600 mt-1">Compression en cours…</p>
             )}
           </div>
 
+          {/* Boutons */}
           <div className="flex justify-end gap-3">
             <Button type="button" variant="outline" onClick={() => router.back()}>
               Annuler

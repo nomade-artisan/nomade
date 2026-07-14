@@ -9,7 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@ffmpeg/ffmpeg": "^0.12.15",
+    "@ffmpeg/core": "^0.12.6",
+    "@ffmpeg/ffmpeg": "^0.12.6",
     "@ffmpeg/util": "^0.12.2",
     "@hookform/resolvers": "^5.4.0",
     "@stripe/stripe-js": "^9.4.0",

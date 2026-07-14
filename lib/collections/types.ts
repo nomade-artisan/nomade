@@ -17,13 +17,4 @@ export interface CollectionFormState {
   created_at: string;
 }
 
-export interface CollectionFormState {
-  name: string;
-  slug: string;
-  description: string;
-  image_path: string;
-  video_path: string;
-    created_at: string;
-}
-
 

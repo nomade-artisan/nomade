@@ -1,35 +1,50 @@
 // lib/collections/mutations.ts
-import { supabaseAdmin } from "@/lib/supabase/admin"; // ✅ Admin client
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { Collection, CollectionFormState } from "./types";
 
-export async function createCollection(data: CollectionFormState): Promise<Collection> {
+export async function createCollection(
+  data: CollectionFormState
+): Promise<Collection> {
   const { data: collection, error } = await supabaseAdmin
     .from("collections")
     .insert({
       name: data.name,
       slug: data.slug,
       description: data.description || null,
+      image_path: data.image_path || null,
+      video_path: data.video_path || null,
     })
     .select()
     .single();
 
-  if (error) throw new Error(`Erreur création collection: ${error.message}`);
+  if (error) {
+    throw new Error(`Erreur création collection : ${error.message}`);
+  }
+
   return collection as Collection;
 }
 
-export async function updateCollection(id: number, data: CollectionFormState): Promise<Collection> {
+export async function updateCollection(
+  id: number,
+  data: CollectionFormState
+): Promise<Collection> {
   const { data: collection, error } = await supabaseAdmin
     .from("collections")
     .update({
       name: data.name,
       slug: data.slug,
       description: data.description || null,
+      image_path: data.image_path || null,
+      video_path: data.video_path || null,
     })
     .eq("id", id)
     .select()
     .single();
 
-  if (error) throw new Error(`Erreur mise à jour collection: ${error.message}`);
+  if (error) {
+    throw new Error(`Erreur mise à jour collection : ${error.message}`);
+  }
+
   return collection as Collection;
 }
 
@@ -39,5 +54,7 @@ export async function deleteCollection(id: number): Promise<void> {
     .delete()
     .eq("id", id);
 
-  if (error) throw new Error(`Erreur suppression collection: ${error.message}`);
+  if (error) {
+    throw new Error(`Erreur suppression collection : ${error.message}`);
+}
 }

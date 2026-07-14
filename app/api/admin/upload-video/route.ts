@@ -32,13 +32,15 @@ export async function POST(req: NextRequest) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-
-    const fileName = `${randomUUID()}.webm`;
+    const extension = file.name.includes(".")
+      ? file.name.split(".").pop()?.toLowerCase() || "webm"
+      : "webm";
+    const fileName = `${randomUUID()}.${extension}`;
 
     const { error } = await supabaseAdmin.storage
       .from("collections")
       .upload(fileName, buffer, {
-        contentType: "video/webm",
+        contentType: file.type || "video/webm",
         upsert: false,
       });
 
