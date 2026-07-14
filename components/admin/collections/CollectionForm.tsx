@@ -102,7 +102,7 @@ export default function CollectionForm({ initialData }: Props) {
       ]);
 
       const data = await ffmpeg.readFile("output.webm");
-      return new Blob([data], { type: "video/webm" });
+return new Blob([new Uint8Array(data)], { type: "video/webm" });
     } finally {
       setCompressing(false);
       // Nettoyage
