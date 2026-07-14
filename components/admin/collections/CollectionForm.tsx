@@ -9,9 +9,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase/client";
 import type { Collection, CollectionFormState } from "@/lib/collections/types";
 
-// Hook personnalisé pour la compression vidéo
-import { useVideoCompressor } from "@/lib/video/compressor";
-
 function generateSlug(name: string): string {
   return name
     .toLowerCase()
@@ -29,14 +26,6 @@ export default function CollectionForm({ initialData }: Props) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Récupération des états et fonctions depuis le hook
-  const {
-    ready: ffmpegReady,
-    error: ffmpegError,
-    compressing,
-    compress,
-  } = useVideoCompressor();
 
   const [form, setForm] = useState<CollectionFormState>({
     name: initialData?.name || "",
@@ -89,16 +78,12 @@ export default function CollectionForm({ initialData }: Props) {
         finalImagePath = fileName;
       }
 
-      // 2. Compression vidéo + upload
+      // 2. Upload vidéo (direct, sans compression)
       let finalVideoPath = form.video_path;
       if (videoFile) {
-        if (ffmpegError) throw new Error(ffmpegError);
-
-        const compressedBlob = await compress(videoFile);
-        if (!compressedBlob) throw new Error("La compression a échoué.");
-
         const videoFormData = new FormData();
-        videoFormData.append("video", compressedBlob, "video.webm");
+        // On envoie le fichier original tel quel
+        videoFormData.append("video", videoFile);
 
         const uploadRes = await fetch("/api/admin/upload-video", {
           method: "POST",
@@ -206,7 +191,7 @@ export default function CollectionForm({ initialData }: Props) {
             />
           </div>
 
-          {/* Vidéo avec compression navigateur */}
+          {/* Vidéo (upload direct, sans compression) */}
           <div>
             <label className="text-sm font-medium">Vidéo (optionnelle)</label>
             <Input
@@ -215,19 +200,8 @@ export default function CollectionForm({ initialData }: Props) {
               onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
             />
             <p className="text-xs text-muted-foreground mt-1">
-              La vidéo sera compressée en WebM dans le navigateur, puis uploadée via l’API.
+              La vidéo sera uploadée directement dans son format d’origine.
             </p>
-            {!ffmpegReady && !ffmpegError && (
-              <p className="text-xs text-amber-700 mt-1">
-                Préparation du moteur de compression…
-              </p>
-            )}
-            {ffmpegError && (
-              <p className="text-xs text-red-600 mt-1">{ffmpegError}</p>
-            )}
-            {compressing && (
-              <p className="text-xs text-blue-600 mt-1">Compression en cours…</p>
-            )}
           </div>
 
           {/* Boutons */}
@@ -235,8 +209,8 @@ export default function CollectionForm({ initialData }: Props) {
             <Button type="button" variant="outline" onClick={() => router.back()}>
               Annuler
             </Button>
-            <Button type="submit" disabled={isLoading || compressing}>
-              {isLoading || compressing ? "Enregistrement..." : "Enregistrer"}
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? "Enregistrement..." : "Enregistrer"}
             </Button>
           </div>
         </form>

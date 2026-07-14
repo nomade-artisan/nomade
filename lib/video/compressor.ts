@@ -81,18 +81,19 @@ export function useVideoCompressor(): UseVideoCompressorReturn {
 
       // Compression plus légère pour limiter la consommation mémoire de ffmpeg.wasm.
       await instance.exec([
-        "-i", inputName,
-        "-c:v", "libvpx-vp9",
-        "-crf", "36",
-        "-b:v", "0",
-        "-c:a", "libopus",
-        "-vf",
-        "scale='min(960,iw)':-2:force_original_aspect_ratio=decrease",
-        "-pix_fmt", "yuv420p",
-        "-threads", "1",
-        "-cpu-used", "4",
-        outputName,
-      ]);
+  "-i",
+  inputName,
+  "-vf",
+  "scale=960:-2",
+  "-c:v",
+  "libvpx-vp8",
+  "-crf",
+  "20",
+  "-b:v",
+  "0",
+  "-an",
+  outputName,
+]);
 
       const data = await instance.readFile(outputName);
 

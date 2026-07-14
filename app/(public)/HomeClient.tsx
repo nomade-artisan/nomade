@@ -24,7 +24,6 @@ interface HomeCategoryCard {
   name: string;
   slug: string;
   img: string;
-  hoverImg?: string;
   description: string;
   video?: string;
 }
