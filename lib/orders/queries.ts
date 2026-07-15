@@ -18,11 +18,11 @@ export async function getOrdersList(
     .from("orders")
     .select(
       `
+      *,
       id,
       status,
       total,
       discount_amount,
-      shipping_address(firstName, lastName, phone),
       promo_code,
       order_number,
       created_at,
