@@ -53,9 +53,12 @@ export async function getOrdersList(
   const orders: OrderListItem[] = (data || []).map((order: any) => ({
     id: order.id,
     order_number: order.order_number || null,
-    customer_name: order.customer
-      ? `${order.customer.first_name} ${order.customer.last_name}`
-      : "Client invité",
+    customer_name:
+      order.shipping_address
+        ? `${order.shipping_address.firstName} ${order.shipping_address.lastName}`
+        : order.customer
+          ? `${order.customer.first_name} ${order.customer.last_name}`
+          : "Client invité",
     status: order.status,
     total: order.total,
     discount_amount: order.discount_amount ?? 0,
