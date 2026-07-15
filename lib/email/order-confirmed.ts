@@ -49,7 +49,7 @@ export async function sendOrderConfirmedEmail({
             (item) => `
               <div style="padding:8px 0;border-top:1px solid #f3f4f6;display:flex;justify-content:space-between;gap:10px;">
                 <span style="font-size:13px;color:#111827;">${escapeHtml(item.name)} x${item.quantity}</span>
-                <span style="font-size:13px;color:#111827;font-weight:600;">${formatEuro(
+                <span style="font-size:13px;color:#111827;font-weight:600;"> ${formatEuro(
                   item.price * item.quantity
                 )}</span>
               </div>

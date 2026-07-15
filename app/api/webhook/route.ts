@@ -376,6 +376,18 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    console.log("Metadata :", session.metadata);
+
+    console.log("Product IDs :", productIds);
+
+    console.log(
+        "Stripe line items :",
+        lineItems.data.map(i => ({
+            description: i.description,
+            quantity: i.quantity
+        }))
+    );
+
     // --- Email admin ---
     const itemsList = lineItems.data
       .map(
