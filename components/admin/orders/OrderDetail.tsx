@@ -113,12 +113,6 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
     ? CARRIERS[shipment.carrier] ?? shipment.carrier
     : null;
 
-  /**
-   * 🔥 Génération de l'étiquette d'expédition
-   * - Déclenche la création du shipment avec statut ANNOUNCED
-   * - Passe la commande en "preparing"
-   * - L'email n'est PAS envoyé ici (ce sera fait par le webhook)
-   */
   async function handleGenerateLabel() {
     setIsGenerating(true);
     try {
@@ -150,12 +144,7 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
       setLabelData(payload);
       toast.success("Étiquette générée avec succès");
 
-      // 🔥 L'API de génération de label gère déjà la mise à jour de l'historique
-      // et le passage en status "preparing".
       router.refresh();
-
-      // ⚠️ L'email d'expédition sera envoyé par le webhook Boxtal
-      // lors du passage à SHIPPED (dépôt transporteur)
 
     } catch (err: any) {
       toast.error(err.message ?? "Erreur lors de la génération");
@@ -633,7 +622,10 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
                 <p className="font-medium">
                   {order.customer.first_name} {order.customer.last_name}
                 </p>
-                <p className="text-muted-foreground">{order.customer.email}</p>
+                <p className="text-muted-foreground">mail: {order.customer.email}</p>
+                <p className="text-muted-foreground">
+                  tel: {order.shipping_address?.phone}
+                </p>
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">Client invité</p>
