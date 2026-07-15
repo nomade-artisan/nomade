@@ -193,10 +193,12 @@ export async function POST(req: NextRequest) {
         };
       });
 
-      if (orderItems.length > 0 && orderItems.some((oi) => oi.product_id > 0)) {
+      // ✅ Correction : on ne garde que les items avec un product_id valide (> 0)
+      const validOrderItems = orderItems.filter((oi) => oi.product_id > 0);
+      if (validOrderItems.length > 0) {
         const { error: itemsError } = await supabase
           .from("order_items")
-          .insert(orderItems);
+          .insert(validOrderItems);
         if (itemsError) {
           console.error("❌ Erreur order_items :", itemsError);
         }
@@ -377,15 +379,13 @@ export async function POST(req: NextRequest) {
     }
 
     console.log("Metadata :", session.metadata);
-
     console.log("Product IDs :", productIds);
-
     console.log(
-        "Stripe line items :",
-        lineItems.data.map(i => ({
-            description: i.description,
-            quantity: i.quantity
-        }))
+      "Stripe line items :",
+      lineItems.data.map((i) => ({
+        description: i.description,
+        quantity: i.quantity,
+      }))
     );
 
     // --- Email admin ---
