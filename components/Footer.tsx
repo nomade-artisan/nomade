@@ -59,18 +59,18 @@ function Footer() {
           <div className="sm:col-span-2 md:col-span-1">
             <Link
               href="/"
-              className="text-[18px] md:text-[22px] tracking-[0.35em]"
+              className="text-2xl font-extralight tracking-[-0.02em]"
             >
-              NOMADE
+              Nomade
             </Link>
             <p className="text-stone-500 text-sm font-light mt-4 leading-relaxed max-w-xs">
-              Des sacs pour ceux qui savent que l&apos;essentiel est à l&apos;intérieur.
+              Des sacs pour ceux qui savent que l’essentiel est à l’intérieur.
             </p>
           </div>
 
           {/* Boutique */}
           <div>
-            <h3 className="text-xs tracking-[0.2em] uppercase text-stone-400 mb-5 font-light">
+            <h3 className="text-xs tracking-[0.3em] uppercase text-stone-400 mb-5 font-light">
               Boutique
             </h3>
             <ul className="space-y-3">
@@ -78,7 +78,7 @@ function Footer() {
                 <li key={link.label}>
                   <Link
                     href={link.to}
-                    className="text-stone-600 hover:text-stone-900 text-sm font-light transition-colors"
+                    className="text-stone-600 hover:text-stone-900 text-sm font-light transition-colors duration-200 hover:underline underline-offset-4"
                   >
                     {link.label}
                   </Link>
@@ -89,7 +89,7 @@ function Footer() {
 
           {/* Service */}
           <div>
-            <h3 className="text-xs tracking-[0.2em] uppercase text-stone-400 mb-5 font-light">
+            <h3 className="text-xs tracking-[0.3em] uppercase text-stone-400 mb-5 font-light">
               Service
             </h3>
             <ul className="space-y-3">
@@ -97,7 +97,7 @@ function Footer() {
                 <li key={link.label}>
                   <Link
                     href={link.to}
-                    className="text-stone-600 hover:text-stone-900 text-sm font-light transition-colors"
+                    className="text-stone-600 hover:text-stone-900 text-sm font-light transition-colors duration-200 hover:underline underline-offset-4"
                   >
                     {link.label}
                   </Link>
@@ -108,7 +108,7 @@ function Footer() {
 
           {/* Légal */}
           <div>
-            <h3 className="text-xs tracking-[0.2em] uppercase text-stone-400 mb-5 font-light">
+            <h3 className="text-xs tracking-[0.3em] uppercase text-stone-400 mb-5 font-light">
               Légal
             </h3>
             <ul className="space-y-3">
@@ -116,7 +116,7 @@ function Footer() {
                 <li key={link.label}>
                   <Link
                     href={link.to}
-                    className="text-stone-600 hover:text-stone-900 text-sm font-light transition-colors"
+                    className="text-stone-600 hover:text-stone-900 text-sm font-light transition-colors duration-200 hover:underline underline-offset-4"
                   >
                     {link.label}
                   </Link>
@@ -127,7 +127,7 @@ function Footer() {
 
           {/* Newsletter */}
           <div className="sm:col-span-2 md:col-span-1">
-            <h3 className="text-xs tracking-[0.2em] uppercase text-stone-400 mb-5 font-light">
+            <h3 className="text-xs tracking-[0.3em] uppercase text-stone-400 mb-5 font-light">
               Restez nomade
             </h3>
             <p className="text-stone-500 text-xs font-light mb-4 leading-relaxed">
@@ -140,12 +140,13 @@ function Footer() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={status === "loading" || status === "success"}
-                className="flex-1 min-w-0 bg-stone-50 border border-stone-200 text-stone-900 text-sm px-4 py-2 rounded-lg font-light placeholder-stone-400 focus:outline-none focus:border-stone-400 focus:ring-1 focus:ring-stone-200 transition-colors disabled:opacity-50"
+                className="flex-1 min-w-0 bg-stone-50 border border-stone-200 text-stone-900 text-sm px-4 py-2 rounded-xl font-light placeholder-stone-400 focus:outline-none focus:border-stone-400 focus:ring-1 focus:ring-stone-200 transition-colors disabled:opacity-50"
               />
               <button
                 type="submit"
+                aria-label="S’inscrire à la newsletter"
                 disabled={status === "loading" || status === "success"}
-                className={`flex-shrink-0 text-sm px-4 py-2 rounded-lg font-light transition-all duration-200 ${
+                className={`flex-shrink-0 text-sm px-4 py-2 rounded-xl font-light transition-all duration-200 ${
                   status === "success"
                     ? "bg-emerald-700 text-white"
                     : status === "error"
@@ -170,8 +171,8 @@ function Footer() {
           <p className="text-stone-400 text-xs font-light tracking-wide">
             © {new Date().getFullYear()} Nomade. Tous droits réservés.
           </p>
-          <p className="text-stone-400 text-xs font-light italic">
-            On ne possède que ce qu&apos;on porte
+          <p className="text-stone-400 text-xs font-light italic text-center md:text-left">
+            « On ne possède que ce qu’on porte »
           </p>
         </div>
       </div>
