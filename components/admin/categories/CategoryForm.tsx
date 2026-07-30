@@ -4,16 +4,26 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { generateCategorySlug } from "@/lib/categories/queries";
 import type { Category, CategoryFormState } from "@/lib/categories/types";
+import type { Collection } from "@/lib/collections/types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Props {
   initialData?: Category;
+  collections: Collection[];
 }
 
-export default function CategoryForm({ initialData }: Props) {
+export default function CategoryForm({ initialData, collections }: Props) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,6 +31,7 @@ export default function CategoryForm({ initialData }: Props) {
     name: initialData?.name || "",
     slug: initialData?.slug || "",
     description: initialData?.description || "",
+    collectionId: initialData?.collection_id || collections[0]?.id || null,
   });
 
   function handleNameChange(name: string) {
@@ -71,6 +82,24 @@ export default function CategoryForm({ initialData }: Props) {
           {error && (
             <div className="bg-red-50 text-red-700 px-4 py-3 rounded text-sm">{error}</div>
           )}
+          <div>
+            <Label className="text-sm font-medium">Collection</Label>
+            <Select
+              value={form.collectionId?.toString() || ""}
+              onValueChange={(value) => setForm({ ...form, collectionId: Number(value) })}
+            >
+              <SelectTrigger className="mt-2 w-full">
+                <SelectValue placeholder="Choisir une collection" />
+              </SelectTrigger>
+              <SelectContent>
+                {collections.map((collection) => (
+                  <SelectItem key={collection.id} value={collection.id.toString()}>
+                    {collection.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div>
             <label className="text-sm font-medium">Nom</label>
             <Input

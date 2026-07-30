@@ -1,10 +1,12 @@
 import Link from "next/link";
 import {
   LayoutDashboard,
+  Layers3,
   Package,
   ShoppingCart,
   Users,
   Settings,
+  Ticket,
 } from "lucide-react";
 
 const links = [
@@ -32,6 +34,16 @@ const links = [
     label: "Catégories",
     href: "/admin/categories",
     icon: Package,
+  },
+  {
+    label: "Collections",
+    href: "/admin/collections",
+    icon: Layers3,
+  },
+  {
+    label: "Codes promo",
+    href: "/admin/promo-codes",
+    icon: Ticket,
   },
   {
     label: "Paramètres",

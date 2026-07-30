@@ -13,6 +13,7 @@ export interface ProductFormState {
   name: string
   slug: string
   description: string
+  collectionId: number | null
   categoryId: number | null
   price: number
   stock: number
@@ -52,6 +53,14 @@ export interface Category {
   name: string
   slug: string
   description: string | null
+  collection_id: number
+  collection?: {
+    id: number
+    name: string
+    slug: string
+    description: string | null
+    created_at: string
+  } | null
   created_at: string
 }
 

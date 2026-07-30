@@ -45,6 +45,7 @@ export default function CategoriesTable({ categories }: Props) {
         <table className="w-full">
           <thead>
             <tr className="border-b bg-muted/30">
+              <th className="text-left p-4 text-sm">Collection</th>
               <th className="text-left p-4 text-sm">Nom</th>
               <th className="text-left p-4 text-sm">Slug</th>
               <th className="text-left p-4 text-sm">Description</th>
@@ -54,6 +55,7 @@ export default function CategoriesTable({ categories }: Props) {
           <tbody>
             {categories.map((cat) => (
               <tr key={cat.id} className="border-b hover:bg-muted/50">
+                <td className="p-4 text-sm text-muted-foreground">{cat.collection?.name || "—"}</td>
                 <td className="p-4 font-medium">{cat.name}</td>
                 <td className="p-4 text-sm text-muted-foreground">{cat.slug}</td>
                 <td className="p-4 text-sm">{cat.description || "—"}</td>

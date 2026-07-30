@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/components/CartContext";
 import { trackEvent } from "@/lib/analytics/tracking";
+import { toast } from "sonner";
 
 const isMaintenance =
   process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "true";
@@ -21,6 +22,7 @@ function CartClient() {
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
   const [promoDiscount, setPromoDiscount] = useState(0);
+  const [promoError, setPromoError] = useState("");
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [stockModalOpen, setStockModalOpen] = useState(false);
 
@@ -41,6 +43,7 @@ function CartClient() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
+        promoCode: promoApplied ? promoCode.trim() : undefined,
         items: [
           // Tous les produits
           ...cart.map((item) => ({
@@ -73,10 +76,17 @@ function CartClient() {
       setCheckoutLoading(false);
       return;
     }
+
+    if (!res.ok) {
+      toast.error(data.error || "Erreur lors du paiement");
+      setCheckoutLoading(false);
+      return;
+    }
+
     if (data.url) {
       window.location.href = data.url;
     } else {
-      alert(data.error || "Erreur lors du paiement");
+      toast.error(data.error || "Erreur lors du paiement");
       setCheckoutLoading(false);
     }
   };
@@ -87,21 +97,58 @@ function CartClient() {
   );
 
   // Nouveaux frais de livraison
-  const FREE_SHIPPING_THRESHOLD = process.env.FREE_SHIPPING_THRESHOLD ? parseFloat(process.env.FREE_SHIPPING_THRESHOLD) : 120;
-  const SHIPPING_COST = process.env.SHIPPING_COST ? parseFloat(process.env.SHIPPING_COST) : 0;
-  const shipping = subtotal > FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+  const parseEnvNumber = (value: string | undefined, fallback: number) => {
+    if (!value) return fallback;
+    const parsed = parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  };
+
+  const FREE_SHIPPING_THRESHOLD = parseEnvNumber(
+    process.env.NEXT_PUBLIC_FREE_SHIPPING_THRESHOLD,
+    120
+  );
+  const SHIPPING_COST = parseEnvNumber(
+    process.env.NEXT_PUBLIC_SHIPPING_COST,
+    7
+  );
+  const hasFreeShipping = subtotal >= FREE_SHIPPING_THRESHOLD;
+  const shipping = hasFreeShipping ? 0 : SHIPPING_COST;
   const total = subtotal + shipping - promoDiscount;
 
-  const handleApplyPromo = (e: React.FormEvent) => {
+  const handleApplyPromo = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (
-      promoCode.toUpperCase() === "NOMADE10" &&
-      !promoApplied
-    ) {
-      setPromoDiscount(10);
-      setPromoApplied(true);
+    setPromoError("");
+
+    const code = promoCode.trim();
+    if (!code) {
+      setPromoError("Saisissez un code promo.");
+      return;
     }
+
+    const response = await fetch("/api/promo/validate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        promoCode: code,
+        subtotal,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.valid) {
+      setPromoApplied(false);
+      setPromoDiscount(0);
+      setPromoError(result.error || "Code promo invalide.");
+      return;
+    }
+
+    setPromoCode(result.code || code.toUpperCase());
+    setPromoDiscount(Number(result.discountAmount) || 0);
+    setPromoApplied(true);
   };
 
   const cartItemVariants = {
@@ -388,7 +435,7 @@ function CartClient() {
                   </span>
 
                   <span>
-                    {shipping === 0 ? (
+                    {hasFreeShipping ? (
                       <span className="text-emerald-700">
                         Offerte
                       </span>
@@ -413,9 +460,12 @@ function CartClient() {
                       <input
                         type="text"
                         value={promoCode}
-                        onChange={(e) =>
-                          setPromoCode(e.target.value)
-                        }
+                        onChange={(e) => {
+                          setPromoCode(e.target.value);
+                          if (promoError) {
+                            setPromoError("");
+                          }
+                        }}
                         placeholder="Code promo"
                         className="flex-1 border border-stone-200 rounded-xl px-4 py-3 text-sm font-light bg-transparent focus:outline-none focus:border-stone-400 transition-colors"
                       />
@@ -429,6 +479,12 @@ function CartClient() {
                       </button>
 
                     </div>
+
+                    {promoError && (
+                      <p className="mt-2 text-xs text-red-500 font-light">
+                        {promoError}
+                      </p>
+                    )}
 
                   </form>
 

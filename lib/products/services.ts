@@ -137,7 +137,7 @@ export async function updateCompleteProduct(
 
 export async function deleteCompleteProduct(productId: number): Promise<void> {
   // 1. Récupérer les URLs des images pour les supprimer du storage
-  const { supabase } = await import("@/lib/db");
+  const { supabase } = await import("@/lib/supabase/client");
   
   const { data: images } = await supabase
     .from("product_images")

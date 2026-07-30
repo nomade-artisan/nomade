@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { enforceRateLimit } from "@/lib/security/rate-limit";
 
 export async function POST(req: NextRequest) {
+  const rateLimitError = await enforceRateLimit(req, "newsletter", {
+    windowMs: 60_000,
+    maxRequests: 5,
+  });
+  if (rateLimitError) return rateLimitError;
+
   try {
     const { email } = await req.json();
 

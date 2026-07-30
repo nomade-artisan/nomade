@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/db";
+import { supabase } from "@/lib/supabase/client";
 import type { GlobalMetrics, ProductPrediction, SalesDataPoint } from "./types";
 
 export async function getGlobalMetrics(): Promise<GlobalMetrics> {

@@ -7,6 +7,7 @@ import {
   Users,
   FolderOpen,
   BarChart3,
+  Ticket,
 } from "lucide-react";
 
 const modules = [
@@ -49,6 +50,14 @@ const modules = [
     icon: BarChart3,
     color: "text-red-600",
     bgColor: "bg-red-50",
+  },
+  {
+    title: "Codes promo",
+    description: "Gestion des remises",
+    href: "/admin/promo-codes",
+    icon: Ticket,
+    color: "text-emerald-600",
+    bgColor: "bg-emerald-50",
   },
 ];
 

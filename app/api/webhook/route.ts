@@ -1,21 +1,40 @@
+// app/api/webhook/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
-import { supabase } from "@/lib/db";
+import { supabase } from "@/lib/supabase/client";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { Resend } from "resend";
+import { sendOrderConfirmedEmail } from "@/lib/email/order-confirmed";
 import Stripe from "stripe";
 import crypto from "crypto";
 import { revalidatePath } from "next/cache";
+import { Redis } from "@upstash/redis";
 
+const redis = Redis.fromEnv();
 const resend = new Resend(process.env.RESEND_API_KEY);
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const NOREPLY_EMAIL = process.env.NOREPLY_EMAIL;
 
 export async function POST(req: NextRequest) {
+  // --- Rate limiting ---
+  const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
+  const rateKey = `stripe-webhook:rate:${ip}`;
+  const rateLimit = 10;
+  const rateWindow = 60;
+  const current = await redis.incr(rateKey);
+  if (current === 1) await redis.expire(rateKey, rateWindow);
+  if (current > rateLimit) {
+    console.warn(`🚫 Rate limit dépassé pour IP ${ip}`);
+    return NextResponse.json(
+      { error: "Trop de requêtes, veuillez réessayer dans une minute." },
+      { status: 429 }
+    );
+  }
+
+  // --- Vérification signature ---
   const body = await req.text();
   const signature = req.headers.get("stripe-signature")!;
-
   let event: Stripe.Event;
-
   try {
     event = stripe.webhooks.constructEvent(
       body,
@@ -27,14 +46,50 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 
+  // --- Idempotence ---
+  const eventKey = `stripe:event:${event.id}`;
+  const alreadyProcessed = await redis.get(eventKey);
+  if (alreadyProcessed) {
+    console.log(`♻️ Événement ${event.id} déjà traité, ignoré.`);
+    return NextResponse.json({ received: true, alreadyProcessed: true });
+  }
+
+  // --- Traitement de l'événement ---
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as any;
 
+    // Récupération des détails de livraison
+    const resolvedSession = (await stripe.checkout.sessions.retrieve(
+      session.id
+    )) as any;
+    const shippingAddress =
+      session?.shipping_details?.address ||
+      session?.collected_information?.shipping_details?.address ||
+      resolvedSession?.shipping_details?.address ||
+      (resolvedSession as any)?.collected_information?.shipping_details?.address ||
+      session?.customer_details?.address ||
+      resolvedSession?.customer_details?.address ||
+      null;
+    const shippingPhone =
+      session?.shipping_details?.phone ||
+      resolvedSession?.shipping_details?.phone ||
+      session?.customer_details?.phone ||
+      resolvedSession?.customer_details?.phone ||
+      "";
+    const shippingName =
+      session?.shipping_details?.name ||
+      resolvedSession?.shipping_details?.name ||
+      session?.customer_details?.name ||
+      resolvedSession?.customer_details?.name ||
+      "";
+
+    // Métadonnées produits
     const productIds: string[] =
       session.metadata?.product_ids?.split(",").filter(Boolean) || [];
     const quantities: number[] =
       session.metadata?.quantities?.split(",").map(Number).filter(Boolean) || [];
 
+    // Mise à jour des stocks
     const { data: products } = await supabase
       .from("products")
       .select("id, stock")
@@ -43,9 +98,7 @@ export async function POST(req: NextRequest) {
     const updates = productIds
       .map((id: string, i: number) => {
         const product = products?.find((p) => p.id === Number(id));
-        if (!product) {
-          return null;
-        }
+        if (!product) return null;
         const qty = quantities[i] ?? 1;
         return {
           id: Number(id),
@@ -60,29 +113,52 @@ export async function POST(req: NextRequest) {
       )
     );
 
+    // Line items
     const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
-    const shipping = session.shipping_details || session.customer_details;
-    const orderNumber =
-      "NOM-" + crypto.randomBytes(3).toString("hex").toUpperCase();
+    const orderNumber = "NOM-" + crypto.randomBytes(3).toString("hex").toUpperCase();
     const totalAmount = (session.amount_total || 0) / 100;
+    const shippingAmount = (session.total_details?.amount_shipping || session.shipping_cost?.amount_total || 0) / 100;
+    const discountAmount = (session.total_details?.amount_discount || 0) / 100;
+    const subtotal = totalAmount - shippingAmount + discountAmount;
+    const appliedPromoCode =
+      typeof session.metadata?.promo_code === "string" && session.metadata.promo_code.trim()
+        ? session.metadata.promo_code.trim().toUpperCase()
+        : null;
+
+    const customerName = shippingName || session.customer_details?.name || "";
+    const [firstName = "", ...rest] = customerName.trim().split(/\s+/);
+    const lastName = rest.join(" ");
+
+    // Création de la commande
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .insert({
         customer_id: null,
         status: "confirmed",
-        subtotal: totalAmount,
-        shipping: 0,
+        subtotal: subtotal,
+        shipping: shippingAmount,
+        discount_amount: discountAmount,
+        promo_code: appliedPromoCode,
         total: totalAmount,
-        shipping_address: shipping?.address
+        shipping_address: shippingAddress
           ? {
-              line1: shipping.address.line1,
-              line2: shipping.address.line2 || "",
-              city: shipping.address.city,
-              postal_code: shipping.address.postal_code,
-              country: shipping.address.country,
+              firstName,
+              lastName,
+              email: session.customer_details?.email ?? "",
+              phone: shippingPhone || session.customer_details?.phone || "",
+              line1: shippingAddress.line1 || "",
+              line2: shippingAddress.line2 || "",
+              city: shippingAddress.city || "",
+              postal_code: shippingAddress.postal_code || "",
+              country: shippingAddress.country || "",
             }
-          : null,
-        notes: `Commande passée via Stripes`,
+          : {
+              firstName,
+              lastName,
+              email: session.customer_details?.email ?? "",
+              phone: shippingPhone || session.customer_details?.phone || "",
+            },
+        notes: `Commande passée via Stripe`,
         payment_intent_id: session.payment_intent,
         order_number: orderNumber,
       })
@@ -92,6 +168,19 @@ export async function POST(req: NextRequest) {
     if (orderError || !order) {
       console.error("❌ Erreur création commande :", orderError);
     } else {
+      // Persistance promo (sécurité)
+      const { error: promoTraceError } = await supabaseAdmin
+        .from("orders")
+        .update({
+          discount_amount: discountAmount,
+          promo_code: appliedPromoCode,
+        })
+        .eq("id", order.id);
+      if (promoTraceError) {
+        console.error("❌ Erreur persistance trace promo sur order:", promoTraceError);
+      }
+
+      // Order items
       const orderItems = lineItems.data.map((item: any, index: number) => {
         const productId = Number(productIds[index]) || 0;
         return {
@@ -104,26 +193,26 @@ export async function POST(req: NextRequest) {
         };
       });
 
-      if (orderItems.length > 0 && orderItems.some((oi) => oi.product_id > 0)) {
+      // ✅ Correction : on ne garde que les items avec un product_id valide (> 0)
+      const validOrderItems = orderItems.filter((oi) => oi.product_id > 0);
+      if (validOrderItems.length > 0) {
         const { error: itemsError } = await supabase
           .from("order_items")
-          .insert(orderItems);
-
+          .insert(validOrderItems);
         if (itemsError) {
           console.error("❌ Erreur order_items :", itemsError);
         }
       }
 
+      // Tracking
       await supabase.from("order_tracking").insert({
         order_id: order.id,
         status: "confirmed",
         comment: "Paiement validé via Stripe",
       });
 
-      const customerEmail =
-        session.customer_details?.email || session.customer?.email || "";
-      const customerName = session.customer_details?.name || "";
-
+      // Gestion client
+      const customerEmail = session.customer_details?.email || session.customer?.email || "";
       if (customerEmail) {
         const normalizedEmail = customerEmail.toLowerCase().trim();
         const nameParts = customerName.trim().split(" ");
@@ -141,20 +230,19 @@ export async function POST(req: NextRequest) {
         }
 
         if (existingCustomer) {
-          // Mettre à jour les infos
           await supabase
             .from("customers")
             .update({
               first_name: firstName || existingCustomer.first_name,
               last_name: lastName || existingCustomer.last_name,
-              phone: shipping?.phone || existingCustomer.phone,
-              address: shipping?.address
+              phone: shippingPhone || existingCustomer.phone,
+              address: shippingAddress
                 ? {
-                    line1: shipping.address.line1,
-                    line2: shipping.address.line2 || "",
-                    city: shipping.address.city,
-                    postal_code: shipping.address.postal_code,
-                    country: shipping.address.country,
+                    line1: shippingAddress.line1 || "",
+                    line2: shippingAddress.line2 || "",
+                    city: shippingAddress.city || "",
+                    postal_code: shippingAddress.postal_code || "",
+                    country: shippingAddress.country || "",
                   }
                 : existingCustomer.address,
               total_orders: existingCustomer.total_orders + 1,
@@ -163,31 +251,25 @@ export async function POST(req: NextRequest) {
             })
             .eq("id", existingCustomer.id);
 
-          // Lier la commande
-          const { error: linkError } = await supabase
+          await supabase
             .from("orders")
             .update({ customer_id: existingCustomer.id })
             .eq("id", order.id);
-
-          if (linkError) {
-            console.error("❌ Erreur liaison commande-client :", linkError);
-          }
         } else {
-          // Nouveau client
           const { data: newCustomer, error: customerError } = await supabase
             .from("customers")
             .insert({
               email: normalizedEmail,
               first_name: firstName,
               last_name: lastName,
-              phone: shipping?.phone || null,
-              address: shipping?.address
+              phone: shippingPhone || null,
+              address: shippingAddress
                 ? {
-                    line1: shipping.address.line1,
-                    line2: shipping.address.line2 || "",
-                    city: shipping.address.city,
-                    postal_code: shipping.address.postal_code,
-                    country: shipping.address.country,
+                    line1: shippingAddress.line1 || "",
+                    line2: shippingAddress.line2 || "",
+                    city: shippingAddress.city || "",
+                    postal_code: shippingAddress.postal_code || "",
+                    country: shippingAddress.country || "",
                   }
                 : null,
               total_orders: 1,
@@ -205,9 +287,9 @@ export async function POST(req: NextRequest) {
             console.error("❌ Erreur création client :", customerError);
           }
         }
-      } else {
       }
 
+      // Analytics
       await supabase.from("analytics_events").insert({
         event_type: "purchase_completed",
         product_id: productIds.join(","),
@@ -215,12 +297,46 @@ export async function POST(req: NextRequest) {
           order_id: order.id,
           order_number: orderNumber,
           amount: totalAmount,
+          shipping: shippingAmount,
+          discount: discountAmount,
+          promo_code: session.metadata?.promo_code || "",
           products: productIds,
           quantities,
           customer_email: customerEmail,
         },
       });
 
+      // Incrémenter l'utilisation du code promo
+      const promoIdRaw = session.metadata?.promo_id;
+      const promoCodeRaw = session.metadata?.promo_code;
+      const promoId = promoIdRaw ? Number(promoIdRaw) : NaN;
+      if (Number.isFinite(promoId) || promoCodeRaw) {
+        let promoCodeRecord: { id: number; used_count: number } | null = null;
+        if (Number.isFinite(promoId)) {
+          const { data, error } = await supabaseAdmin
+            .from("promo_codes")
+            .select("id, used_count")
+            .eq("id", promoId)
+            .maybeSingle();
+          if (!error) promoCodeRecord = data;
+        }
+        if (!promoCodeRecord && promoCodeRaw) {
+          const { data, error } = await supabaseAdmin
+            .from("promo_codes")
+            .select("id, used_count")
+            .eq("code", String(promoCodeRaw).trim().toUpperCase())
+            .maybeSingle();
+          if (!error) promoCodeRecord = data;
+        }
+        if (promoCodeRecord) {
+          await supabaseAdmin
+            .from("promo_codes")
+            .update({ used_count: (promoCodeRecord.used_count || 0) + 1 })
+            .eq("id", promoCodeRecord.id);
+        }
+      }
+
+      // Revalidation
       for (const id of productIds) {
         revalidatePath(`/boutique/${id}`);
       }
@@ -230,9 +346,49 @@ export async function POST(req: NextRequest) {
       revalidatePath("/");
     }
 
-    const invoice = await stripe.invoices.retrieve(session.invoice as string);
-    const invoiceUrl = invoice.hosted_invoice_url;
+    // --- Récupération de la facture Stripe ---
+    let invoiceUrl: string | null = null;
+    if (session.invoice) {
+      try {
+        const invoice = await stripe.invoices.retrieve(session.invoice as string);
+        invoiceUrl = invoice.hosted_invoice_url || null;
+      } catch (e) {
+        console.warn("⚠️ Impossible de récupérer la facture :", e);
+      }
+    }
 
+    // --- Email client ---
+    const customerEmail = session.customer_details?.email || "";
+    if (customerEmail && order) {
+      const itemsForEmail = lineItems.data.map((item: any) => ({
+        name: item.description || "Produit",
+        quantity: item.quantity || 1,
+        price: (item.amount_total || 0) / 100 / (item.quantity || 1),
+      }));
+
+      await sendOrderConfirmedEmail({
+        to: customerEmail,
+        customerName: customerName || "Client",
+        orderNumber,
+        items: itemsForEmail,
+        subtotal: subtotal,
+        shipping: shippingAmount,
+        total: totalAmount,
+        invoicePdfUrl: invoiceUrl,
+      });
+    }
+
+    console.log("Metadata :", session.metadata);
+    console.log("Product IDs :", productIds);
+    console.log(
+      "Stripe line items :",
+      lineItems.data.map((i) => ({
+        description: i.description,
+        quantity: i.quantity,
+      }))
+    );
+
+    // --- Email admin ---
     const itemsList = lineItems.data
       .map(
         (item: any) =>
@@ -244,114 +400,10 @@ export async function POST(req: NextRequest) {
       )
       .join("");
 
-    const shippingAddress = shipping?.address
-      ? `${shipping.address.line1 || ""}, ${shipping.address.postal_code || ""} ${shipping.address.city || ""}, ${shipping.address.country || ""}`
+    const shippingAddressText = shippingAddress
+      ? `${shippingAddress.line1 || ""}, ${shippingAddress.postal_code || ""} ${shippingAddress.city || ""}, ${shippingAddress.country || ""}`
       : "Adresse communiquée";
 
-    const customerName = session.customer_details?.name || "";
-    const customerEmail = session.customer_details?.email || "";
-
-    // Email client
-    if (customerEmail) {
-    await resend.emails.send({
-      from: `Nomade <${NOREPLY_EMAIL}>`,
-      to: customerEmail,
-      subject: "Votre commande Nomade est confirmée",
-      html: `
-        <div style="font-family: Inter, system-ui, sans-serif; max-width: 560px; margin: auto; padding: 36px; background: #fafaf9; border-radius: 16px; color: #1c1917;">
-
-          <h2 style="font-size: 26px; font-weight: 500; margin: 0 0 12px;">
-            Merci pour votre confiance !
-          </h2>
-
-          <p style="font-size: 15px; color: #57534e; line-height: 1.7; margin-bottom: 24px;">
-            Bonjour ${customerName || "à vous"},
-            <br><br>
-            Nous sommes ravis de vous compter parmi les clients <strong>Nomade</strong>.
-            Votre commande a bien été reçue et notre atelier va désormais préparer votre article avec le plus grand soin.
-          </p>
-
-          <div style="background: #f5f5f4; border-radius: 12px; padding: 16px; margin-bottom: 24px;">
-            <p style="margin: 0; font-size: 13px; color: #78716c;">
-              Numéro de commande
-            </p>
-            <p style="margin: 6px 0 0; font-size: 18px; font-weight: 600; color: #1c1917;">
-              ${orderNumber}
-            </p>
-          </div>
-
-          <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
-            <tbody>
-              ${itemsList}
-            </tbody>
-          </table>
-
-          <div style="background: #f5f5f4; border-radius: 12px; padding: 16px; margin-bottom: 24px;">
-            <p style="margin: 0 0 6px; font-size: 14px; font-weight: 600; color: #1c1917;">
-              Adresse de livraison
-            </p>
-
-            <p style="margin: 0; font-size: 14px; color: #57534e; line-height: 1.6;">
-              📍 ${shippingAddress}
-            </p>
-
-            <p style="margin: 10px 0 0; font-size: 13px; color: #78716c;">
-              Livraison estimée : <strong>3 à 5 jours ouvrés</strong>
-            </p>
-          </div>
-
-          <div style="border-top: 1px solid #e7e5e4; padding-top: 18px; margin-bottom: 28px;">
-            <p style="margin: 0; text-align: right; font-size: 18px;">
-              Total : <strong>${totalAmount.toFixed(2)} €</strong>
-            </p>
-          </div>
-
-          <div style="text-align: center; margin-bottom: 32px;">
-            <a
-              href="${invoiceUrl}"
-              style="display: inline-block; background: #1c1917; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 999px; font-size: 14px; font-weight: 500;"
-            >
-              Télécharger ma facture
-            </a>
-          </div>
-
-          <div style="border-top: 1px solid #e7e5e4; padding-top: 24px;">
-
-            <p style="font-size: 14px; color: #57534e; line-height: 1.7;">
-              Nous vous informerons par e-mail dès que votre commande sera expédiée.
-            </p>
-
-            <p style="font-size: 14px; color: #57534e; line-height: 1.7;">
-              Cet e-mail a été envoyé automatiquement depuis une adresse ne recevant pas de réponses.
-            </p>
-
-            <p style="font-size: 14px; color: #57534e; line-height: 1.7;">
-              Pour toute question concernant votre commande, vous pouvez nous contacter via notre formulaire en ligne ou directement par e-mail :
-            </p>
-
-            <p style="font-size: 14px; line-height: 1.8; margin-top: 10px;">
-              🌐 <a href="https://nomade-artisan.fr/contact" style="color:#1c1917;">nomade-artisan.fr/contact</a><br>
-              ✉️ <a href="mailto:contact@nomade-artisan.fr" style="color:#1c1917;">contact@nomade-artisan.fr</a>
-            </p>
-
-            <p style="margin-top: 26px; font-size: 15px; color: #1c1917;">
-              Chaque pièce est préparée avec soin. Merci de faire partie de l'aventure <strong>Nomade</strong>.
-            </p>
-
-            <p style="margin-top: 20px; color: #1c1917;">
-              À très bientôt,<br>
-              <strong>L'équipe Nomade</strong>
-            </p>
-
-          </div>
-
-        </div>
-      `,
-    });
-
-    }
-
-    // Email admin
     await resend.emails.send({
       from: `Nomade <${NOREPLY_EMAIL}>`,
       to: `${ADMIN_EMAIL}`,
@@ -365,11 +417,14 @@ export async function POST(req: NextRequest) {
           </div>
           <p><strong>${customerName}</strong><br/>${customerEmail}</p>
           <table style="width:100%;">${itemsList}</table>
-          <p>📍 ${shippingAddress}</p>
+          <p>📍 ${shippingAddressText}</p>
           <a href="${process.env.NEXT_PUBLIC_BASE_URL}/admin/orders/${order?.id}" style="display: inline-block; background: #1c1917; color: white; padding: 10px 20px; border-radius: 24px; text-decoration: none;">Voir dans l'admin</a>
         </div>`,
     });
   }
+
+  // --- Marquer l'événement comme traité ---
+  await redis.set(eventKey, "processed", { ex: 86400 });
 
   return NextResponse.json({ received: true });
 }

@@ -14,28 +14,40 @@ export default function ProductActions({
   isEditing = false,
 }: ProductActionsProps) {
   return (
-    <div className="sticky bottom-0 z-10 flex items-center justify-end gap-3 rounded-xl border bg-background p-4">
-      <Button
-        asChild
-        type="button"
-        variant="outline"
-      >
-        <Link href="/admin/products">
-          <X className="mr-2 h-4 w-4" />
-          Annuler
-        </Link>
-      </Button>
+    <div className="sticky bottom-4 z-20 mt-8 rounded-2xl border border-border/80 bg-background/98 p-3 shadow-lg shadow-black/5 backdrop-blur supports-backdrop-filter:bg-background/90">
+      <div className="flex items-center justify-between gap-4">
+        <div className="hidden min-w-0 sm:block">
+          <p className="text-sm font-medium text-foreground">Finaliser la fiche produit</p>
+          <p className="text-xs text-muted-foreground">
+            Verifie les informations avant validation.
+          </p>
+        </div>
 
-      <Button
-        type="submit"
-        disabled={isLoading}
-      >
-        <Save className="mr-2 h-4 w-4" />
+        <div className="ml-auto flex items-center gap-3">
+          <Button
+            asChild
+            type="button"
+            variant="outline"
+          >
+            <Link href="/admin/products">
+              <X className="mr-2 h-4 w-4" />
+              Annuler
+            </Link>
+          </Button>
 
-        {isEditing
-          ? "Enregistrer les modifications"
-          : "Créer le produit"}
-      </Button>
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="min-w-42.5"
+          >
+            <Save className="mr-2 h-4 w-4" />
+
+            {isEditing
+              ? "Enregistrer"
+              : "Créer le produit"}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

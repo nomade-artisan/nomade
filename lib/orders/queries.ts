@@ -1,5 +1,4 @@
-import { supabase } from "@/lib/db";
-import type {
+import { supabase } from "@/lib/supabase/client";import { supabaseAdmin } from "@/lib/supabase/admin";import type {
   OrderWithRelations,
   OrderListItem,
   OrderTracking,
@@ -19,9 +18,12 @@ export async function getOrdersList(
     .from("orders")
     .select(
       `
+      *,
       id,
       status,
       total,
+      discount_amount,
+      promo_code,
       order_number,
       created_at,
       customer:customers(id, first_name, last_name),
@@ -52,11 +54,16 @@ export async function getOrdersList(
   const orders: OrderListItem[] = (data || []).map((order: any) => ({
     id: order.id,
     order_number: order.order_number || null,
-    customer_name: order.customer
-      ? `${order.customer.first_name} ${order.customer.last_name}`
-      : "Client invité",
+    customer_name:
+      order.shipping_address
+        ? `${order.shipping_address.firstName} ${order.shipping_address.lastName}`
+        : order.customer
+          ? `${order.customer.first_name} ${order.customer.last_name}`
+          : "Client invité",
     status: order.status,
     total: order.total,
+    discount_amount: order.discount_amount ?? 0,
+    promo_code: order.promo_code ?? null,
     items_count: order.items?.[0]?.count || 0,
     created_at: order.created_at,
   }));
@@ -71,7 +78,7 @@ export async function getOrdersList(
 }
 
 export async function getOrderById(id: string): Promise<OrderWithRelations | null> {
-  const { data: order, error } = await supabase
+  const { data: order, error } = await supabaseAdmin
     .from("orders")
     .select(
       `
@@ -89,5 +96,18 @@ export async function getOrderById(id: string): Promise<OrderWithRelations | nul
     return null;
   }
 
-  return order as unknown as OrderWithRelations;
+  const { data: shipment, error: shipmentError } = await supabaseAdmin
+    .from("shipments")
+    .select("*")
+    .eq("order_id", id)
+    .maybeSingle();
+
+  if (shipmentError) {
+    console.error("Error fetching shipment:", shipmentError);
+  }
+
+  return {
+    ...(order as unknown as OrderWithRelations),
+    shipment: shipment ?? null,
+  };
 }

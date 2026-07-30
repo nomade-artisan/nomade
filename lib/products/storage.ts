@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/db";
+import { supabase } from "@/lib/supabase/client";
 
 const BUCKET_NAME = "products";
 const FOLDER = "product-images";

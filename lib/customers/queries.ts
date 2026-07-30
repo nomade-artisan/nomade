@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/db";
+import { supabase } from "@/lib/supabase/client";
 import type { CustomerListItem, CustomerWithOrders } from "./types";
 
 export interface PaginatedResponse<T> {

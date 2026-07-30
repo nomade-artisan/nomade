@@ -1,5 +1,6 @@
 import React from "react";
 import { getCategoryById } from "@/lib/categories/queries";
+import { getCollections } from "@/lib/collections/queries";
 import { notFound } from "next/navigation";
 import CategoryForm from "@/components/admin/categories/CategoryForm";
 
@@ -15,7 +16,10 @@ export default async function EditCategoryPage({ params }: Props) {
     notFound();
   }
 
-  const category = await getCategoryById(categoryId);
+  const [category, collections] = await Promise.all([
+    getCategoryById(categoryId),
+    getCollections(),
+  ]);
 
   if (!category) {
     notFound();
@@ -24,7 +28,7 @@ export default async function EditCategoryPage({ params }: Props) {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Modifier la catégorie</h1>
-      <CategoryForm initialData={category} />
+      <CategoryForm initialData={category} collections={collections} />
     </div>
   );
 }

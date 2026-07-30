@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/db";
+import { supabase } from "@/lib/supabase/client";
 import { getVisitorId, getSessionId } from "./visitor";
 
 interface AnalyticsEvent {
