@@ -5,7 +5,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase/client";
 
-// Helper pour récupérer l'URL publique d'une image du bucket "histoire"
 const histoireImage = (filename: string) =>
   supabase.storage.from("histoire").getPublicUrl(filename).data.publicUrl;
 
@@ -43,14 +42,14 @@ function HistoireClient() {
                 Notre histoire
               </p>
               <h1 className="text-white text-5xl md:text-7xl xl:text-8xl font-extralight leading-[0.95] tracking-[-0.04em] mb-10">
-                Créer des objets
+                Façonner
                 <br />
-                simples,
+                le beau,
                 <br />
-                durables.
+                lentement.
               </h1>
               <p className="text-white/70 text-lg md:text-2xl font-light leading-relaxed max-w-2xl">
-                Nomade est une marque construite autour du temps, des matières et du goût pour les objets faits avec attention.
+                Nomade est né de la volonté de créer des sacs qui traversent le temps — et les frontières.
               </p>
             </motion.div>
           </div>
@@ -71,13 +70,17 @@ function HistoireClient() {
                 Là où tout commence
               </p>
               <h2 className="text-4xl md:text-6xl font-extralight leading-tight tracking-[-0.03em]">
-                Une vision née
+                Un atelier
                 <br />
-                autour du
+                à Alès,
                 <br />
-                savoir-faire
+                une Singer
                 <br />
-                et du détail.
+                d’un autre temps,
+                <br />
+                et l’envie
+                <br />
+                de bien faire.
               </h2>
             </motion.div>
 
@@ -89,19 +92,13 @@ function HistoireClient() {
               className="space-y-8 text-stone-600 text-lg md:text-xl font-light leading-relaxed"
             >
               <p>
-                Nomade est né d’une fascination pour les objets qui traversent les années sans perdre leur caractère.
+                Tout a débuté dans une petite pièce lumineuse du Gard, avec une vieille machine à coudre Singer 31K15 et quelques outils essentiels. Rien de plus. L’essentiel était ailleurs : dans la patience, la curiosité, et le désir d’apprendre un métier exigeant.
               </p>
               <p>
-                Inspirée par le travail des matières et les méthodes artisanales, la marque s’est construite progressivement, à travers des essais, des ajustements et beaucoup d’attention portée aux détails.
+                Les fondateurs de Nomade viennent d’horizons différents — l’un porte en lui les couleurs et la résilience du Congo, l’autre a grandi entre tourisme et scoutisme. Leur rencontre a fait naître une idée simple : créer une marque de sacs en cuir, à échelle humaine, où chaque pièce serait le fruit d’un travail soigné.
               </p>
               <p>
-                Chaque pièce est pensée pour être utile, équilibrée et durable.
-              </p>
-              <p>
-                Nous croyons qu’un bel objet doit vivre longtemps, évoluer avec le temps et accompagner le quotidien naturellement.
-              </p>
-              <p>
-                Aujourd’hui, Nomade continue d’avancer avec la même idée : créer lentement, produire avec exigence et construire une maison durable autour du savoir-faire.
+                Aujourd’hui, l’atelier est leur terrain d’expérimentation. On y prototypage, on y coud, on y défait parfois. Et chaque jour, la marque se construit un peu plus, au rythme du cuir que l’on travaille.
               </p>
             </motion.div>
           </div>
@@ -126,10 +123,10 @@ function HistoireClient() {
             transition={{ duration: 1 }}
             className="text-center text-white"
           >
-            <p className="text-4xl md:text-6xl xl:text-7xl font-extralight leading-[1.1] tracking-[-0.03em]">
-              Chaque détail
+            <p className="text-3xl md:text-6xl xl:text-7xl font-extralight leading-[1.1] tracking-[-0.03em]">
+              « Chaque point
               <br />
-              compte
+              compte. »
             </p>
           </motion.blockquote>
         </div>
@@ -146,12 +143,14 @@ function HistoireClient() {
               transition={{ duration: 0.9 }}
             >
               <p className="text-stone-400 uppercase tracking-[0.35em] text-[11px] mb-8">
-                Notre approche
+                Le choix du cuir
               </p>
               <h2 className="text-4xl md:text-6xl font-extralight leading-tight tracking-[-0.03em]">
-                Concevoir des pièces
+                Une matière
                 <br />
-                pensées pour durer
+                vivante,
+                <br />
+                un héritage.
               </h2>
             </motion.div>
 
@@ -163,16 +162,13 @@ function HistoireClient() {
               className="space-y-8 text-stone-600 text-lg md:text-xl font-light leading-relaxed"
             >
               <p>
-                Nous privilégions des matières solides, des lignes simples et des finitions intemporelles.
+                Le cuir pleine fleur s’impose comme une évidence. Il ne se démode pas, il se patine avec élégance. Il raconte le temps qui passe, les voyages, les gestes du quotidien. Une matière noble, profondément ancrée dans l’artisanat.
               </p>
               <p>
-                Le cuir évolue avec le temps, développe sa texture et rend chaque pièce unique.
+                Pour maîtriser sa transformation, l’équipe s’est formée sur le tas, guidée par deux ouvrages de référence — <em>Sacs en cuir</em> de Yoko Ganaha, <em>Modélisme pour la maroquinerie</em> d’Elisa Cigna et Andrea Marcocci. Chaque étape a été apprise avec rigueur : coupe, couture, finition. Sans professeur, mais avec une exigence constante.
               </p>
               <p>
-                Cette évolution fait partie de l’objet. Elle raconte son usage, son quotidien et les années qui passent.
-              </p>
-              <p>
-                Nous aimons l’idée qu’un produit puisse être conservé, réparé et transmis plutôt que remplacé.
+                Aujourd’hui, les premiers prototypes prennent forme. La collection n’est pas encore en vente, mais l’intention est déjà là : proposer des sacs conçus pour durer, réparables, intemporels.
               </p>
             </motion.div>
           </div>
@@ -180,7 +176,7 @@ function HistoireClient() {
       </section>
 
       {/* VALEURS */}
-      <section className="py-24 md:py-40 bg-white">
+      <section className="py-24 md:py-36 bg-white">
         <div className="max-w-7xl mx-auto px-6 md:px-10">
           <motion.div
             initial={{ opacity: 0, y: 35 }}
@@ -193,9 +189,9 @@ function HistoireClient() {
               Nos principes
             </p>
             <h2 className="text-4xl md:text-6xl font-extralight leading-tight tracking-[-0.03em]">
-              Une manière simple
+              Créer moins,
               <br />
-              de faire les choses.
+              créer mieux.
             </h2>
           </motion.div>
 
@@ -203,15 +199,15 @@ function HistoireClient() {
             {[
               {
                 title: "Le temps",
-                text: "Créer lentement permet de porter attention à chaque finition et à chaque détail.",
+                text: "Chaque sac demande des heures de travail. Nous prenons ce temps parce que c’est lui qui donne sa valeur à l’objet.",
               },
               {
                 title: "La matière",
-                text: "Chaque matière est choisie pour sa solidité, sa texture et sa capacité à durer.",
+                text: "Cuir pleine fleur, toile robuste, bouclerie massive. Nous sélectionnons ce qui vieillit le mieux, pour que chaque pièce raconte une histoire.",
               },
               {
-                title: "L’équilibre",
-                text: "Des formes simples, utiles et pensées pour accompagner le quotidien durablement.",
+                title: "L’essentiel",
+                text: "Des lignes simples, des volumes justes. Nous allons à l’essentiel pour que le sac devienne un compagnon de tous les jours.",
               },
             ].map((item, index) => (
               <motion.div
@@ -220,7 +216,7 @@ function HistoireClient() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.12, duration: 0.8 }}
-                className="bg-[#f8f5f1] rounded-[2rem] p-10 md:p-12 border border-stone-200/70"
+                className="bg-[#f8f5f1] rounded-[2rem] p-10 md:p-12 border border-stone-200/70 hover:-translate-y-1 hover:shadow-md transition-all duration-300"
               >
                 <div className="text-stone-300 text-5xl font-extralight mb-10">
                   0{index + 1}
@@ -248,14 +244,16 @@ function HistoireClient() {
             className="text-center"
           >
             <p className="text-white/30 uppercase tracking-[0.35em] text-[11px] mb-10">
-              Notre vision
+              Une conviction
             </p>
             <blockquote className="text-4xl md:text-7xl font-extralight italic leading-[1.15] tracking-[-0.04em] text-white/90">
-              “Créer moins.
+              « On ne possède
               <br />
-              Créer mieux.
+              jamais vraiment
               <br />
-              Et créer pour durer”
+              un sac Nomade.
+              <br />
+              On le transmet. »
             </blockquote>
           </motion.div>
         </div>
@@ -271,19 +269,19 @@ function HistoireClient() {
             transition={{ duration: 1 }}
           >
             <p className="text-stone-400 uppercase tracking-[0.35em] text-[11px] mb-8">
-              La suite
+              Et maintenant
             </p>
             <h2 className="text-4xl md:text-6xl font-extralight leading-tight tracking-[-0.03em] mb-10">
-              L’histoire continue.
+              L’atelier avance.
             </h2>
             <p className="text-stone-500 text-lg md:text-2xl font-light leading-relaxed max-w-3xl mx-auto mb-16">
-              De nouvelles pièces arrivent progressivement, toujours avec la même attention portée aux matières, aux détails et au temps.
+              Les premiers sacs sont en prototypage. Bientôt, ils seront prêts à vous accompagner. D’ici là, nous continuons à apprendre, à coudre, à améliorer chaque détail. Avec une seule idée en tête : faire de Nomade une maison artisanale, durable, et profondément humaine.
             </p>
             <Link
               href="/boutique"
-              className="inline-flex items-center justify-center bg-stone-950 text-white px-10 md:px-14 py-5 rounded-full uppercase tracking-[0.25em] text-xs hover:bg-stone-800 transition-all duration-300"
+              className="inline-flex items-center justify-center bg-stone-950 text-white px-10 md:px-14 py-5 rounded-full uppercase tracking-[0.2em] text-xs hover:bg-stone-800 transition-all duration-300"
             >
-              Découvrir la collection
+              Suivre l’aventure
             </Link>
           </motion.div>
         </div>
