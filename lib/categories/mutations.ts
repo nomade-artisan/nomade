@@ -1,8 +1,8 @@
-import { supabase } from "@/lib/supabase/client";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { CategoryFormState, Category } from "./types";
 
 export async function createCategory(data: CategoryFormState): Promise<Category> {
-  const { data: category, error } = await supabase
+  const { data: category, error } = await supabaseAdmin
     .from("categories")
     .insert({
       name: data.name,
@@ -18,7 +18,7 @@ export async function createCategory(data: CategoryFormState): Promise<Category>
 }
 
 export async function updateCategory(id: number, data: CategoryFormState): Promise<Category> {
-  const { data: category, error } = await supabase
+  const { data: category, error } = await supabaseAdmin
     .from("categories")
     .update({
       name: data.name,
@@ -35,7 +35,7 @@ export async function updateCategory(id: number, data: CategoryFormState): Promi
 }
 
 export async function deleteCategory(id: number): Promise<void> {
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from("categories")
     .delete()
     .eq("id", id);
