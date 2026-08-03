@@ -1,8 +1,8 @@
-import { supabase } from "@/lib/supabase/client";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { Category } from "./types";
 
 export async function getCategories(): Promise<Category[]> {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from("categories")
     .select(`
       *,
@@ -18,7 +18,7 @@ export async function getCategories(): Promise<Category[]> {
 }
 
 export async function getCategoryById(id: number): Promise<Category | null> {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from("categories")
     .select(`
       *,
