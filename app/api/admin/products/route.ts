@@ -5,6 +5,51 @@ import type { ProductFormState } from "@/lib/products/types";
 import { requireAdminAuthorization } from "@/lib/security/admin-auth";
 import { enforceRateLimit } from "@/lib/security/rate-limit";
 
+function normalizeForComparison(value: string): string {
+  return value
+    .toLowerCase()
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function hasRequiredSpec(details: string[]): boolean {
+  const requiredKeys = ["matiere", "dimensions"];
+
+  return details.some((item) => {
+    const [rawKey] = item.split(":");
+    if (!rawKey) return false;
+    const normalized = normalizeForComparison(rawKey);
+    return requiredKeys.some((required) => required === normalized);
+  });
+}
+
+function validateRequiredProductFields(input: {
+  name: string;
+  description: string;
+  categoryId: number | null;
+  price: number;
+  stock: number;
+  details: string[];
+  totalImageCount: number;
+}): string | null {
+  if (!input.name.trim()) return "Le nom du produit est obligatoire.";
+  if (!input.description.trim()) return "La description est obligatoire.";
+  if (!input.categoryId) return "La categorie est obligatoire.";
+  if (!Number.isFinite(input.price) || input.price <= 0) {
+    return "Le prix doit etre superieur a 0.";
+  }
+  if (!Number.isFinite(input.stock) || input.stock < 0) {
+    return "Le stock doit etre superieur ou egal a 0.";
+  }
+  if (input.totalImageCount <= 0) return "Au moins une image est obligatoire.";
+  if (input.details.length === 0) return "Ajoute au moins une caracteristique produit.";
+  if (!hasRequiredSpec(input.details)) {
+    return "Ajoute au minimum une matiere ou des dimensions dans les caracteristiques.";
+  }
+  return null;
+}
+
 
 export async function POST(request: NextRequest) {
   const rateLimitError = await enforceRateLimit(request, "admin-products-post", {
@@ -46,6 +91,20 @@ export async function POST(request: NextRequest) {
         });
       }
     });
+
+    const validationError = validateRequiredProductFields({
+      name,
+      description,
+      categoryId,
+      price,
+      stock,
+      details,
+      totalImageCount: images.length,
+    });
+
+    if (validationError) {
+      return NextResponse.json({ error: validationError }, { status: 400 });
+    }
 
     // Générer le slug
     const slug = generateSlug(name);
@@ -131,6 +190,20 @@ export async function PUT(request: NextRequest) {
         });
       }
     });
+
+    const validationError = validateRequiredProductFields({
+      name,
+      description,
+      categoryId,
+      price,
+      stock,
+      details,
+      totalImageCount: images.length + existingUrls.length,
+    });
+
+    if (validationError) {
+      return NextResponse.json({ error: validationError }, { status: 400 });
+    }
 
     // Générer le slug
     const slug = generateSlug(name);

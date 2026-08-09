@@ -15,17 +15,27 @@ interface Product {
   price: number;
   images: string[];
   category: string;
+  collectionSlug?: string | null;
   isNew?: boolean;
   rating?: number;
   reviews?: number;
 }
 
 interface HomeCategoryCard {
+  id: number;
   name: string;
   slug: string;
   img: string;
   description: string;
+  productCount: number;
   video?: string;
+}
+
+interface HomeCollectionProduct {
+  id: number | string;
+  name: string;
+  price: number;
+  image: string;
 }
 
 // --- Helpers ---
@@ -36,13 +46,67 @@ const homeAsset = (filename: string, useNestedPath = true) =>
 
 const homeImage = (filename: string) => homeAsset(filename, true);
 
+const DEFAULT_COLLECTION_DESCRIPTION =
+  "Des pieces pensees pour durer, coupees et assemblees a la main avec des finitions exigeantes.";
+
+function normalizeCollectionDescription(description: string | null): string {
+  const value = (description || "").replace(/\s+/g, " ").trim();
+  return value.length > 0 ? value : DEFAULT_COLLECTION_DESCRIPTION;
+}
+
+function CollectionProductShowcase({
+  products,
+}: {
+  products: HomeCollectionProduct[];
+}) {
+  if (products.length === 0) return null;
+
+  const showcaseItems = products.slice(0, 3);
+
+  return (
+    <div className="mt-8 flex justify-center">
+      <div className="flex flex-wrap justify-center gap-3 md:gap-4">
+        {showcaseItems.map((product) => (
+          <Link
+            key={product.id}
+            href={`/boutique/${product.id}`}
+            className="group/showcase block w-24 text-center sm:w-28 md:w-32"
+            aria-label={product.name}
+          >
+            <div className="relative aspect-3/4 overflow-hidden bg-stone-200">
+              {product.image ? (
+                <Image
+                  src={product.image}
+                  alt={product.name}
+                  fill
+                  sizes="(max-width: 640px) 96px, (max-width: 768px) 112px, 128px"
+                  className="object-cover transition-transform duration-500 group-hover/showcase:scale-105"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-stone-400 text-sm uppercase tracking-[0.15em]">
+                  N
+                </div>
+              )}
+            </div>
+            <p className="mt-2 truncate text-[11px] uppercase tracking-[0.14em] text-stone-600">
+              {product.name}
+            </p>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // --- CollectionCard améliorée ---
 function CollectionCard({
   cat,
   index,
+  products,
 }: {
   cat: HomeCategoryCard;
   index: number;
+  products: HomeCollectionProduct[];
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isHovering, setIsHovering] = useState(false);
@@ -129,10 +193,16 @@ function CollectionCard({
       </Link>
 
       {/* TEXTE desktop / mobile caché derrière overlay */}
-      <div className="mx-auto w-full max-w-xl px-4 lg:px-0 text-center lg:text-left lg:block hidden md:block">
+      <div className="hidden mx-auto w-full max-w-xl px-4 text-center lg:block lg:px-0 lg:text-left">
         <p className="mb-4 uppercase tracking-[0.35em] text-[11px] text-stone-400">
           Collection
         </p>
+
+        <div className="mb-5 flex flex-wrap items-center gap-2 justify-center lg:justify-start">
+          <span className="inline-flex items-center rounded-full border border-stone-300/80 bg-stone-50 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-stone-500">
+            {cat.productCount} {cat.productCount > 1 ? "produits" : "produit"}
+          </span>
+        </div>
 
         <h3 className="text-3xl sm:text-4xl lg:text-5xl font-light leading-tight tracking-wide text-stone-900">
           {cat.name}
@@ -141,6 +211,8 @@ function CollectionCard({
         <p className="mt-6 text-[15px] md:text-base leading-8 text-stone-500 font-light">
           {cat.description}
         </p>
+
+        <CollectionProductShowcase products={products} />
 
         <Link
           href={`/boutique?collection=${cat.slug}`}
@@ -154,9 +226,17 @@ function CollectionCard({
       {/* Version mobile : le texte en dessous de l'image (alternative sans overlay) */}
       <div className="lg:hidden px-4 mt-2 text-center">
         {/* Le nom est déjà affiché dans l'overlay, mais on peut rappeler la description */}
+        <div className="mt-1 flex flex-wrap items-center justify-center gap-2">
+          <span className="inline-flex items-center rounded-full border border-stone-300/80 bg-stone-50 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-stone-500">
+            {cat.productCount} {cat.productCount > 1 ? "produits" : "produit"}
+          </span>
+        </div>
         <p className="mt-3 text-sm leading-relaxed text-stone-500 font-light px-2">
           {cat.description}
         </p>
+
+        <CollectionProductShowcase products={products} />
+
         <Link
           href={`/boutique?collection=${cat.slug}`}
           className="mt-5 inline-flex items-center gap-2 border-b border-stone-300 pb-1 text-xs uppercase tracking-[0.35em] text-stone-700"
@@ -169,8 +249,12 @@ function CollectionCard({
   );
 }
 
-function buildHomeCategoryCards(collections: Collection[]): HomeCategoryCard[] {
+function buildHomeCategoryCards(
+  collections: Collection[],
+  productCountByCollection: Record<string, number>
+): HomeCategoryCard[] {
   return collections.slice(0, 4).map((collection) => ({
+    id: collection.id,
     name: collection.name,
     slug: collection.slug,
     img: collection.image_path
@@ -179,20 +263,31 @@ function buildHomeCategoryCards(collections: Collection[]): HomeCategoryCard[] {
     video: collection.video_path
       ? supabase.storage.from("collections").getPublicUrl(collection.video_path).data.publicUrl
       : undefined,
-    description: collection.description || "",
+    description: normalizeCollectionDescription(collection.description),
+    productCount: productCountByCollection[collection.slug] || 0,
   }));
 }
 
 // --- Composant principal ---
-export default function HomeClient({ collections }: { collections: Collection[] }) {
+export default function HomeClient({
+  collections,
+  initialProducts,
+}: {
+  collections: Collection[];
+  initialProducts: Product[];
+}) {
   const { scrollY } = useScroll();
   const heroY = useTransform(scrollY, [0, 500], [0, 100]);
   const [isVisible, setIsVisible] = useState<Record<string, boolean>>({});
-  const [products, setProducts] = useState<Product[]>([]);
+  const products = initialProducts;
+  const [shouldLoadHeroVideo, setShouldLoadHeroVideo] = useState(false);
   const [isVideoReady, setIsVideoReady] = useState(false);
   const [videoPathMode, setVideoPathMode] = useState<"nested" | "root">("nested");
   const [videoUnavailable, setVideoUnavailable] = useState(false);
   const heroVideoRef = useRef<HTMLVideoElement | null>(null);
+  const heroSectionRef = useRef<HTMLElement | null>(null);
+  const atelierVideoRef = useRef<HTMLVideoElement | null>(null);
+  const [shouldPlayAtelierVideo, setShouldPlayAtelierVideo] = useState(false);
 
   const videoSources = useMemo(() => {
     const useNestedPath = videoPathMode === "nested";
@@ -203,10 +298,52 @@ export default function HomeClient({ collections }: { collections: Collection[] 
   }, [videoPathMode]);
 
   useEffect(() => {
+    if (videoUnavailable) return;
+
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (media.matches) return;
+
+    let heroVisible = false;
+
+    const maybeEnableHeroVideo = () => {
+      if (heroVisible) setShouldLoadHeroVideo(true);
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        heroVisible = Boolean(entry?.isIntersecting);
+        maybeEnableHeroVideo();
+      },
+      { threshold: 0.35 }
+    );
+
+    if (heroSectionRef.current) {
+      observer.observe(heroSectionRef.current);
+    }
+
+    const handleInteraction = () => maybeEnableHeroVideo();
+    const delayedStart = window.setTimeout(maybeEnableHeroVideo, 1200);
+
+    window.addEventListener("pointerdown", handleInteraction, { passive: true });
+    window.addEventListener("scroll", handleInteraction, { passive: true });
+    window.addEventListener("keydown", handleInteraction);
+
+    return () => {
+      observer.disconnect();
+      window.clearTimeout(delayedStart);
+      window.removeEventListener("pointerdown", handleInteraction);
+      window.removeEventListener("scroll", handleInteraction);
+      window.removeEventListener("keydown", handleInteraction);
+    };
+  }, [videoUnavailable]);
+
+  useEffect(() => {
+    if (!shouldLoadHeroVideo) return;
     const video = heroVideoRef.current;
     if (!video) return;
     video.play().catch(() => {});
-  }, [videoPathMode]);
+  }, [videoPathMode, shouldLoadHeroVideo]);
 
   const handleHeroVideoError = () => {
     if (videoPathMode === "nested") {
@@ -217,24 +354,34 @@ export default function HomeClient({ collections }: { collections: Collection[] 
   };
 
   useEffect(() => {
-    fetch("/api/products?pageSize=50&status=active")
-      .then((res) => res.json())
-      .then((result) => {
-        const products = result.data || result;
-        const formatted = products.map((p: any) => ({
-          id: p.id,
-          name: p.name,
-          price: typeof p.price === "string" ? parseFloat(p.price) : p.price,
-          images: p.cover_image ? [p.cover_image] : [],
-          category: p.category_name || "",
-          isNew: p.is_new || false,
-          rating: 0,
-          reviews: 0,
-        }));
-        setProducts(formatted);
-      })
-      .catch(console.error);
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (media.matches) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        setShouldPlayAtelierVideo(Boolean(entry?.isIntersecting));
+      },
+      { threshold: 0.25 }
+    );
+
+    if (atelierVideoRef.current) {
+      observer.observe(atelierVideoRef.current);
+    }
+
+    return () => observer.disconnect();
   }, []);
+
+  useEffect(() => {
+    const video = atelierVideoRef.current;
+    if (!video) return;
+
+    if (shouldPlayAtelierVideo) {
+      video.play().catch(() => {});
+    } else {
+      video.pause();
+    }
+  }, [shouldPlayAtelierVideo]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -255,7 +402,41 @@ export default function HomeClient({ collections }: { collections: Collection[] 
 
   const newProducts = products.filter((p) => p.isNew).slice(0, 4);
   const bestProducts = products.filter((p) => (p.rating || 0) >= 4.7).slice(0, 4);
-  const categoryCards = useMemo(() => buildHomeCategoryCards(collections), [collections]);
+  const productCountByCollection = useMemo(
+    () =>
+      products.reduce<Record<string, number>>((acc, product) => {
+        if (!product.collectionSlug) return acc;
+        acc[product.collectionSlug] = (acc[product.collectionSlug] || 0) + 1;
+        return acc;
+      }, {}),
+    [products]
+  );
+
+  const categoryCards = useMemo(
+    () => buildHomeCategoryCards(collections, productCountByCollection),
+    [collections, productCountByCollection]
+  );
+
+  const productsByCollection = useMemo(
+    () =>
+      products.reduce<Record<string, HomeCollectionProduct[]>>((acc, product) => {
+        if (!product.collectionSlug) return acc;
+
+        const current = acc[product.collectionSlug] || [];
+        if (current.length >= 8) return acc;
+
+        current.push({
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          image: product.images[0] || "",
+        });
+
+        acc[product.collectionSlug] = current;
+        return acc;
+      }, {}),
+    [products]
+  );
 
   const values = [
     {
@@ -279,7 +460,7 @@ export default function HomeClient({ collections }: { collections: Collection[] 
   return (
     <div className="bg-white text-stone-800 overflow-hidden font-light">
       {/* ====== HERO ====== */}
-      <section className="relative min-h-[90vh] overflow-hidden">
+      <section ref={heroSectionRef} className="relative min-h-[90vh] overflow-hidden">
         <motion.div style={{ y: heroY }} className="absolute inset-0">
           <Image
             src={homeImage("hero.webp")}
@@ -293,26 +474,28 @@ export default function HomeClient({ collections }: { collections: Collection[] 
         <motion.div
           style={{ y: heroY }}
           className={`absolute inset-0 transition-opacity duration-1000 ${
-            isVideoReady && !videoUnavailable ? "opacity-100" : "opacity-0"
+            shouldLoadHeroVideo && isVideoReady && !videoUnavailable ? "opacity-100" : "opacity-0"
           }`}
         >
-          <video
-            key={videoPathMode}
-            ref={heroVideoRef}
-            autoPlay
-            loop
-            muted
-            playsInline
-            preload="metadata"
-            poster={homeImage("hero.webp")}
-            onLoadedData={() => setIsVideoReady(true)}
-            onCanPlay={() => setIsVideoReady(true)}
-            onError={handleHeroVideoError}
-            className="absolute inset-0 w-full h-full object-cover"
-          >
-            <source src={videoSources.webm} type="video/webm" />
-            <source src={videoSources.mp4} type="video/mp4" />
-          </video>
+          {shouldLoadHeroVideo && (
+            <video
+              key={videoPathMode}
+              ref={heroVideoRef}
+              autoPlay
+              loop
+              muted
+              playsInline
+              preload="metadata"
+              poster={homeImage("hero.webp")}
+              onLoadedData={() => setIsVideoReady(true)}
+              onCanPlay={() => setIsVideoReady(true)}
+              onError={handleHeroVideoError}
+              className="absolute inset-0 w-full h-full object-cover"
+            >
+              <source src={videoSources.webm} type="video/webm" />
+              <source src={videoSources.mp4} type="video/mp4" />
+            </video>
+          )}
         </motion.div>
 
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60" />
@@ -417,9 +600,37 @@ export default function HomeClient({ collections }: { collections: Collection[] 
 
       {/* ====== COLLECTIONS – version épurée et aérée ====== */}
       <section className="mx-auto max-w-[1600px] px-5 sm:px-8 lg:px-12 xl:px-20">
+        <div className="py-16 md:py-20 text-center max-w-3xl mx-auto">
+          <p className="text-stone-400 text-xs tracking-[0.3em] uppercase mb-4 font-light">
+            Collections
+          </p>
+          <h2 className="text-3xl md:text-5xl font-light tracking-wide leading-tight text-stone-900">
+            Des lignes pensees pour des usages differents
+          </h2>
+          <p className="mt-6 text-stone-500 text-base md:text-lg leading-relaxed font-light">
+            Chaque collection propose une intention claire: format, rythme d'usage, niveau de capacite et finitions.
+            Explore les univers et va directement sur les modeles qui correspondent a ton quotidien.
+          </p>
+        </div>
+
         {categoryCards.map((cat, index) => (
-          <CollectionCard key={cat.slug} cat={cat} index={index} />
+          <CollectionCard
+            key={cat.slug}
+            cat={cat}
+            index={index}
+            products={productsByCollection[cat.slug] || []}
+          />
         ))}
+
+        <div className="pt-8 pb-14 md:pb-20 text-center">
+          <Link
+            href="/boutique"
+            className="inline-flex items-center gap-3 rounded-full border border-stone-300 px-7 py-3 text-xs uppercase tracking-[0.25em] text-stone-700 hover:border-stone-900 hover:text-stone-900 transition-colors"
+          >
+            Voir toutes les collections
+            <span>→</span>
+          </Link>
+        </div>
       </section>
 
       {/* ====== NOUVEAUTÉS ====== */}
@@ -449,7 +660,7 @@ export default function HomeClient({ collections }: { collections: Collection[] 
                   transition={{ delay: index * 0.1, duration: 0.5 }}
                   className="w-full sm:w-[calc(50%-16px)] lg:w-[calc(25%-24px)] max-w-[280px]"
                 >
-                  <ProductCard product={product} />
+                  <ProductCard product={product} showPrice={false} />
                 </motion.div>
               ))}
             </div>
@@ -470,10 +681,12 @@ export default function HomeClient({ collections }: { collections: Collection[] 
       {/* ====== VIDÉO ATELIER ====== */}
       <section className="relative h-[70vh] overflow-hidden">
         <video
-          autoPlay
+          ref={atelierVideoRef}
+          autoPlay={shouldPlayAtelierVideo}
           loop
           muted
           playsInline
+          preload="none"
           className="absolute inset-0 w-full h-full object-cover"
           poster={homeImage("valeurs-video-poster.webp")}
         >
@@ -575,7 +788,7 @@ export default function HomeClient({ collections }: { collections: Collection[] 
                   transition={{ delay: index * 0.1, duration: 0.5 }}
                   className="w-full sm:w-[calc(50%-16px)] lg:w-[calc(25%-24px)] max-w-[280px]"
                 >
-                  <ProductCard product={product} />
+                  <ProductCard product={product} showPrice={false} />
                 </motion.div>
               ))}
             </div>

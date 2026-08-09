@@ -19,7 +19,13 @@ interface Product {
  * - Badges de stock discrets et raffinés
  * - Ligne décorative sous le nom
  */
-function ProductCard({ product }: { product: Product }) {
+function ProductCard({
+  product,
+  showPrice = true,
+}: {
+  product: Product;
+  showPrice?: boolean;
+}) {
   const imageUrl = Array.isArray(product.images)
     ? product.images[0]
     : product.images || "";
@@ -41,7 +47,7 @@ function ProductCard({ product }: { product: Product }) {
 
   return (
     <Link href={`/boutique/${product.id}`} className="group block">
-      <div className="relative overflow-hidden rounded-2xl bg-stone-100 aspect-[3/4] mb-5 shadow-sm group-hover:shadow-md transition-shadow duration-500">
+      <div className="relative overflow-hidden rounded-2xl bg-stone-100 aspect-3/4 mb-5 shadow-sm group-hover:shadow-md transition-shadow duration-500">
         {/* Image */}
         {imageUrl ? (
           <Image
@@ -85,9 +91,11 @@ function ProductCard({ product }: { product: Product }) {
           <h3 className="font-light text-base tracking-wide text-stone-800 group-hover:text-stone-900 transition-colors duration-300">
             {product.name}
           </h3>
-          <span className="text-stone-500 font-light text-sm whitespace-nowrap">
-            {price.toFixed(2)} €
-          </span>
+          {showPrice && (
+            <span className="text-stone-500 font-light text-sm whitespace-nowrap">
+              {price.toFixed(2)} €
+            </span>
+          )}
         </div>
 
         {/* Ligne décorative fine (apparaît au survol) */}

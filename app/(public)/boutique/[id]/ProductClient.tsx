@@ -184,8 +184,8 @@ function Gallery({
   setSelectedImage: (i: number) => void;
 }) {
   return (
-    <div className="space-y-4 md:space-y-5">
-      <div className="relative overflow-hidden rounded-[24px] md:rounded-[28px] bg-stone-100 aspect-[3/4] md:aspect-[4/5]">
+    <div className="space-y-4 md:space-y-6">
+      <div className="relative overflow-hidden rounded-[24px] md:rounded-[30px] bg-stone-100 aspect-3/4 md:aspect-5/6 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.35)] group">
         <div className="relative w-full h-full">
           <Image
             src={images[selectedImage] || "/placeholder.svg"}
@@ -193,9 +193,11 @@ function Gallery({
             fill
             priority={selectedImage === 0}
             sizes="(max-width: 768px) 100vw, 50vw"
-            className="object-cover transition-opacity duration-300"
+            className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
           />
         </div>
+
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-linear-to-t from-black/30 via-black/10 to-transparent" />
 
         <div className="absolute top-4 left-4 md:top-5 md:left-5 flex flex-col gap-2 z-10">
           {isNew && (
@@ -235,7 +237,7 @@ function Gallery({
               onClick={() => setSelectedImage(i)}
               className={`relative rounded-2xl overflow-hidden aspect-square bg-stone-100 border transition-all duration-300 ${
                 i === selectedImage
-                  ? "border-stone-900"
+                  ? "border-stone-900 shadow-md"
                   : "border-transparent hover:border-stone-300"
               }`}
             >
@@ -455,22 +457,25 @@ function Tabs({
         ))}
       </div>
 
-      <div className="pt-8 min-h-[140px]">
+      <div className="pt-8 min-h-35">
         <div
           className="text-stone-600 text-sm font-light leading-relaxed transition-opacity duration-200"
           key={activeTab}
         >
           {activeTab === "description" && <p>{product.description}</p>}
-          {activeTab === "details" && (
-            <ul className="space-y-3">
-              {product.details.map((detail) => (
-                <li key={detail} className="flex items-start gap-3">
-                  <span className="text-stone-300">—</span>
-                  <span>{detail}</span>
-                </li>
-              ))}
-            </ul>
-          )}
+          {activeTab === "details" &&
+            (product.details.length > 0 ? (
+              <ul className="space-y-3">
+                {product.details.map((detail) => (
+                  <li key={detail} className="flex items-start gap-3">
+                    <span className="text-stone-300">—</span>
+                    <span>{detail}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>Aucun detail supplementaire.</p>
+            ))}
           {activeTab === "livraison" && (
             <div className="space-y-3">
               <p>Livraison standard : 3 à 5 jours ouvrés.</p>
@@ -496,7 +501,7 @@ function RelatedProducts({ products }: { products: Product[] }) {
       <div className="grid grid-cols-2 md:grid-cols-3 gap-5 md:gap-10">
         {products.map((p) => (
           <Link key={p.id} href={`/boutique/${p.id}`} className="group">
-            <div className="relative rounded-[22px] md:rounded-[24px] overflow-hidden bg-stone-100 aspect-[4/5] mb-4">
+            <div className="relative rounded-[22px] md:rounded-[24px] overflow-hidden bg-stone-100 aspect-4/5 mb-4">
               <Image
                 src={p.images[0] || "/placeholder.svg"}
                 alt={p.name}

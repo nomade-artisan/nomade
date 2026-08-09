@@ -23,6 +23,65 @@ interface ProductFormProps {
   productId?: number;
 }
 
+function normalizeForComparison(value: string): string {
+  return value
+    .toLowerCase()
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function hasRequiredSpec(details: string[]): boolean {
+  const requiredKeys = ["matiere", "dimensions"];
+
+  return details.some((item) => {
+    const [rawKey] = item.split(":");
+    if (!rawKey) return false;
+
+    const normalized = normalizeForComparison(rawKey);
+    return requiredKeys.some((required) => normalized === required);
+  });
+}
+
+function validateProductForm(product: ProductFormState): string[] {
+  const errors: string[] = [];
+  const details = sanitizeDetails(product.details);
+
+  if (!product.name.trim()) {
+    errors.push("Le nom du produit est obligatoire.");
+  }
+
+  if (!product.description.trim()) {
+    errors.push("La description est obligatoire.");
+  }
+
+  if (!product.categoryId) {
+    errors.push("La categorie est obligatoire.");
+  }
+
+  if (!Number.isFinite(product.price) || product.price <= 0) {
+    errors.push("Le prix doit etre superieur a 0.");
+  }
+
+  if (!Number.isFinite(product.stock) || product.stock < 0) {
+    errors.push("Le stock doit etre superieur ou egal a 0.");
+  }
+
+  if (product.images.length === 0) {
+    errors.push("Au moins une image est obligatoire.");
+  }
+
+  if (details.length === 0) {
+    errors.push("Ajoute au moins une caracteristique produit.");
+  }
+
+  if (!hasRequiredSpec(details)) {
+    errors.push("Ajoute au minimum une matiere ou des dimensions dans les caracteristiques.");
+  }
+
+  return errors;
+}
+
 function sanitizeDetails(details: string[] | null | undefined): string[] {
   return (details || []).map((item) => item.trim()).filter(Boolean);
 }
@@ -35,7 +94,7 @@ export default function ProductForm({
 }: ProductFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<string[]>([]);
 
   const [product, setProduct] = useState<ProductFormState>({
     name: "",
@@ -92,8 +151,15 @@ export default function ProductForm({
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
+    const validationErrors = validateProductForm(product);
+    if (validationErrors.length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+
     setIsSubmitting(true);
-    setError(null);
+    setErrors([]);
 
     try {
       const formData = new FormData();
@@ -145,7 +211,7 @@ export default function ProductForm({
       router.refresh();
     } catch (err) {
       console.error(err);
-      setError(err instanceof Error ? err.message : "Erreur" );
+      setErrors([err instanceof Error ? err.message : "Erreur"]);
     } finally {
       setIsSubmitting(false);
     }
@@ -153,9 +219,13 @@ export default function ProductForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 pb-24">
-      {error && (
+      {errors.length > 0 && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">
-          {error}
+          <ul className="space-y-1 text-sm">
+            {errors.map((error) => (
+              <li key={error}>• {error}</li>
+            ))}
+          </ul>
         </div>
       )}
 

@@ -1,11 +1,10 @@
-import { supabase } from "@/lib/supabase/client";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { CreateProductInput, UpdateProductInput, Product, ProductImage } from "./types";
 
 export async function createProduct(
   input: CreateProductInput
 ): Promise<Product> {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from("products")
     .insert({
       name: input.name,
@@ -30,7 +29,7 @@ export async function createProduct(
 export async function updateProduct(
   input: UpdateProductInput
 ): Promise<Product> {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from("products")
     .update({
       ...(input.name !== undefined && { name: input.name }),
@@ -66,7 +65,7 @@ export async function deleteProduct(id: number): Promise<void> {
 export async function createProductImages(
   images: { productId: number; imageUrl: string; position: number }[]
 ): Promise<ProductImage[]> {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from("product_images")
     .insert(
       images.map((img) => ({
