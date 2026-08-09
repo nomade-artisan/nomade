@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase/client";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 const BUCKET_NAME = "products";
 const FOLDER = "product-images";
@@ -26,7 +27,7 @@ export async function uploadProductImages(
 }
 
 export async function deleteProductImages(paths: string[]): Promise<void> {
-  const { error } = await supabase.storage
+  const { error } = await supabaseAdmin.storage
     .from(BUCKET_NAME)
     .remove(paths);
 

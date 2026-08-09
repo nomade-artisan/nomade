@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase/client";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { CreateProductInput, UpdateProductInput, Product, ProductImage } from "./types";
 
 export async function createProduct(
@@ -54,14 +55,7 @@ export async function updateProduct(
 }
 
 export async function deleteProduct(id: number): Promise<void> {
-  // Delete product images first
-  const { data: images } = await supabase
-    .from("product_images")
-    .select("image_url")
-    .eq("product_id", id);
-
-  // Then delete the product
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from("products")
     .delete()
     .eq("id", id);
@@ -92,7 +86,7 @@ export async function createProductImages(
 export async function deleteProductImagesByProductId(
   productId: number
 ): Promise<void> {
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from("product_images")
     .delete()
     .eq("product_id", productId);

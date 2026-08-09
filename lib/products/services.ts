@@ -7,7 +7,7 @@ import {
 } from "./mutations";
 import { uploadProductImages, deleteProductImages, getPublicUrl } from "./storage";
 import type { ProductFormState, ProductWithImages } from "./types";
-import { supabase } from "@/lib/supabase/client";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export async function createCompleteProduct(
   productData: ProductFormState
@@ -71,7 +71,7 @@ export async function updateCompleteProduct(
   });
 
   // 2. Récupérer les images actuelles en DB
-  const { data: oldImages } = await supabase
+  const { data: oldImages } = await supabaseAdmin
     .from("product_images")
     .select("*")
     .eq("product_id", productId)
@@ -98,12 +98,12 @@ export async function updateCompleteProduct(
       }
 
       for (const img of toDelete) {
-        await supabase.from("product_images").delete().eq("id", img.id);
+        await supabaseAdmin.from("product_images").delete().eq("id", img.id);
       }
     }
 
     for (let i = 0; i < existingUrls.length; i++) {
-      await supabase
+      await supabaseAdmin
         .from("product_images")
         .update({ position: i === 0 ? 0 : i })
         .eq("product_id", productId)
@@ -137,9 +137,9 @@ export async function updateCompleteProduct(
 
 export async function deleteCompleteProduct(productId: number): Promise<void> {
   // 1. Récupérer les URLs des images pour les supprimer du storage
-  const { supabase } = await import("@/lib/supabase/client");
+  const { supabaseAdmin } = await import("@/lib/supabase/admin");
   
-  const { data: images } = await supabase
+  const { data: images } = await supabaseAdmin
     .from("product_images")
     .select("image_url")
     .eq("product_id", productId);
