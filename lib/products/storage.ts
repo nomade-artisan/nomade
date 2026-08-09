@@ -11,7 +11,7 @@ export async function uploadProductImages(
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
     const filePath = `${FOLDER}/${fileName}`;
 
-    const { data, error } = await supabase.storage
+    const { data, error } = await supabaseAdmin.storage
       .from(BUCKET_NAME)
       .upload(filePath, file, {
         cacheControl: "3600",
