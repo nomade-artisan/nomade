@@ -30,7 +30,6 @@ export default function ProductEditActions({
   const [open, setOpen] = useState(false);
 
   async function handleDelete(e: React.MouseEvent) {
-    e.preventDefault(); // ✅ Empêche la fermeture automatique du popup
     setIsDeleting(true);
 
     try {
@@ -48,7 +47,7 @@ export default function ProductEditActions({
     } catch (error) {
       console.error(error);
       alert("Erreur lors de la suppression");
-      setIsDeleting(false); // ✅ Réactive seulement si erreur
+      setIsDeleting(false);
     }
   }
 
@@ -74,36 +73,36 @@ export default function ProductEditActions({
                 Supprimer
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Supprimer ce produit ?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Cette action est <span className="font-semibold text-destructive">irréversible</span>.
-                  Le produit et toutes ses images seront définitivement supprimés.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
-                <Button
-                  variant="destructive"
-                  onClick={handleDelete}
-                  disabled={isDeleting}
-                >
-                  {isDeleting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Suppression...
-                    </>
-                  ) : (
-                    <>
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Supprimer
-                    </>
-                  )}
-                </Button>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Supprimer ce produit ?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Cette action est irréversible...
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
+              {/* Un seul bouton de confirmation, PAS de AlertDialogAction pour contrôler la fermeture */}
+              <Button
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Suppression...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Supprimer
+                  </>
+                )}
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
           <div className="flex gap-3">
             <Button

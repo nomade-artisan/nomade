@@ -317,7 +317,7 @@ export default function HomeClient({ collections }: { collections: Collection[] 
 
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60" />
 
-        <div className="relative min-h-[90vh] flex flex-col justify-center items-center px-6 text-center">
+        <div className="relative min-h-[90vh] flex flex-col justify-center items-center px-6 pt-24 pb-10 md:pt-28 md:pb-14 text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}

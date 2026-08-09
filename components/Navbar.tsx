@@ -50,12 +50,13 @@ function Navbar() {
     setMenuOpen(false);
   }, [pathname]);
 
-  // Scroll detection – seuil à 5px pour réactivité
+  // Scroll detection – calcule aussi l'etat initial au chargement/changement de route
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 5);
+    onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  }, [pathname]);
 
   // Détermine si la navbar doit être opaque
   const isOpaque = !isHome || scrolled;
