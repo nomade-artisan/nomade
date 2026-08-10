@@ -214,7 +214,8 @@ function BoutiqueClient({
                 <section key={collection.slug} className="space-y-3 md:space-y-4">
                   <Link
                     href={`/boutique/collection/${collection.slug}`}
-                    className="relative left-1/2 right-1/2 block w-screen -translate-x-1/2 overflow-hidden aspect-32/9 bg-stone-100"
+                    className="relative left-1/2 right-1/2 block w-screen -translate-x-1/2 overflow-hidden bg-stone-100"
+                    style={{ aspectRatio: "21 / 10" }}
                   >
                     {mediaVideoUrl ? (
                       <video

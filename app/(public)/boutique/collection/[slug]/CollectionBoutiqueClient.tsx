@@ -148,7 +148,10 @@ export default function CollectionBoutiqueClient({
 
   return (
     <div className="bg-white text-stone-800 pt-20">
-      <section className="relative left-1/2 right-1/2 w-screen -translate-x-1/2 overflow-hidden aspect-32/9 bg-stone-100">
+      <section
+        className="relative left-1/2 right-1/2 w-screen -translate-x-1/2 overflow-hidden bg-stone-100"
+        style={{ aspectRatio: "21 / 10" }}
+      >
         {mediaVideoUrl ? (
           <video
             src={mediaVideoUrl}
