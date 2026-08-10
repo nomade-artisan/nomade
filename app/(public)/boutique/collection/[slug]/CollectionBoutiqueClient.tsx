@@ -1,0 +1,185 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import ProductCard from "@/components/ProductCard";
+
+interface Product {
+  id: number | string;
+  name: string;
+  price: number;
+  images: string[];
+  category: string;
+  categorySlug: string;
+  collectionSlug?: string;
+  stock?: number;
+}
+
+interface CategoryOption {
+  slug: string;
+  name: string;
+}
+
+interface Props {
+  collectionName: string;
+  collectionSlug: string;
+  collectionDescription: string | null;
+  mediaImageUrl: string;
+  mediaVideoUrl: string;
+  products: Product[];
+  categories: CategoryOption[];
+}
+
+export default function CollectionBoutiqueClient({
+  collectionName,
+  collectionSlug,
+  collectionDescription,
+  mediaImageUrl,
+  mediaVideoUrl,
+  products,
+  categories,
+}: Props) {
+  const [activeCategory, setActiveCategory] = useState<string>("all");
+
+  const sortedProducts = useMemo(() => {
+    const items = products.filter((product) => product.collectionSlug === collectionSlug);
+    items.sort((a, b) => {
+      const categoryCompare = a.categorySlug.localeCompare(b.categorySlug);
+      if (categoryCompare !== 0) return categoryCompare;
+      return a.name.localeCompare(b.name);
+    });
+    return items;
+  }, [collectionSlug, products]);
+
+  const filteredProducts = useMemo(() => {
+    if (activeCategory === "all") return sortedProducts;
+    return sortedProducts.filter((product) => product.categorySlug === activeCategory);
+  }, [activeCategory, sortedProducts]);
+
+  const groupedProducts = useMemo(() => {
+    if (activeCategory !== "all") return [] as Array<{ category: string; items: Product[] }>;
+
+    const groups: Array<{ category: string; items: Product[] }> = [];
+    for (const product of sortedProducts) {
+      const existing = groups.find((group) => group.category === product.categorySlug);
+      if (existing) {
+        existing.items.push(product);
+      } else {
+        groups.push({ category: product.categorySlug, items: [product] });
+      }
+    }
+
+    return groups;
+  }, [activeCategory, sortedProducts]);
+
+  const subtitle = collectionDescription?.trim().length
+    ? collectionDescription
+    : "Une collection pensee pour durer.";
+
+  return (
+    <div className="bg-white text-stone-800 pt-20">
+      <section className="relative left-1/2 right-1/2 w-screen -translate-x-1/2 overflow-hidden aspect-32/9 bg-stone-100">
+        {mediaVideoUrl ? (
+          <video
+            src={mediaVideoUrl}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            poster={mediaImageUrl || undefined}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : mediaImageUrl ? (
+          <Image
+            src={mediaImageUrl}
+            alt={collectionName}
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
+          />
+        ) : null}
+
+        <div className="absolute inset-0 bg-linear-to-t from-black/55 via-black/10 to-transparent" />
+        <div className="absolute bottom-4 left-5 right-5 md:bottom-6 md:left-8 md:right-8 text-white">
+          <p className="text-[10px] uppercase tracking-[0.25em] text-white/75 font-light">Collection</p>
+          <h1 className="mt-1 text-2xl md:text-4xl font-light tracking-wide">{collectionName}</h1>
+          <p className="mt-1 text-xs md:text-sm text-white/80 font-light max-w-3xl">{subtitle}</p>
+        </div>
+      </section>
+
+      <div className="max-w-7xl mx-auto px-5 md:px-8 py-8 md:py-10">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mb-6">
+          <button
+            type="button"
+            onClick={() => setActiveCategory("all")}
+            className={`text-[11px] uppercase tracking-[0.25em] font-light transition-colors ${
+              activeCategory === "all" ? "text-stone-900" : "text-stone-400 hover:text-stone-600"
+            }`}
+          >
+            Toutes les categories
+          </button>
+
+          {categories.map((category) => (
+            <button
+              key={category.slug}
+              type="button"
+              onClick={() => setActiveCategory(category.slug)}
+              className={`text-[11px] uppercase tracking-[0.25em] font-light transition-colors ${
+                activeCategory === category.slug
+                  ? "text-stone-900"
+                  : "text-stone-400 hover:text-stone-600"
+              }`}
+            >
+              {category.name}
+            </button>
+          ))}
+        </div>
+
+        {filteredProducts.length > 0 ? (
+          activeCategory === "all" ? (
+            <div className="space-y-8 md:space-y-10">
+              {groupedProducts.map((group) => {
+                const categoryName = categories.find((category) => category.slug === group.category)?.name || group.category;
+
+                return (
+                  <section key={group.category} className="space-y-3">
+                    <p className="text-[10px] uppercase tracking-[0.3em] text-stone-400 font-light">
+                      {categoryName}
+                    </p>
+                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5 md:gap-3">
+                      {group.items.map((product) => (
+                        <ProductCard key={product.id} product={product} />
+                      ))}
+                    </div>
+                  </section>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5 md:gap-3">
+              {filteredProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )
+        ) : (
+          <div className="text-center py-20">
+            <p className="text-stone-400 font-light">Aucun produit dans cette categorie.</p>
+          </div>
+        )}
+
+        <div className="pt-8">
+          <Link
+            href="/boutique"
+            className="text-[11px] uppercase tracking-[0.25em] text-stone-500 hover:text-stone-800 transition-colors"
+          >
+            Retour a toutes les collections
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}

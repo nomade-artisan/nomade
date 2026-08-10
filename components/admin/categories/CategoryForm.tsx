@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { generateCategorySlug } from "@/lib/categories/queries";
 import type { Category, CategoryFormState } from "@/lib/categories/types";
 import type { Collection } from "@/lib/collections/types";
 import {
@@ -21,6 +20,16 @@ import {
 interface Props {
   initialData?: Category;
   collections: Collection[];
+}
+
+function generateCategorySlug(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .substring(0, 50);
 }
 
 export default function CategoryForm({ initialData, collections }: Props) {

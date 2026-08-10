@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useMemo, useCallback, memo } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { useEffect } from "react";
 import { trackEvent } from "@/lib/analytics/tracking";
+import { supabase } from "@/lib/supabase/client";
 import ProductCard from "@/components/ProductCard";
 
-// Types
 interface Product {
   id: number | string;
   name: string;
@@ -21,27 +22,12 @@ interface Product {
   stock?: number;
 }
 
-interface CategoryFilter {
-  id: number;
-  name: string;
-  slug: string;
-  collectionId: number;
-  collectionName: string;
-  collectionSlug: string;
-}
-
 interface CollectionFilter {
   id: number;
   name: string;
   slug: string;
-}
-
-function normalizeCategory(value: string): string {
-  return value
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim();
+  imagePath?: string | null;
+  videoPath?: string | null;
 }
 
 const sortOptions = [
@@ -49,50 +35,34 @@ const sortOptions = [
   { label: "Prix croissant", value: "price-asc" },
   { label: "Prix décroissant", value: "price-desc" },
   { label: "Nouveautés", value: "newest" },
-];
+] as const;
+
+type SortValue = (typeof sortOptions)[number]["value"];
+
+function getCollectionMediaUrl(path?: string | null): string {
+  if (!path) return "";
+  return supabase.storage.from("collections").getPublicUrl(path).data.publicUrl;
+}
 
 function BoutiqueClient({
   products,
-  categories,
   collections,
 }: {
   products: Product[];
-  categories: CategoryFilter[];
   collections: CollectionFilter[];
 }) {
   const searchParams = useSearchParams();
-  const collectionParam = searchParams.get("collection");
-  const categoryParam = searchParams.get("category");
   const filterParam = searchParams.get("filter");
 
-  const availableCollections = useMemo(() => collections, [collections]);
-
-  const availableCategories = useMemo(() => {
-    const seen = new Set<string>();
-    return categories.filter((category) => {
-      const normalized = normalizeCategory(category.slug);
-      if (!normalized || seen.has(normalized)) return false;
-      seen.add(normalized);
-      return true;
-    });
-  }, [categories]);
-
-  // États
-  const [activeCollection, setActiveCollection] = useState("Tous");
-  const [activeCategory, setActiveCategory] = useState("Tous");
-  const [sortBy, setSortBy] = useState("default");
+  const [sortBy, setSortBy] = useState<SortValue>("default");
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
-  const [transitioning, setTransitioning] = useState(false);
 
-  // Tracking
   useEffect(() => {
-    if (activeCategory === "Tous") return;
-    trackEvent("category_view", {
-      metadata: { collection: activeCollection, category: activeCategory },
-    });
-  }, [activeCategory, activeCollection]);
+    if (filterParam === "nouveautes") {
+      setSortBy("newest");
+    }
+  }, [filterParam]);
 
   useEffect(() => {
     if (searchTerm.trim().length < 2) return;
@@ -102,67 +72,14 @@ function BoutiqueClient({
     return () => clearTimeout(timeout);
   }, [searchTerm]);
 
-  // Initialisation depuis les paramètres d'URL
-  useMemo(() => {
-    let category = "Tous";
-    let collection = "Tous";
-    let filter: string | null = null;
-    let sort = "default";
-
-    if (collectionParam) {
-      const match = availableCollections.find(
-        (item) => normalizeCategory(item.slug) === normalizeCategory(collectionParam)
-      );
-      if (match) collection = match.name;
-    }
-
-    if (categoryParam) {
-      const cat = availableCategories.find(
-        (c) => normalizeCategory(c.slug) === normalizeCategory(categoryParam)
-      );
-      if (cat) {
-        category = cat.name;
-        if (cat.collectionName) collection = cat.collectionName;
-      }
-    }
-
-    if (filterParam) {
-      if (filterParam === "nouveautes") {
-        filter = "nouveautes";
-        category = "Tous";
-        sort = "newest";
-      } else if (filterParam === "best" || filterParam === "best-sellers") {
-        filter = "best";
-        category = "Tous";
-      }
-    }
-
-    setActiveCollection(collection);
-    setActiveCategory(category);
-    setActiveFilter(filter);
-    setSortBy(sort);
-  }, [availableCategories, availableCollections, categoryParam, collectionParam, filterParam]);
-
-  // Filtrage et tri
-  const filteredProducts = useMemo(() => {
+  const displayedProducts = useMemo(() => {
     let filtered = [...products];
 
-    if (activeFilter === "best") {
-      filtered = filtered.filter((p) => (p.rating || 0) >= 4.7);
-    }
-    if (activeFilter === "nouveautes") {
-      filtered = filtered.filter((p) => p.isNew);
-    }
-    if (activeCollection !== "Tous") {
-      filtered = filtered.filter((p) => p.collection === activeCollection);
-    }
-    if (activeCategory !== "Tous") {
-      filtered = filtered.filter((p) => p.category === activeCategory);
-    }
     if (searchTerm.trim() !== "") {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(
-        (p) => p.name.toLowerCase().includes(term) || p.category.toLowerCase().includes(term)
+        (product) =>
+          product.name.toLowerCase().includes(term) || product.collection.toLowerCase().includes(term)
       );
     }
 
@@ -181,171 +98,56 @@ function BoutiqueClient({
     }
 
     return filtered;
-  }, [activeCategory, activeCollection, sortBy, searchTerm, activeFilter, products]);
-
-  const visibleCategories = useMemo(() => {
-    if (activeCollection === "Tous") return availableCategories;
-    return availableCategories.filter(
-      (category) => category.collectionName === activeCollection
-    );
-  }, [activeCollection, availableCategories]);
-
-  // Handlers
-  const handleCollectionChange = useCallback(
-    (collection: string) => {
-      if (collection === activeCollection && activeCategory === "Tous" && !activeFilter) return;
-      setTransitioning(true);
-      setTimeout(() => {
-        setActiveCollection(collection);
-        setActiveCategory("Tous");
-        setActiveFilter(null);
-        setTransitioning(false);
-      }, 150);
-    },
-    [activeCategory, activeCollection, activeFilter]
-  );
-
-  const handleCategoryChange = useCallback(
-    (cat: string) => {
-      if (cat === activeCategory && !activeFilter) return;
-      setTransitioning(true);
-      setTimeout(() => {
-        setActiveCategory(cat);
-        setActiveFilter(null);
-        const found = availableCategories.find((c) => c.name === cat);
-        if (found?.collectionName) {
-          setActiveCollection(found.collectionName);
-        }
-        setTransitioning(false);
-      }, 150);
-    },
-    [activeCategory, activeFilter, availableCategories]
-  );
-
-  const handleNewFilter = useCallback(() => {
-    if (activeFilter === "nouveautes") return;
-    setTransitioning(true);
-    setTimeout(() => {
-      setActiveFilter("nouveautes");
-      setActiveCollection("Tous");
-      setActiveCategory("Tous");
-      setSortBy("newest");
-      setTransitioning(false);
-    }, 150);
-  }, [activeFilter]);
-
-  const handleBestFilter = useCallback(() => {
-    if (activeFilter === "best") return;
-    setTransitioning(true);
-    setTimeout(() => {
-      setActiveFilter("best");
-      setActiveCollection("Tous");
-      setActiveCategory("Tous");
-      setTransitioning(false);
-    }, 150);
-  }, [activeFilter]);
-
-  const pageTitle =
-    activeFilter === "nouveautes"
-      ? "Nouveautés"
-      : activeFilter === "best"
-      ? "Essentiels"
-      : activeCategory !== "Tous"
-      ? activeCategory
-      : activeCollection !== "Tous"
-      ? activeCollection
-      : "La collection";
-
-  const pageSubtitle =
-    activeFilter === "nouveautes"
-      ? "Les dernières pièces."
-      : activeFilter === "best"
-      ? "Les modèles les plus appréciés."
-      : activeCategory !== "Tous"
-      ? `Une sélection ${activeCategory.toLowerCase()}.`
-      : activeCollection !== "Tous"
-      ? `Explore la collection ${activeCollection.toLowerCase()}.`
-      : "Des objets pensés pour durer";
+  }, [products, searchTerm, sortBy]);
 
   const currentSortLabel =
-    sortOptions.find((opt) => opt.value === sortBy)?.label || "Par défaut";
+    sortOptions.find((option) => option.value === sortBy)?.label || "Par défaut";
+
+  const visibleCollections = useMemo(
+    () => collections.filter((collection) => collection.slug !== "all"),
+    [collections]
+  );
+
+  const groupedCollections = useMemo(() => {
+    return visibleCollections
+      .map((collection) => ({
+        collection,
+        items: displayedProducts.filter(
+          (product) =>
+            product.collectionSlug === collection.slug || product.collection === collection.name
+        ),
+      }))
+      .filter((group) => group.items.length > 0);
+  }, [displayedProducts, visibleCollections]);
 
   return (
     <div className="bg-white text-stone-800 pt-20">
-      <div className="max-w-7xl mx-auto px-6 md:px-10 py-16 md:py-20">
-        {/* En-tête minimaliste */}
-        <div className="text-center mb-14">
+      <div className="max-w-7xl mx-auto px-5 md:px-8 py-12 md:py-14">
+        <div className="text-center mb-10">
           <h1 className="text-4xl md:text-6xl font-light tracking-tight text-stone-900 mb-3">
-            {pageTitle}
+            La collection
           </h1>
-          <p className="text-stone-400 font-light text-base md:text-lg tracking-wide max-w-xs mx-auto">
-            {pageSubtitle}
+          <p className="text-stone-400 font-light text-base md:text-lg tracking-wide max-w-sm mx-auto">
+            Les pieces sont organisees par collection.
           </p>
         </div>
 
-        {/* Barre de filtres épurée */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 mb-12">
-          {/* Filtres horizontaux */}
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-9">
           <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-            {/* Collections */}
-            {availableCollections.map((collection) => (
-              <button
+            <span className="text-[11px] uppercase tracking-[0.25em] font-light text-stone-900">
+              Tous
+            </span>
+            {visibleCollections.map((collection) => (
+              <Link
                 key={collection.slug}
-                onClick={() => handleCollectionChange(collection.name)}
-                className={`text-[11px] uppercase tracking-[0.25em] font-light transition-all duration-300 ${
-                  activeCollection === collection.name && !activeFilter
-                    ? "text-stone-900"
-                    : "text-stone-400 hover:text-stone-600"
-                }`}
+                href={`/boutique/collection/${collection.slug}`}
+                className="text-[11px] uppercase tracking-[0.25em] font-light text-stone-400 hover:text-stone-600 transition-colors"
               >
                 {collection.name}
-              </button>
+              </Link>
             ))}
-
-            <span className="w-px h-4 bg-stone-200 hidden sm:block" />
-
-            {/* Catégories visibles */}
-            {visibleCategories.map((cat) => (
-              <button
-                key={cat.slug}
-                onClick={() => handleCategoryChange(cat.name)}
-                className={`text-[11px] uppercase tracking-[0.25em] font-light transition-all duration-300 ${
-                  activeCategory === cat.name && !activeFilter
-                    ? "text-stone-900"
-                    : "text-stone-400 hover:text-stone-600"
-                }`}
-              >
-                {cat.name}
-              </button>
-            ))}
-
-            <span className="w-px h-4 bg-stone-200 hidden sm:block" />
-
-            {/* Filtres spéciaux */}
-            <button
-              onClick={handleNewFilter}
-              className={`text-[11px] uppercase tracking-[0.25em] font-light transition-all duration-300 ${
-                activeFilter === "nouveautes"
-                  ? "text-stone-900"
-                  : "text-stone-400 hover:text-stone-600"
-              }`}
-            >
-              Nouveautés
-            </button>
-
-            <button
-              onClick={handleBestFilter}
-              className={`text-[11px] uppercase tracking-[0.25em] font-light transition-all duration-300 ${
-                activeFilter === "best"
-                  ? "text-stone-900"
-                  : "text-stone-400 hover:text-stone-600"
-              }`}
-            >
-              Essentiels
-            </button>
           </div>
 
-          {/* Recherche + tri */}
           <div className="flex items-center gap-4 w-full lg:w-auto">
             <div className="relative flex-1 lg:w-48">
               <input
@@ -357,7 +159,6 @@ function BoutiqueClient({
               />
             </div>
 
-            {/* Menu de tri */}
             <div className="relative">
               <button
                 onClick={() => setSortMenuOpen(!sortMenuOpen)}
@@ -365,11 +166,7 @@ function BoutiqueClient({
                 className="text-[11px] uppercase tracking-[0.2em] font-light text-stone-400 hover:text-stone-600 transition-colors flex items-center gap-2"
               >
                 {currentSortLabel}
-                <span
-                  className={`transition-transform duration-200 ${
-                    sortMenuOpen ? "rotate-180" : ""
-                  }`}
-                >
+                <span className={`transition-transform duration-200 ${sortMenuOpen ? "rotate-180" : ""}`}>
                   ↓
                 </span>
               </button>
@@ -390,9 +187,7 @@ function BoutiqueClient({
                       }`}
                     >
                       <span>{option.label}</span>
-                      {sortBy === option.value && (
-                        <span className="text-stone-400">•</span>
-                      )}
+                      {sortBy === option.value && <span className="text-stone-400">•</span>}
                     </button>
                   ))}
                 </div>
@@ -401,51 +196,94 @@ function BoutiqueClient({
           </div>
         </div>
 
-        {/* Résultats */}
-        {filteredProducts.length > 0 && (
-          <p className="text-[10px] uppercase tracking-[0.3em] text-stone-300 font-light mb-8">
-            {filteredProducts.length} produit{filteredProducts.length > 1 ? "s" : ""}
+        {displayedProducts.length > 0 && (
+          <p className="text-[10px] uppercase tracking-[0.3em] text-stone-300 font-light mb-6">
+            {displayedProducts.length} produit{displayedProducts.length > 1 ? "s" : ""}
           </p>
         )}
 
-        {/* Grille */}
-        <div
-          className={`transition-opacity duration-300 ${
-            transitioning ? "opacity-0 translate-y-2" : "opacity-100 translate-y-0"
-          }`}
-        >
-          {filteredProducts.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
-              {filteredProducts.map((product) => (
-                <MemoizedProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-32">
-              <div className="w-12 h-px bg-stone-200 mx-auto mb-8" />
-              <p className="text-stone-400 font-light text-lg mb-6">
-                Aucun produit trouvé.
-              </p>
-              <button
-                onClick={() => {
-                  setActiveCategory("Tous");
-                  setActiveFilter(null);
-                  setSearchTerm("");
-                  setSortBy("default");
-                }}
-                className="text-sm text-stone-400 hover:text-stone-600 underline underline-offset-2 font-light transition-colors"
-              >
-                Réinitialiser les filtres
-              </button>
-            </div>
-          )}
-        </div>
+        {groupedCollections.length > 0 ? (
+          <div className="space-y-8 md:space-y-10">
+            {groupedCollections.map(({ collection, items }) => {
+              const mediaImageUrl = getCollectionMediaUrl(collection.imagePath);
+              const mediaVideoUrl = getCollectionMediaUrl(collection.videoPath);
+              const previewItems = items.slice(0, 10);
+              const hasMoreItems = items.length > previewItems.length;
+
+              return (
+                <section key={collection.slug} className="space-y-3 md:space-y-4">
+                  <Link
+                    href={`/boutique/collection/${collection.slug}`}
+                    className="relative left-1/2 right-1/2 block w-screen -translate-x-1/2 overflow-hidden aspect-32/9 bg-stone-100"
+                  >
+                    {mediaVideoUrl ? (
+                      <video
+                        src={mediaVideoUrl}
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        preload="metadata"
+                        poster={mediaImageUrl || undefined}
+                        className="absolute inset-0 h-full w-full object-cover"
+                      />
+                    ) : mediaImageUrl ? (
+                      <Image
+                        src={mediaImageUrl}
+                        alt={collection.name}
+                        fill
+                        sizes="100vw"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 bg-stone-100" />
+                    )}
+
+                    <div className="absolute inset-0 bg-linear-to-t from-black/55 via-black/10 to-transparent" />
+                    <div className="absolute bottom-4 left-5 right-5 md:bottom-6 md:left-8 md:right-8 text-white">
+                      <p className="text-[10px] uppercase tracking-[0.25em] text-white/75 font-light">
+                        Collection
+                      </p>
+                      <h2 className="mt-1 text-2xl md:text-4xl font-light tracking-wide">
+                        {collection.name}
+                      </h2>
+                      <p className="mt-1 text-xs md:text-sm text-white/80 font-light tracking-wide">
+                        {items.length} piece{items.length > 1 ? "s" : ""}
+                      </p>
+                    </div>
+                  </Link>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5 md:gap-3">
+                    {previewItems.map((product) => (
+                      <MemoizedProductCard key={product.id} product={product} />
+                    ))}
+                  </div>
+
+                  {hasMoreItems && (
+                    <div className="pt-1">
+                      <Link
+                        href={`/boutique/collection/${collection.slug}`}
+                        className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-stone-500 hover:text-stone-800 transition-colors"
+                      >
+                        Voir la suite
+                        <span>→</span>
+                      </Link>
+                    </div>
+                  )}
+                </section>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-center py-20">
+            <p className="text-stone-400 font-light">Aucun produit trouvé.</p>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-// Memoize ProductCard
 const MemoizedProductCard = memo(ProductCard);
 
 export default BoutiqueClient;

@@ -54,6 +54,12 @@ function normalizeCollectionDescription(description: string | null): string {
   return value.length > 0 ? value : DEFAULT_COLLECTION_DESCRIPTION;
 }
 
+function compactCopy(text: string, max = 120): string {
+  const normalized = text.replace(/\s+/g, " ").trim();
+  if (normalized.length <= max) return normalized;
+  return `${normalized.slice(0, max - 1).trimEnd()}...`;
+}
+
 function CollectionProductShowcase({
   products,
 }: {
@@ -61,16 +67,54 @@ function CollectionProductShowcase({
 }) {
   if (products.length === 0) return null;
 
-  const showcaseItems = products.slice(0, 3);
+  const showcaseItems = products.slice(0, 8);
+  const count = showcaseItems.length;
+
+  const gridClass =
+    count === 1
+      ? "grid-cols-1"
+      : count === 2
+        ? "grid-cols-2"
+        : count === 3
+          ? "grid-cols-3"
+          : count === 4
+            ? "grid-cols-2"
+            : count === 5 || count === 6
+              ? "grid-cols-3"
+              : "grid-cols-4";
+
+  const wrapperWidthClass =
+    count === 1
+      ? "max-w-44"
+      : count === 2
+        ? "max-w-96"
+        : count === 3
+          ? "max-w-3xl"
+          : count === 4
+            ? "max-w-sm"
+            : count === 5 || count === 6
+              ? "max-w-3xl"
+              : "max-w-4xl";
+
+  const thumbSizes =
+    count === 1
+      ? "(max-width: 1024px) 100vw, 50vw"
+      : count === 2
+        ? "(max-width: 1024px) 50vw, 25vw"
+        : count === 3 || count === 5 || count === 6
+          ? "(max-width: 1024px) 33vw, 16vw"
+          : count === 4
+            ? "(max-width: 1024px) 50vw, 25vw"
+            : "(max-width: 768px) 25vw, 12.5vw";
 
   return (
-    <div className="mt-8 flex justify-center">
-      <div className="flex flex-wrap justify-center gap-3 md:gap-4">
+    <div className="mt-6 mx-auto w-full max-w-[720px]">
+      <div className={`mx-auto grid ${gridClass} ${wrapperWidthClass} gap-1.5 md:gap-2`}>
         {showcaseItems.map((product) => (
           <Link
             key={product.id}
             href={`/boutique/${product.id}`}
-            className="group/showcase block w-24 text-center sm:w-28 md:w-32"
+            className="group/showcase block w-full"
             aria-label={product.name}
           >
             <div className="relative aspect-3/4 overflow-hidden bg-stone-200">
@@ -79,7 +123,7 @@ function CollectionProductShowcase({
                   src={product.image}
                   alt={product.name}
                   fill
-                  sizes="(max-width: 640px) 96px, (max-width: 768px) 112px, 128px"
+                  sizes={thumbSizes}
                   className="object-cover transition-transform duration-500 group-hover/showcase:scale-105"
                 />
               ) : (
@@ -88,9 +132,6 @@ function CollectionProductShowcase({
                 </div>
               )}
             </div>
-            <p className="mt-2 truncate text-[11px] uppercase tracking-[0.14em] text-stone-600">
-              {product.name}
-            </p>
           </Link>
         ))}
       </div>
@@ -108,30 +149,6 @@ function CollectionCard({
   index: number;
   products: HomeCollectionProduct[];
 }) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isHovering, setIsHovering] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 1024);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
-
-  const handleMouseEnter = () => {
-    if (!cat.video || isMobile) return;
-    setIsHovering(true);
-    videoRef.current?.play();
-  };
-
-  const handleMouseLeave = () => {
-    if (!cat.video || isMobile) return;
-    setIsHovering(false);
-    videoRef.current?.pause();
-    if (videoRef.current) videoRef.current.currentTime = 0;
-  };
-
   return (
     <motion.section
       initial={{ opacity: 0, y: 40 }}
@@ -140,43 +157,35 @@ function CollectionCard({
       transition={{ duration: 0.7, delay: index * 0.1 }}
       className={`
         group relative grid grid-cols-1 lg:grid-cols-2 items-center gap-8 md:gap-14 lg:gap-24 xl:gap-32
-        py-16 lg:py-32 border-b border-stone-100 last:border-0
+        py-16 lg:py-28
         ${index % 2 === 1 ? "lg:[&>*:first-child]:order-2" : ""}
       `}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
     >
-      {/* IMAGE avec overlay mobile */}
+      {/* MEDIA: video if available, otherwise image fallback */}
       <Link
-        href={`/boutique?collection=${cat.slug}`}
+        href={`/boutique/collection/${cat.slug}`}
         className="block w-full overflow-hidden"
       >
-        <div className="relative mx-auto w-full max-w-[720px] aspect-[4/5] lg:aspect-[4/5] bg-stone-100 overflow-hidden rounded-2xl shadow-sm group-hover:shadow-lg transition-shadow duration-500">
-          <Image
-            src={cat.img}
-            alt={cat.name}
-            fill
-            priority={index === 0}
-            sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 720px"
-            className={`
-              object-cover transition-all duration-700 ease-out
-              ${isHovering && cat.video && !isMobile ? "opacity-0 scale-105" : "opacity-100 scale-100"}
-              group-hover:scale-105
-            `}
-          />
-
-          {cat.video && (
+        <div className="relative mx-auto w-full max-w-[720px] aspect-[4/5] lg:aspect-[4/5] bg-stone-100 overflow-hidden">
+          {cat.video ? (
             <video
-              ref={videoRef}
               src={cat.video}
+              autoPlay
               muted
               loop
               playsInline
               preload="metadata"
-              className={`
-                absolute inset-0 h-full w-full object-cover transition-opacity duration-700
-                ${isHovering && !isMobile ? "opacity-100" : "opacity-0"}
-              `}
+              poster={cat.img}
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          ) : (
+            <Image
+              src={cat.img}
+              alt={cat.name}
+              fill
+              priority={index === 0}
+              sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 720px"
+              className="object-cover transition-transform duration-700 group-hover:scale-105"
             />
           )}
 
@@ -198,24 +207,18 @@ function CollectionCard({
           Collection
         </p>
 
-        <div className="mb-5 flex flex-wrap items-center gap-2 justify-center lg:justify-start">
-          <span className="inline-flex items-center rounded-full border border-stone-300/80 bg-stone-50 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-stone-500">
-            {cat.productCount} {cat.productCount > 1 ? "produits" : "produit"}
-          </span>
-        </div>
-
         <h3 className="text-3xl sm:text-4xl lg:text-5xl font-light leading-tight tracking-wide text-stone-900">
           {cat.name}
         </h3>
 
         <p className="mt-6 text-[15px] md:text-base leading-8 text-stone-500 font-light">
-          {cat.description}
+          {compactCopy(cat.description, 110)}
         </p>
 
         <CollectionProductShowcase products={products} />
 
         <Link
-          href={`/boutique?collection=${cat.slug}`}
+          href={`/boutique/collection/${cat.slug}`}
           className="mt-8 inline-flex items-center gap-3 border-b border-stone-300 pb-1 text-xs uppercase tracking-[0.35em] text-stone-700 hover:text-stone-900 hover:border-stone-900 transition-all duration-300 group/link"
         >
           Découvrir
@@ -225,20 +228,14 @@ function CollectionCard({
 
       {/* Version mobile : le texte en dessous de l'image (alternative sans overlay) */}
       <div className="lg:hidden px-4 mt-2 text-center">
-        {/* Le nom est déjà affiché dans l'overlay, mais on peut rappeler la description */}
-        <div className="mt-1 flex flex-wrap items-center justify-center gap-2">
-          <span className="inline-flex items-center rounded-full border border-stone-300/80 bg-stone-50 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-stone-500">
-            {cat.productCount} {cat.productCount > 1 ? "produits" : "produit"}
-          </span>
-        </div>
         <p className="mt-3 text-sm leading-relaxed text-stone-500 font-light px-2">
-          {cat.description}
+          {compactCopy(cat.description, 90)}
         </p>
 
         <CollectionProductShowcase products={products} />
 
         <Link
-          href={`/boutique?collection=${cat.slug}`}
+          href={`/boutique/collection/${cat.slug}`}
           className="mt-5 inline-flex items-center gap-2 border-b border-stone-300 pb-1 text-xs uppercase tracking-[0.35em] text-stone-700"
         >
           Découvrir la collection
@@ -441,17 +438,17 @@ export default function HomeClient({
   const values = [
     {
       title: "Fabriqué à la main",
-      text: "Chaque pièce est coupée, cousue et finie dans notre atelier. Le temps nécessaire est pris pour garantir des finitions soignées.",
+      text: "Chaque piece est realisee a la main, avec un controle exigeant a chaque etape.",
       img: homeImage("valeur-artisanat.webp"),
     },
     {
       title: "Conçu pour durer",
-      text: "Cuir pleine fleur, toile robuste et coutures renforcées. Des matériaux choisis pour accompagner votre quotidien pendant de nombreuses années.",
+      text: "Des matieres selectionnees pour traverser les annees avec elegance.",
       img: homeImage("valeur-durer.webp"),
     },
     {
       title: "Pensé dans les moindres détails",
-      text: "Chaque poche, chaque couture et chaque finition ont une raison d'être. Rien n'est laissé au hasard.",
+      text: "Une ligne pure, fonctionnelle, sans compromis sur les finitions.",
       img: homeImage("valeur-essentiel.webp"),
     },
   ];
@@ -514,10 +511,10 @@ export default function HomeClient({
               Nomade
             </h1>
             <p className="text-white/90 text-2xl sm:text-3xl md:text-4xl font-light tracking-wide max-w-2xl mx-auto mb-4">
-              Le sac qui vous suivra partout, pendant des années
+              Le sac signature
             </p>
             <p className="text-white/50 text-base sm:text-lg font-light max-w-md mx-auto mb-10">
-              Fabrication artisanale, livraison offerte dès 100 €
+              Artisanat francais. Edition limitee.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Link
@@ -551,18 +548,11 @@ export default function HomeClient({
                 La différence
               </p>
               <h2 className="text-3xl md:text-5xl font-light leading-tight tracking-wide mb-8">
-                Un sac qui ne ressemble qu'à vous
+                Une presence. Un style.
               </h2>
-              <div className="space-y-5 text-stone-500 text-lg leading-relaxed font-light">
-                <p>
-                  Pas de production en série. Chaque sac est fabriqué un par un,
-                  dans notre atelier, avec des matériaux choisis pour leur qualité et leur durabilité.
-                </p>
-                <p>
-                  Cuir pleine fleur, toile épaisse, coutures doubles. Des matériaux
-                  qui vieillissent bien. Très bien.
-                </p>
-              </div>
+              <p className="text-stone-500 text-lg leading-relaxed font-light max-w-xl">
+                Des pieces sobres et puissantes, faconnees a la main pour durer.
+              </p>
               <div className="mt-10 flex flex-wrap gap-4">
                 <Link
                   href="/boutique"
@@ -605,11 +595,10 @@ export default function HomeClient({
             Collections
           </p>
           <h2 className="text-3xl md:text-5xl font-light tracking-wide leading-tight text-stone-900">
-            Des lignes pensees pour des usages differents
+            Les collections
           </h2>
           <p className="mt-6 text-stone-500 text-base md:text-lg leading-relaxed font-light">
-            Chaque collection propose une intention claire: format, rythme d'usage, niveau de capacite et finitions.
-            Explore les univers et va directement sur les modeles qui correspondent a ton quotidien.
+            Des lignes nettes, un volume juste, une allure immediate.
           </p>
         </div>
 
@@ -625,7 +614,7 @@ export default function HomeClient({
         <div className="pt-8 pb-14 md:pb-20 text-center">
           <Link
             href="/boutique"
-            className="inline-flex items-center gap-3 rounded-full border border-stone-300 px-7 py-3 text-xs uppercase tracking-[0.25em] text-stone-700 hover:border-stone-900 hover:text-stone-900 transition-colors"
+            className="inline-flex items-center gap-3 px-7 py-3 text-xs uppercase tracking-[0.25em] text-stone-700 hover:text-stone-900 transition-colors"
           >
             Voir toutes les collections
             <span>→</span>
@@ -646,7 +635,7 @@ export default function HomeClient({
               Nouveautés
             </p>
             <h2 className="text-3xl md:text-4xl font-light tracking-wide leading-tight max-w-2xl mx-auto">
-              Ce qui vient de sortir de l'atelier
+              Dernieres pieces
             </h2>
           </motion.div>
 
@@ -704,10 +693,10 @@ export default function HomeClient({
               L’atelier
             </p>
             <h2 className="text-3xl md:text-5xl font-light mb-6 tracking-wide">
-              Fabriqué avec attention
+              Le geste de l'atelier
             </h2>
             <p className="text-white/80 text-lg max-w-2xl mx-auto font-light">
-              Chaque geste compte. Découvrez notre savoir-faire
+              Precision. Rigueur. Matiere.
             </p>
           </motion.div>
         </div>
@@ -723,12 +712,10 @@ export default function HomeClient({
             className="text-center mb-20"
           >
             <p className="text-stone-400 text-xs tracking-[0.3em] uppercase mb-4 font-light">
-              Pourquoi choisir Nomade
+              Signature
             </p>
             <h2 className="text-3xl md:text-4xl font-light tracking-wide leading-tight">
-              La qualité que vous méritez,
-              <br />
-              au prix juste
+              L'essentiel, sans exces
             </h2>
           </motion.div>
 
@@ -774,7 +761,7 @@ export default function HomeClient({
               Nos clients les recommandent
             </p>
             <h2 className="text-3xl md:text-4xl font-light tracking-wide leading-tight max-w-2xl mx-auto">
-              Les modèles qui reviennent le plus souvent
+              Les icones Nomade
             </h2>
           </motion.div>
 
@@ -827,12 +814,12 @@ export default function HomeClient({
                 Prêt à trouver le vôtre ?
               </p>
               <h2 className="text-4xl md:text-6xl font-light mb-8 leading-tight tracking-wide">
-                Un sac fait main,
+                Entrez dans
                 <br />
-                livré chez vous
+                l'univers Nomade
               </h2>
               <p className="text-white/60 text-lg md:text-xl leading-relaxed font-light mb-12 max-w-2xl mx-auto">
-                Livraison offerte dès 100 €. Retours gratuits sous 30 jours
+                Decouvrez la collection complete.
               </p>
               <Link
                 href="/boutique"
