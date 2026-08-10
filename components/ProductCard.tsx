@@ -47,7 +47,7 @@ function ProductCard({
 
   return (
     <Link href={`/boutique/${product.id}`} className="group block">
-      <div className="relative overflow-hidden rounded-2xl bg-stone-100 aspect-3/4 mb-5 shadow-sm group-hover:shadow-md transition-shadow duration-500">
+      <div className="relative overflow-hidden rounded-none bg-stone-100 aspect-3/4 mb-3 shadow-sm group-hover:shadow-md transition-shadow duration-500">
         {/* Image */}
         {imageUrl ? (
           <Image
@@ -86,7 +86,7 @@ function ProductCard({
       </div>
 
       {/* Infos produit */}
-      <div className="space-y-1">
+      <div className="space-y-0.5">
         <div className="flex items-start justify-between gap-2">
           <h3 className="font-light text-base tracking-wide text-stone-800 group-hover:text-stone-900 transition-colors duration-300">
             {product.name}

@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import { getProductsList } from "@/lib/products/queries";
-import { getCategories } from "@/lib/categories/queries";
 import { getCollections } from "@/lib/collections/queries";
 import BoutiqueClient from "./BoutiqueClient";
 
@@ -19,12 +18,11 @@ export default function BoutiquePage() {
 }
 
 async function BoutiqueContent() {
-  const [{ data }, categoryRecords, collectionRecords] = await Promise.all([
+  const [{ data }, collectionRecords] = await Promise.all([
     getProductsList({
       pageSize: 50,
       status: "active",
     }),
-    getCategories(),
     getCollections(),
   ]);
 
@@ -41,23 +39,16 @@ async function BoutiqueContent() {
     rating: 0,
   }));
 
-  const categories = categoryRecords.map((category) => ({
-    id: category.id,
-    name: category.name,
-    slug: category.slug,
-    collectionId: category.collection_id,
-    collectionName: category.collection?.name || "",
-    collectionSlug: category.collection?.slug || "",
-  }));
-
   const collections = [
-    { id: 0, name: "Tous", slug: "all" },
+    { id: 0, name: "Tous", slug: "all", imagePath: null, videoPath: null },
     ...collectionRecords.map((collection) => ({
       id: collection.id,
       name: collection.name,
       slug: collection.slug,
+      imagePath: collection.image_path,
+      videoPath: collection.video_path,
     })),
   ];
 
-  return <BoutiqueClient products={products} categories={categories} collections={collections} />;
+  return <BoutiqueClient products={products} collections={collections} />;
 }
