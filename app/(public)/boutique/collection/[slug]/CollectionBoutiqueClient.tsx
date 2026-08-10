@@ -31,6 +31,75 @@ interface Props {
   categories: CategoryOption[];
 }
 
+function getRowItemCounts(count: number): number[] {
+  if (count <= 0) return [];
+  if (count === 1) return [1];
+  if (count === 2) return [2];
+
+  const rows: number[] = [];
+  const fullRows = Math.floor(count / 4);
+  const remainder = count % 4;
+
+  if (remainder === 0) {
+    for (let i = 0; i < fullRows; i += 1) rows.push(4);
+    return rows;
+  }
+
+  if (remainder === 1) {
+    for (let i = 0; i < Math.max(0, fullRows - 1); i += 1) rows.push(4);
+    rows.push(3, 2);
+    return rows;
+  }
+
+  if (remainder === 2) {
+    for (let i = 0; i < fullRows; i += 1) rows.push(4);
+    rows.push(2);
+    return rows;
+  }
+
+  for (let i = 0; i < fullRows; i += 1) rows.push(4);
+  rows.push(3);
+  return rows;
+}
+
+function getDesktopRowColsClass(cols: number): string {
+  if (cols <= 1) return "lg:grid-cols-2";
+  if (cols === 2) return "lg:grid-cols-2";
+  if (cols === 3) return "lg:grid-cols-3";
+  return "lg:grid-cols-4";
+}
+
+function ProductMosaic({ products }: { products: Product[] }) {
+  if (products.length === 0) return null;
+
+  const rows = useMemo(() => {
+    const counts = getRowItemCounts(products.length);
+    let offset = 0;
+    return counts.map((count) => {
+      const rowProducts = products.slice(offset, offset + count);
+      offset += count;
+      return rowProducts;
+    });
+  }, [products]);
+
+  return (
+    <div className="space-y-2 sm:space-y-2.5 md:space-y-3">
+      {rows.map((rowProducts, rowIndex) => (
+        <div
+          key={`row-${rowIndex}`}
+          className={`grid grid-cols-2 ${getDesktopRowColsClass(rowProducts.length)} gap-2 sm:gap-2.5 md:gap-3`}
+        >
+          {rowProducts.map((product) => (
+            <div key={product.id} className={rowProducts.length === 1 ? "col-span-2 lg:col-span-2" : ""}>
+              <ProductCard product={product} />
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function CollectionBoutiqueClient({
   collectionName,
   collectionSlug,
@@ -149,21 +218,13 @@ export default function CollectionBoutiqueClient({
                     <p className="text-[10px] uppercase tracking-[0.3em] text-stone-400 font-light">
                       {categoryName}
                     </p>
-                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5 md:gap-3">
-                      {group.items.map((product) => (
-                        <ProductCard key={product.id} product={product} />
-                      ))}
-                    </div>
+                    <ProductMosaic products={group.items} />
                   </section>
                 );
               })}
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5 md:gap-3">
-              {filteredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
+            <ProductMosaic products={filteredProducts} />
           )
         ) : (
           <div className="text-center py-20">
