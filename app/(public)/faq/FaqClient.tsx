@@ -18,9 +18,9 @@ const categories = [
     questions: [
       {
         question:
-          "D'où viennent les sacs Nomade ?",
+          "D'où viennent les sacs SCOLTA ?",
         answer:
-          "Chaque sac est fabriqué à la main dans notre atelier. Nous travaillons des cuirs pleine fleur et des toiles résistantes, choisis pour leur qualité et leur durabilité.",
+          "Chaque sac SCOLTA est fabrique a la main dans l'atelier Nomade. Nous travaillons des cuirs pleine fleur et des toiles resistantes, choisis pour leur qualite et leur durabilite.",
       },
       {
         question:

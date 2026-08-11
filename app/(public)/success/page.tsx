@@ -5,6 +5,10 @@ import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "Commande confirmée",
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default function SuccessPage() {

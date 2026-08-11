@@ -16,7 +16,9 @@ function HistoireClient() {
       exit={{ opacity: 0 }}
       className="bg-[#f8f5f1] text-stone-900 overflow-hidden"
     >
-      {/* HERO */}
+      {/* =========================================================
+          HERO
+      ========================================================= */}
       <section className="relative min-h-screen overflow-hidden">
         <div className="absolute inset-0">
           <Image
@@ -28,6 +30,7 @@ function HistoireClient() {
             className="object-cover"
           />
         </div>
+
         <div className="absolute inset-0 bg-black/55" />
 
         <div className="relative z-10 min-h-screen flex items-end">
@@ -39,24 +42,28 @@ function HistoireClient() {
               className="max-w-4xl"
             >
               <p className="text-white/50 uppercase tracking-[0.4em] text-[11px] md:text-xs mb-7">
-                Notre histoire
+                Maison NOMADE
               </p>
+
               <h1 className="text-white text-5xl md:text-7xl xl:text-8xl font-extralight leading-[0.95] tracking-[-0.04em] mb-10">
-                Façonner
+                Une maison.
                 <br />
-                le beau,
-                <br />
-                lentement.
+                Des marques.
               </h1>
+
               <p className="text-white/70 text-lg md:text-2xl font-light leading-relaxed max-w-2xl">
-                Nomade est né de la volonté de créer des sacs qui traversent le temps — et les frontières.
+                La Maison NOMADE développe des marques autour du cuir, de
+                l'artisanat et des objets du quotidien. SCOLTA est l'une
+                d'entre elles.
               </p>
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* INTRO */}
+      {/* =========================================================
+          INTRO
+      ========================================================= */}
       <section className="py-24 md:py-40 bg-white">
         <div className="max-w-6xl mx-auto px-6 md:px-10">
           <div className="grid lg:grid-cols-2 gap-20 items-start">
@@ -67,20 +74,17 @@ function HistoireClient() {
               transition={{ duration: 0.9 }}
             >
               <p className="text-stone-400 uppercase tracking-[0.35em] text-[11px] mb-8">
-                Là où tout commence
+                La Maison NOMADE
               </p>
+
               <h2 className="text-4xl md:text-6xl font-extralight leading-tight tracking-[-0.03em]">
-                Un atelier
+                Construire
                 <br />
-                à Alès,
+                une maison
                 <br />
-                une Singer
+                qui avance
                 <br />
-                d’un autre temps,
-                <br />
-                et l’envie
-                <br />
-                de bien faire.
+                avec le temps.
               </h2>
             </motion.div>
 
@@ -92,20 +96,84 @@ function HistoireClient() {
               className="space-y-8 text-stone-600 text-lg md:text-xl font-light leading-relaxed"
             >
               <p>
-                Tout a débuté dans une petite pièce lumineuse du Gard, avec une vieille machine à coudre Singer 31K15 et quelques outils essentiels. Rien de plus. L’essentiel était ailleurs : dans la patience, la curiosité, et le désir d’apprendre un métier exigeant.
+                NOMADE est une maison qui développe des marques et des
+                collections dans l'univers du cuir, de la maroquinerie et des
+                accessoires.
               </p>
+
               <p>
-                Les fondateurs de Nomade viennent d’horizons différents — l’un porte en lui les couleurs et la résilience du Congo, l’autre a grandi entre tourisme et scoutisme. Leur rencontre a fait naître une idée simple : créer une marque de sacs en cuir, à échelle humaine, où chaque pièce serait le fruit d’un travail soigné.
+                Notre volonté est de créer des produits que l'on peut
+                réellement utiliser au quotidien. Nous accordons une attention
+                particulière aux matières, aux proportions, à la construction
+                et aux finitions.
               </p>
+
               <p>
-                Aujourd’hui, l’atelier est leur terrain d’expérimentation. On y prototypage, on y coud, on y défait parfois. Et chaque jour, la marque se construit un peu plus, au rythme du cuir que l’on travaille.
+                Nous sommes encore au début de cette aventure. La Maison
+                NOMADE se construit progressivement, avec l'envie de développer
+                plusieurs univers et de donner à chacun sa propre identité.
               </p>
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* IMAGE PLEINE LARGEUR */}
+      {/* =========================================================
+          SCOLTA
+      ========================================================= */}
+      <section className="py-24 md:py-40 bg-[#f8f5f1]">
+        <div className="max-w-6xl mx-auto px-6 md:px-10">
+          <div className="grid lg:grid-cols-2 gap-20 items-center">
+            <motion.div
+              initial={{ opacity: 0, y: 35 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.9 }}
+              className="order-2 lg:order-1"
+            >
+              <p className="text-stone-400 uppercase tracking-[0.35em] text-[11px] mb-8">
+                Une marque de la Maison NOMADE
+              </p>
+
+              <h2 className="text-4xl md:text-6xl font-extralight leading-tight tracking-[-0.03em]">
+                SCOLTA
+                <br />
+                commence ici.
+              </h2>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 35 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1 }}
+              className="order-1 lg:order-2 space-y-8 text-stone-600 text-lg md:text-xl font-light leading-relaxed"
+            >
+              <p>
+                SCOLTA est une marque développée par la Maison NOMADE. Elle
+                possède son propre univers, son identité et ses propres
+                collections.
+              </p>
+
+              <p>
+                La marque commence avec une première série de sacs et
+                d'accessoires. Les modèles sont développés en petites séries,
+                avec une attention portée à leur usage et à leur fabrication.
+              </p>
+
+              <p>
+                SCOLTA est encore jeune. Nous préférons commencer avec peu de
+                modèles, apprendre de chacun d'eux et faire évoluer la marque
+                au fil du temps.
+              </p>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* =========================================================
+          IMAGE ATELIER
+      ========================================================= */}
       <section className="relative h-[75vh] overflow-hidden">
         <Image
           src={histoireImage("histoire-atelier.webp")}
@@ -114,7 +182,9 @@ function HistoireClient() {
           sizes="100vw"
           className="object-cover"
         />
+
         <div className="absolute inset-0 bg-black/35" />
+
         <div className="absolute inset-0 flex items-center justify-center px-6">
           <motion.blockquote
             initial={{ opacity: 0, scale: 0.96 }}
@@ -124,7 +194,7 @@ function HistoireClient() {
             className="text-center text-white"
           >
             <p className="text-3xl md:text-6xl xl:text-7xl font-extralight leading-[1.1] tracking-[-0.03em]">
-              « Chaque point
+              « Chaque détail
               <br />
               compte. »
             </p>
@@ -132,7 +202,9 @@ function HistoireClient() {
         </div>
       </section>
 
-      {/* POURQUOI */}
+      {/* =========================================================
+          MATIÈRES
+      ========================================================= */}
       <section className="py-24 md:py-40">
         <div className="max-w-6xl mx-auto px-6 md:px-10">
           <div className="grid lg:grid-cols-2 gap-20">
@@ -143,14 +215,17 @@ function HistoireClient() {
               transition={{ duration: 0.9 }}
             >
               <p className="text-stone-400 uppercase tracking-[0.35em] text-[11px] mb-8">
-                Le choix du cuir
+                Les matières
               </p>
+
               <h2 className="text-4xl md:text-6xl font-extralight leading-tight tracking-[-0.03em]">
-                Une matière
+                Choisir
                 <br />
-                vivante,
+                ce qui
                 <br />
-                un héritage.
+                convient
+                <br />
+                à chaque pièce.
               </h2>
             </motion.div>
 
@@ -162,20 +237,31 @@ function HistoireClient() {
               className="space-y-8 text-stone-600 text-lg md:text-xl font-light leading-relaxed"
             >
               <p>
-                Le cuir pleine fleur s’impose comme une évidence. Il ne se démode pas, il se patine avec élégance. Il raconte le temps qui passe, les voyages, les gestes du quotidien. Une matière noble, profondément ancrée dans l’artisanat.
+                Le cuir occupe une place importante dans l'univers de SCOLTA.
+                Nous recherchons des matières avec une bonne tenue, un toucher
+                agréable et une capacité à évoluer avec l'usage.
               </p>
+
               <p>
-                Pour maîtriser sa transformation, l’équipe s’est formée sur le tas, guidée par deux ouvrages de référence — <em>Sacs en cuir</em> de Yoko Ganaha, <em>Modélisme pour la maroquinerie</em> d’Elisa Cigna et Andrea Marcocci. Chaque étape a été apprise avec rigueur : coupe, couture, finition. Sans professeur, mais avec une exigence constante.
+                Selon les modèles, nous travaillons également la toile et
+                différents composants. Chaque choix répond à un besoin précis
+                dans la construction et l'utilisation du produit.
               </p>
+
               <p>
-                Aujourd’hui, les premiers prototypes prennent forme. La collection n’est pas encore en vente, mais l’intention est déjà là : proposer des sacs conçus pour durer, réparables, intemporels.
+                Au lancement, nous faisons le choix de rester concentrés sur
+                quelques matières et quelques modèles. Cette approche nous
+                permet de mieux connaître nos produits et d'améliorer chaque
+                nouvelle série.
               </p>
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* VALEURS */}
+      {/* =========================================================
+          VALEURS
+      ========================================================= */}
       <section className="py-24 md:py-36 bg-white">
         <div className="max-w-7xl mx-auto px-6 md:px-10">
           <motion.div
@@ -186,12 +272,13 @@ function HistoireClient() {
             className="text-center mb-24"
           >
             <p className="text-stone-400 uppercase tracking-[0.35em] text-[11px] mb-8">
-              Nos principes
+              Notre manière de travailler
             </p>
+
             <h2 className="text-4xl md:text-6xl font-extralight leading-tight tracking-[-0.03em]">
-              Créer moins,
+              Faire les choses
               <br />
-              créer mieux.
+              avec attention.
             </h2>
           </motion.div>
 
@@ -199,15 +286,15 @@ function HistoireClient() {
             {[
               {
                 title: "Le temps",
-                text: "Chaque sac demande des heures de travail. Nous prenons ce temps parce que c’est lui qui donne sa valeur à l’objet.",
+                text: "Un modèle demande plusieurs essais. Nous testons les formes, les assemblages et les détails avant de le proposer.",
               },
               {
-                title: "La matière",
-                text: "Cuir pleine fleur, toile robuste, bouclerie massive. Nous sélectionnons ce qui vieillit le mieux, pour que chaque pièce raconte une histoire.",
+                title: "Les matières",
+                text: "Cuir, toile et composants sont choisis en fonction du modèle, de leur qualité et de l'usage auquel ils sont destinés.",
               },
               {
-                title: "L’essentiel",
-                text: "Des lignes simples, des volumes justes. Nous allons à l’essentiel pour que le sac devienne un compagnon de tous les jours.",
+                title: "La simplicité",
+                text: "Nous privilégions des formes lisibles et fonctionnelles. Chaque élément doit avoir une utilité.",
               },
             ].map((item, index) => (
               <motion.div
@@ -221,9 +308,11 @@ function HistoireClient() {
                 <div className="text-stone-300 text-5xl font-extralight mb-10">
                   0{index + 1}
                 </div>
+
                 <h3 className="text-3xl font-extralight mb-6 tracking-[-0.03em]">
                   {item.title}
                 </h3>
+
                 <p className="text-stone-600 text-lg leading-relaxed font-light">
                   {item.text}
                 </p>
@@ -233,7 +322,9 @@ function HistoireClient() {
         </div>
       </section>
 
-      {/* CITATION */}
+      {/* =========================================================
+          VISION
+      ========================================================= */}
       <section className="py-32 md:py-44 bg-stone-950 text-white overflow-hidden">
         <div className="max-w-6xl mx-auto px-6 md:px-10">
           <motion.div
@@ -244,22 +335,23 @@ function HistoireClient() {
             className="text-center"
           >
             <p className="text-white/30 uppercase tracking-[0.35em] text-[11px] mb-10">
-              Une conviction
+              Notre vision
             </p>
+
             <blockquote className="text-4xl md:text-7xl font-extralight italic leading-[1.15] tracking-[-0.04em] text-white/90">
-              « On ne possède
+              « Faire des pièces
               <br />
-              jamais vraiment
+              que l'on aura
               <br />
-              un sac Nomade.
-              <br />
-              On le transmet. »
+              envie de garder. »
             </blockquote>
           </motion.div>
         </div>
       </section>
 
-      {/* CONCLUSION */}
+      {/* =========================================================
+          CONCLUSION
+      ========================================================= */}
       <section className="py-24 md:py-40">
         <div className="max-w-4xl mx-auto px-6 md:px-10 text-center">
           <motion.div
@@ -269,19 +361,25 @@ function HistoireClient() {
             transition={{ duration: 1 }}
           >
             <p className="text-stone-400 uppercase tracking-[0.35em] text-[11px] mb-8">
-              Et maintenant
+              Le début
             </p>
+
             <h2 className="text-4xl md:text-6xl font-extralight leading-tight tracking-[-0.03em] mb-10">
-              L’atelier avance.
+              Nous commençons ici.
             </h2>
+
             <p className="text-stone-500 text-lg md:text-2xl font-light leading-relaxed max-w-3xl mx-auto mb-16">
-              Les premiers sacs sont en prototypage. Bientôt, ils seront prêts à vous accompagner. D’ici là, nous continuons à apprendre, à coudre, à améliorer chaque détail. Avec une seule idée en tête : faire de Nomade une maison artisanale, durable, et profondément humaine.
+              SCOLTA est l'une des premières marques développées par la Maison
+              NOMADE. La suite se construira progressivement, avec de nouveaux
+              modèles, de nouvelles collections et l'expérience acquise au fil
+              du temps.
             </p>
+
             <Link
               href="/boutique"
               className="inline-flex items-center justify-center bg-stone-950 text-white px-10 md:px-14 py-5 rounded-full uppercase tracking-[0.2em] text-xs hover:bg-stone-800 transition-all duration-300"
             >
-              Suivre l’aventure
+              Découvrir SCOLTA
             </Link>
           </motion.div>
         </div>

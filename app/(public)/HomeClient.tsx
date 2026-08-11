@@ -47,7 +47,7 @@ const homeAsset = (filename: string, useNestedPath = true) =>
 const homeImage = (filename: string) => homeAsset(filename, true);
 
 const DEFAULT_COLLECTION_DESCRIPTION =
-  "Des pieces pensees pour durer, coupees et assemblees a la main avec des finitions exigeantes.";
+  "Des pièces pensées pour être portées au quotidien, avec des matières choisies et une attention particulière aux finitions.";
 
 function normalizeCollectionDescription(description: string | null): string {
   const value = (description || "").replace(/\s+/g, " ").trim();
@@ -109,7 +109,9 @@ function CollectionProductShowcase({
 
   return (
     <div className="mt-6 mx-auto w-full max-w-[720px]">
-      <div className={`mx-auto grid ${gridClass} ${wrapperWidthClass} gap-1.5 md:gap-2`}>
+      <div
+        className={`mx-auto grid ${gridClass} ${wrapperWidthClass} gap-1.5 md:gap-2`}
+      >
         {showcaseItems.map((product) => (
           <Link
             key={product.id}
@@ -139,7 +141,7 @@ function CollectionProductShowcase({
   );
 }
 
-// --- CollectionCard améliorée ---
+// --- CollectionCard ---
 function CollectionCard({
   cat,
   index,
@@ -161,12 +163,12 @@ function CollectionCard({
         ${index % 2 === 1 ? "lg:[&>*:first-child]:order-2" : ""}
       `}
     >
-      {/* MEDIA: video if available, otherwise image fallback */}
+      {/* IMAGE / VIDEO */}
       <Link
         href={`/boutique/collection/${cat.slug}`}
         className="block w-full overflow-hidden"
       >
-        <div className="relative mx-auto w-full max-w-[720px] aspect-[4/5] lg:aspect-[4/5] bg-stone-100 overflow-hidden">
+        <div className="relative mx-auto w-full max-w-[720px] aspect-[4/5] bg-stone-100 overflow-hidden">
           {cat.video ? (
             <video
               src={cat.video}
@@ -189,11 +191,12 @@ function CollectionCard({
             />
           )}
 
-          {/* Overlay mobile : texte superposé */}
+          {/* Mobile */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent lg:hidden flex flex-col justify-end p-6 text-white">
             <p className="text-xs uppercase tracking-[0.35em] text-white/70 mb-2">
               Collection
             </p>
+
             <h3 className="text-2xl font-light tracking-wide leading-tight">
               {cat.name}
             </h3>
@@ -201,7 +204,7 @@ function CollectionCard({
         </div>
       </Link>
 
-      {/* TEXTE desktop / mobile caché derrière overlay */}
+      {/* DESKTOP TEXT */}
       <div className="hidden mx-auto w-full max-w-xl px-4 text-center lg:block lg:px-0 lg:text-left">
         <p className="mb-4 uppercase tracking-[0.35em] text-[11px] text-stone-400">
           Collection
@@ -222,11 +225,13 @@ function CollectionCard({
           className="mt-8 inline-flex items-center gap-3 border-b border-stone-300 pb-1 text-xs uppercase tracking-[0.35em] text-stone-700 hover:text-stone-900 hover:border-stone-900 transition-all duration-300 group/link"
         >
           Découvrir
-          <span className="transition-transform duration-300 group-hover/link:translate-x-1">→</span>
+          <span className="transition-transform duration-300 group-hover/link:translate-x-1">
+            →
+          </span>
         </Link>
       </div>
 
-      {/* Version mobile : le texte en dessous de l'image (alternative sans overlay) */}
+      {/* MOBILE TEXT */}
       <div className="lg:hidden px-4 mt-2 text-center">
         <p className="mt-3 text-sm leading-relaxed text-stone-500 font-light px-2">
           {compactCopy(cat.description, 90)}
@@ -255,10 +260,14 @@ function buildHomeCategoryCards(
     name: collection.name,
     slug: collection.slug,
     img: collection.image_path
-      ? supabase.storage.from("collections").getPublicUrl(collection.image_path).data.publicUrl
+      ? supabase.storage
+          .from("collections")
+          .getPublicUrl(collection.image_path).data.publicUrl
       : homeImage("cat-minimal.webp"),
     video: collection.video_path
-      ? supabase.storage.from("collections").getPublicUrl(collection.video_path).data.publicUrl
+      ? supabase.storage
+          .from("collections")
+          .getPublicUrl(collection.video_path).data.publicUrl
       : undefined,
     description: normalizeCollectionDescription(collection.description),
     productCount: productCountByCollection[collection.slug] || 0,
@@ -275,20 +284,28 @@ export default function HomeClient({
 }) {
   const { scrollY } = useScroll();
   const heroY = useTransform(scrollY, [0, 500], [0, 100]);
+
   const [isVisible, setIsVisible] = useState<Record<string, boolean>>({});
   const products = initialProducts;
+
   const [shouldLoadHeroVideo, setShouldLoadHeroVideo] = useState(false);
   const [isVideoReady, setIsVideoReady] = useState(false);
-  const [videoPathMode, setVideoPathMode] = useState<"nested" | "root">("nested");
+  const [videoPathMode, setVideoPathMode] =
+    useState<"nested" | "root">("nested");
   const [videoUnavailable, setVideoUnavailable] = useState(false);
+
   const heroVideoRef = useRef<HTMLVideoElement | null>(null);
   const heroSectionRef = useRef<HTMLElement | null>(null);
   const atelierVideoRef = useRef<HTMLVideoElement | null>(null);
+
   const [shouldPlayAtelierVideo, setShouldPlayAtelierVideo] = useState(false);
-  const youtubeChannelUrl = process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_URL?.trim() || "";
+
+  const youtubeChannelUrl =
+    process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_URL?.trim() || "";
 
   const videoSources = useMemo(() => {
     const useNestedPath = videoPathMode === "nested";
+
     return {
       webm: homeAsset("hero.webm", useNestedPath),
       mp4: homeAsset("hero.mp4", useNestedPath),
@@ -323,7 +340,9 @@ export default function HomeClient({
     const handleInteraction = () => maybeEnableHeroVideo();
     const delayedStart = window.setTimeout(maybeEnableHeroVideo, 1200);
 
-    window.addEventListener("pointerdown", handleInteraction, { passive: true });
+    window.addEventListener("pointerdown", handleInteraction, {
+      passive: true,
+    });
     window.addEventListener("scroll", handleInteraction, { passive: true });
     window.addEventListener("keydown", handleInteraction);
 
@@ -338,8 +357,10 @@ export default function HomeClient({
 
   useEffect(() => {
     if (!shouldLoadHeroVideo) return;
+
     const video = heroVideoRef.current;
     if (!video) return;
+
     video.play().catch(() => {});
   }, [videoPathMode, shouldLoadHeroVideo]);
 
@@ -348,6 +369,7 @@ export default function HomeClient({
       setVideoPathMode("root");
       return;
     }
+
     setVideoUnavailable(true);
   };
 
@@ -386,25 +408,37 @@ export default function HomeClient({
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            setIsVisible((prev) => ({ ...prev, [entry.target.id]: true }));
+            setIsVisible((prev) => ({
+              ...prev,
+              [entry.target.id]: true,
+            }));
           }
         });
       },
       { threshold: 0.15 }
     );
+
     document
       .querySelectorAll("[data-section]")
       .forEach((section) => observer.observe(section));
+
     return () => observer.disconnect();
   }, []);
 
   const newProducts = products.filter((p) => p.isNew).slice(0, 4);
-  const bestProducts = products.filter((p) => (p.rating || 0) >= 4.7).slice(0, 4);
+
+  const bestProducts = products
+    .filter((p) => (p.rating || 0) >= 4.7)
+    .slice(0, 4);
+
   const productCountByCollection = useMemo(
     () =>
       products.reduce<Record<string, number>>((acc, product) => {
         if (!product.collectionSlug) return acc;
-        acc[product.collectionSlug] = (acc[product.collectionSlug] || 0) + 1;
+
+        acc[product.collectionSlug] =
+          (acc[product.collectionSlug] || 0) + 1;
+
         return acc;
       }, {}),
     [products]
@@ -417,49 +451,62 @@ export default function HomeClient({
 
   const productsByCollection = useMemo(
     () =>
-      products.reduce<Record<string, HomeCollectionProduct[]>>((acc, product) => {
-        if (!product.collectionSlug) return acc;
+      products.reduce<Record<string, HomeCollectionProduct[]>>(
+        (acc, product) => {
+          if (!product.collectionSlug) return acc;
 
-        const current = acc[product.collectionSlug] || [];
-        if (current.length >= 8) return acc;
+          const current = acc[product.collectionSlug] || [];
 
-        current.push({
-          id: product.id,
-          name: product.name,
-          price: product.price,
-          image: product.images[0] || "",
-        });
+          if (current.length >= 8) return acc;
 
-        acc[product.collectionSlug] = current;
-        return acc;
-      }, {}),
+          current.push({
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            image: product.images[0] || "",
+          });
+
+          acc[product.collectionSlug] = current;
+
+          return acc;
+        },
+        {}
+      ),
     [products]
   );
 
   const values = [
     {
       title: "Fabriqué à la main",
-      text: "Chaque pièce est fabriquée avec soin, de la coupe du cuir jusqu'aux dernières finitions",
+      text: "Chaque pièce est fabriquée avec soin, de la coupe du cuir jusqu'aux dernières finitions.",
       img: homeImage("valeur-artisanat.webp"),
     },
     {
       title: "Des matières choisies avec soin",
-      text: "Nous sélectionnons nos cuirs et nos toiles pour leur toucher, leur tenue et leur capacité à bien vieillir",
+      text: "Nous sélectionnons nos cuirs et nos toiles pour leur toucher, leur tenue et leur capacité à bien vieillir.",
       img: homeImage("valeur-durer.webp"),
     },
     {
       title: "Pensé pour être utilisé",
-      text: "Une belle pièce doit aussi être pratique. Nous cherchons le bon équilibre entre forme, confort et fonctionnalité",
+      text: "Une belle pièce doit aussi être pratique. Nous cherchons le bon équilibre entre forme, confort et fonctionnalité.",
       img: homeImage("valeur-essentiel.webp"),
     },
   ];
 
-  // --- Rendu ---
   return (
     <div className="bg-white text-stone-800 overflow-hidden font-light">
-      {/* ====== HERO ====== */}
-      <section ref={heroSectionRef} className="relative min-h-[90vh] overflow-hidden">
-        <motion.div style={{ y: heroY }} className="absolute inset-0">
+
+      {/* =========================================================
+          HERO
+      ========================================================= */}
+      <section
+        ref={heroSectionRef}
+        className="relative min-h-[90vh] overflow-hidden"
+      >
+        <motion.div
+          style={{ y: heroY }}
+          className="absolute inset-0"
+        >
           <Image
             src={homeImage("hero.webp")}
             alt=""
@@ -469,10 +516,15 @@ export default function HomeClient({
             className="object-cover"
           />
         </motion.div>
+
         <motion.div
           style={{ y: heroY }}
           className={`absolute inset-0 transition-opacity duration-1000 ${
-            shouldLoadHeroVideo && isVideoReady && !videoUnavailable ? "opacity-100" : "opacity-0"
+            shouldLoadHeroVideo &&
+            isVideoReady &&
+            !videoUnavailable
+              ? "opacity-100"
+              : "opacity-0"
           }`}
         >
           {shouldLoadHeroVideo && (
@@ -508,15 +560,25 @@ export default function HomeClient({
             <p className="text-white/50 text-xs tracking-[0.35em] uppercase mb-6 font-light">
               Fabriqué en France · Cuir · Toile
             </p>
-            <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-extralight tracking-[-0.02em] text-white leading-[0.85] mb-6">
-              Nomade
-            </h1>
+
+            <div className="mb-7">
+              <p className="text-white/65 text-[11px] sm:text-xs tracking-[0.45em] uppercase font-light mb-3">
+                By Nomade
+              </p>
+
+              <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-extralight tracking-[-0.02em] text-white leading-[0.85]">
+                SCOLTA
+              </h1>
+            </div>
+
             <p className="text-white/90 text-2xl sm:text-3xl md:text-4xl font-light tracking-wide max-w-2xl mx-auto mb-4">
-             Pensé pour accompagner chaque départ
+              Un sac pour partir.
             </p>
+
             <p className="text-white/50 text-base sm:text-lg font-light max-w-md mx-auto mb-10">
-              Des pièces fabriquées en petites séries
+              La première collection de SCOLTA.
             </p>
+
             <div className="flex flex-wrap justify-center gap-4">
               <Link
                 href="/boutique"
@@ -524,6 +586,7 @@ export default function HomeClient({
               >
                 Découvrir
               </Link>
+
               <Link
                 href="/boutique?filter=nouveautes"
                 className="border border-white/30 text-white px-10 py-4 rounded-full text-sm tracking-[0.2em] font-light hover:bg-white/10 transition-all"
@@ -535,10 +598,13 @@ export default function HomeClient({
         </div>
       </section>
 
-      {/* ====== INTRO ====== */}
+      {/* =========================================================
+          INTRO
+      ========================================================= */}
       <section className="py-24 md:py-36 bg-stone-50">
         <div className="max-w-6xl mx-auto px-6 md:px-10">
           <div className="grid md:grid-cols-2 gap-16 md:gap-24 items-center">
+
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -548,24 +614,29 @@ export default function HomeClient({
               <p className="text-stone-400 text-xs tracking-[0.3em] uppercase mb-6 font-light">
                 Notre approche
               </p>
+
               <h2 className="text-3xl md:text-5xl font-light leading-tight tracking-wide mb-8">
                 Des pièces faites pour être portées au quotidien
               </h2>
+
               <p className="text-stone-500 text-lg leading-relaxed font-light max-w-xl">
-                Nous privilégions les formes simples, les belles matières et le soin apporté à chaque détail
-                </p>
+                Nous travaillons des formes simples, des matières que nous
+                aimons et des détails qui ont leur utilité.
+              </p>
+
               <div className="mt-10 flex flex-wrap gap-4">
                 <Link
                   href="/boutique"
                   className="bg-stone-900 text-white px-8 py-4 rounded-full text-sm tracking-wider font-light hover:bg-stone-800 transition-all"
                 >
-                  Je découvre
+                  Découvrir SCOLTA
                 </Link>
+
                 <Link
                   href="/histoire"
                   className="border border-stone-300 text-stone-700 px-8 py-4 rounded-full text-sm tracking-wider font-light hover:border-stone-900 hover:text-stone-900 transition-all"
                 >
-                  Notre histoire
+                  La Maison NOMADE
                 </Link>
               </div>
             </motion.div>
@@ -585,21 +656,27 @@ export default function HomeClient({
                 sizes="(max-width: 768px) 100vw, 50vw"
               />
             </motion.div>
+
           </div>
         </div>
       </section>
 
-      {/* ====== COLLECTIONS – version épurée et aérée ====== */}
+      {/* =========================================================
+          COLLECTIONS
+      ========================================================= */}
       <section className="mx-auto max-w-[1600px] px-5 sm:px-8 lg:px-12 xl:px-20">
+
         <div className="py-16 md:py-20 text-center max-w-3xl mx-auto">
           <p className="text-stone-400 text-xs tracking-[0.3em] uppercase mb-4 font-light">
             Collections
           </p>
+
           <h2 className="text-3xl md:text-5xl font-light tracking-wide leading-tight text-stone-900">
             Les collections
           </h2>
+
           <p className="mt-6 text-stone-500 text-base md:text-lg leading-relaxed font-light">
-            Des lignes nettes, un volume juste, une allure immediate.
+            Découvrez les premiers modèles de SCOLTA.
           </p>
         </div>
 
@@ -621,20 +698,33 @@ export default function HomeClient({
             <span>→</span>
           </Link>
         </div>
+
       </section>
 
-      {/* ====== NOUVEAUTÉS ====== */}
-      <section id="new-products" data-section className="py-24 md:py-36 bg-stone-50">
+      {/* =========================================================
+          NOUVEAUTÉS
+      ========================================================= */}
+      <section
+        id="new-products"
+        data-section
+        className="py-24 md:py-36 bg-stone-50"
+      >
         <div className="max-w-7xl mx-auto px-6 md:px-10">
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            animate={isVisible["new-products"] ? { opacity: 1, y: 0 } : {}}
+            animate={
+              isVisible["new-products"]
+                ? { opacity: 1, y: 0 }
+                : {}
+            }
             transition={{ duration: 0.6 }}
             className="text-center mb-14"
           >
             <p className="text-stone-400 text-xs tracking-[0.3em] uppercase mb-4 font-light">
               Nouveautés
             </p>
+
             <h2 className="text-3xl md:text-4xl font-light tracking-wide leading-tight max-w-2xl mx-auto">
               Les nouveautés
             </h2>
@@ -646,30 +736,47 @@ export default function HomeClient({
                 <motion.div
                   key={product.id}
                   initial={{ opacity: 0, y: 20 }}
-                  animate={isVisible["new-products"] ? { opacity: 1, y: 0 } : {}}
-                  transition={{ delay: index * 0.1, duration: 0.5 }}
+                  animate={
+                    isVisible["new-products"]
+                      ? { opacity: 1, y: 0 }
+                      : {}
+                  }
+                  transition={{
+                    delay: index * 0.1,
+                    duration: 0.5,
+                  }}
                   className="w-full sm:w-[calc(50%-16px)] lg:w-[calc(25%-24px)] max-w-[280px]"
                 >
-                  <ProductCard product={product} showPrice={false} />
+                  <ProductCard
+                    product={product}
+                    showPrice={false}
+                  />
                 </motion.div>
               ))}
             </div>
           ) : (
             <div className="text-center py-16">
-              <p className="text-stone-400 font-light mb-4">Les prochains modèles arrivent.</p>
+              <p className="text-stone-400 font-light mb-4">
+                Les prochains modèles arrivent.
+              </p>
+
               <Link
                 href="/boutique"
                 className="text-stone-600 underline underline-offset-4 hover:text-stone-900 transition-colors text-sm font-light"
               >
-                Voir toute la collection
+                Voir la collection
               </Link>
             </div>
           )}
+
         </div>
       </section>
 
-      {/* ====== VIDÉO ATELIER ====== */}
+      {/* =========================================================
+          ATELIER
+      ========================================================= */}
       <section className="relative h-[70vh] overflow-hidden">
+
         <video
           ref={atelierVideoRef}
           autoPlay={shouldPlayAtelierVideo}
@@ -680,25 +787,39 @@ export default function HomeClient({
           className="absolute inset-0 w-full h-full object-cover"
           poster={homeImage("valeurs-video-poster.webp")}
         >
-          <source src={homeAsset("valeurs.webm", false)} type="video/webm" />
-          <source src={homeAsset("valeurs.mp4", false)} type="video/mp4" />
+          <source
+            src={homeAsset("valeurs.webm", false)}
+            type="video/webm"
+          />
+
+          <source
+            src={homeAsset("valeurs.mp4", false)}
+            type="video/mp4"
+          />
         </video>
+
         <div className="absolute inset-0 bg-black/30" />
+
         <div className="relative z-10 flex items-center justify-center h-full text-center text-white px-6">
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
             <p className="text-white/60 text-xs tracking-[0.3em] uppercase mb-6 font-light">
-              L’atelier
+              L'atelier
             </p>
+
             <h2 className="text-3xl md:text-5xl font-light mb-6 tracking-wide">
               Chaque détail compte
             </h2>
+
             <p className="text-white/80 text-lg max-w-2xl mx-auto font-light">
-              Coupe, assemblage, couture, finition : chaque étape est réalisée avec attention et précision.
+              Coupe, assemblage, couture, finition : chaque étape demande du
+              temps et de l'attention.
             </p>
+
             {youtubeChannelUrl && (
               <a
                 href={youtubeChannelUrl}
@@ -706,16 +827,24 @@ export default function HomeClient({
                 rel="noopener noreferrer"
                 className="mt-8 inline-flex items-center gap-2 border-b border-white/50 pb-1 text-xs uppercase tracking-[0.3em] text-white/90 hover:text-white hover:border-white transition-colors"
               >
-                Chaine YouTube
+                Chaîne YouTube
               </a>
             )}
           </motion.div>
+
         </div>
       </section>
 
-      {/* ====== VALEURS ====== */}
-      <section id="values" data-section className="py-24 md:py-36 bg-white">
+      {/* =========================================================
+          VALEURS
+      ========================================================= */}
+      <section
+        id="values"
+        data-section
+        className="py-24 md:py-36 bg-white"
+      >
         <div className="max-w-6xl mx-auto px-6 md:px-10">
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -723,14 +852,16 @@ export default function HomeClient({
             className="text-center mb-20"
           >
             <p className="text-stone-400 text-xs tracking-[0.3em] uppercase mb-4 font-light">
-             Notre façon de faire
+              Notre façon de faire
             </p>
+
             <h2 className="text-3xl md:text-4xl font-light tracking-wide leading-tight">
-              Fabriqué à la main
+              Ce qui compte pour nous
             </h2>
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-14 md:gap-16">
+
             {values.map((value, index) => (
               <motion.div
                 key={value.title}
@@ -749,31 +880,52 @@ export default function HomeClient({
                     sizes="(max-width: 768px) 100vw, 33vw"
                   />
                 </div>
-                <h3 className="text-2xl font-light mb-4 tracking-wide">{value.title}</h3>
+
+                <h3 className="text-2xl font-light mb-4 tracking-wide">
+                  {value.title}
+                </h3>
+
                 <p className="text-stone-500 leading-relaxed font-light text-base max-w-sm mx-auto">
                   {value.text}
                 </p>
               </motion.div>
             ))}
+
           </div>
         </div>
       </section>
 
-      {/* ====== MEILLEURES VENTES ====== */}
-      <section id="best-sellers" data-section className="py-24 md:py-36 bg-stone-50">
+      {/* =========================================================
+          SÉLECTION
+      ========================================================= */}
+      <section
+        id="best-sellers"
+        data-section
+        className="py-24 md:py-36 bg-stone-50"
+      >
         <div className="max-w-7xl mx-auto px-6 md:px-10">
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            animate={isVisible["best-sellers"] ? { opacity: 1, y: 0 } : {}}
+            animate={
+              isVisible["best-sellers"]
+                ? { opacity: 1, y: 0 }
+                : {}
+            }
             transition={{ duration: 0.6 }}
             className="text-center mb-14"
           >
             <p className="text-stone-400 text-xs tracking-[0.3em] uppercase mb-4 font-light">
-              Les pièces préférées
+              La sélection SCOLTA
             </p>
+
             <h2 className="text-3xl md:text-4xl font-light tracking-wide leading-tight max-w-2xl mx-auto">
-              Découvrez les modèles qui composent l'univers Nomade
+              Les premiers modèles
             </h2>
+
+            <p className="mt-5 text-stone-500 text-base font-light max-w-xl mx-auto">
+              Une sélection des pièces disponibles au lancement.
+            </p>
           </motion.div>
 
           {bestProducts.length > 0 ? (
@@ -782,30 +934,47 @@ export default function HomeClient({
                 <motion.div
                   key={product.id}
                   initial={{ opacity: 0, y: 20 }}
-                  animate={isVisible["best-sellers"] ? { opacity: 1, y: 0 } : {}}
-                  transition={{ delay: index * 0.1, duration: 0.5 }}
+                  animate={
+                    isVisible["best-sellers"]
+                      ? { opacity: 1, y: 0 }
+                      : {}
+                  }
+                  transition={{
+                    delay: index * 0.1,
+                    duration: 0.5,
+                  }}
                   className="w-full sm:w-[calc(50%-16px)] lg:w-[calc(25%-24px)] max-w-[280px]"
                 >
-                  <ProductCard product={product} showPrice={false} />
+                  <ProductCard
+                    product={product}
+                    showPrice={false}
+                  />
                 </motion.div>
               ))}
             </div>
           ) : (
             <div className="text-center py-16">
-              <p className="text-stone-400 font-light mb-4">Les premiers avis arrivent bientôt.</p>
+              <p className="text-stone-400 font-light mb-4">
+                Les premiers modèles arrivent bientôt.
+              </p>
+
               <Link
                 href="/boutique"
                 className="text-stone-600 underline underline-offset-4 hover:text-stone-900 transition-colors text-sm font-light"
               >
-                Voir tous les sacs
+                Voir la collection
               </Link>
             </div>
           )}
+
         </div>
       </section>
 
-      {/* ====== APPEL FINAL ====== */}
+      {/* =========================================================
+          FIN
+      ========================================================= */}
       <section className="relative py-28 md:py-40 overflow-hidden">
+
         <Image
           src={homeImage("hommage.webp")}
           alt=""
@@ -813,35 +982,44 @@ export default function HomeClient({
           className="object-cover"
           sizes="100vw"
         />
+
         <div className="absolute inset-0 bg-stone-900/70" />
+
         <div className="relative z-10 text-white text-center">
           <div className="max-w-3xl mx-auto px-6">
+
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
             >
               <p className="text-white/40 text-xs tracking-[0.3em] uppercase mb-6 font-light">
-                Prêt à trouver le vôtre ?
+                Le début
               </p>
+
               <h2 className="text-4xl md:text-6xl font-light mb-8 leading-tight tracking-wide">
-                Entrez dans
+                Découvrez
                 <br />
-                l'univers Nomade
+                SCOLTA
               </h2>
+
               <p className="text-white/60 text-lg md:text-xl leading-relaxed font-light mb-12 max-w-2xl mx-auto">
-                Des pièces pensées pour accompagner vos journées, vos déplacements et les moments qui comptent
+                Les premiers modèles de la marque, développée par la Maison
+                NOMADE.
               </p>
+
               <Link
                 href="/boutique"
                 className="inline-block bg-white text-stone-900 px-10 py-4 rounded-full text-sm tracking-wider font-light hover:bg-stone-100 transition-colors"
               >
-                Découvrir la collection
+                Découvrir SCOLTA
               </Link>
             </motion.div>
+
           </div>
         </div>
       </section>
+
     </div>
   );
 }

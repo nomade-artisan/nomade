@@ -1,9 +1,64 @@
 import { getProductById, getProductsList, getProductRating } from "@/lib/products/queries";
 import { notFound } from "next/navigation";
 import ProductClient from "./ProductClient";
+import type { Metadata } from "next";
 export const revalidate = 20
 interface Props {
   params: Promise<{ id: string }>;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  const productId = Number(id);
+
+  if (isNaN(productId)) {
+    return {
+      title: "Produit introuvable",
+      robots: {
+        index: false,
+        follow: false,
+      },
+    };
+  }
+
+  const product = await getProductById(productId);
+
+  if (!product || product.status !== "active") {
+    return {
+      title: "Produit introuvable",
+      robots: {
+        index: false,
+        follow: false,
+      },
+    };
+  }
+
+  const title = `${product.name} | Boutique`;
+  const description = product.description?.trim().length
+    ? product.description.slice(0, 160)
+    : `Découvrez ${product.name}, une pièce de maroquinerie artisanale SCOLTA by Nomade.`;
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: `/boutique/${product.id}`,
+    },
+    openGraph: {
+      title: `${product.name} | SCOLTA by Nomade`,
+      description,
+      url: `/boutique/${product.id}`,
+      type: "website",
+      images: product.images?.length
+        ? [
+            {
+              url: product.images[0].image_url,
+              alt: product.name,
+            },
+          ]
+        : undefined,
+    },
+  };
 }
 
 export default async function ProductPage({ params }: Props) {

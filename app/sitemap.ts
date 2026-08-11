@@ -1,98 +1,103 @@
 import { MetadataRoute } from "next";
+import { getCollections } from "@/lib/collections/queries";
+import { getProductsList } from "@/lib/products/queries";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://www.nomade-artisan.fr";
+  const now = new Date();
 
   const staticUrls: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: "weekly",
       priority: 1,
     },
 
     {
       url: `${baseUrl}/boutique`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: "daily",
       priority: 0.9,
     },
 
     {
       url: `${baseUrl}/histoire`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: "monthly",
       priority: 0.6,
     },
 
     {
       url: `${baseUrl}/contact`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: "monthly",
       priority: 0.5,
     },
 
     {
       url: `${baseUrl}/faq`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: "monthly",
       priority: 0.5,
     },
 
     {
       url: `${baseUrl}/livraison`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: "monthly",
       priority: 0.4,
     },
 
     {
       url: `${baseUrl}/cgv`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: "yearly",
       priority: 0.3,
     },
 
     {
       url: `${baseUrl}/confidentialite`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: "yearly",
       priority: 0.3,
     },
 
     {
       url: `${baseUrl}/mentions-legales`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: "yearly",
       priority: 0.3,
     },
-
   ];
 
   try {
-    const res = await fetch(`${baseUrl}/api/products?pageSize=1000`, {
-      cache: "no-store",
-    });
+    const [collections, { data: products }] = await Promise.all([
+      getCollections(),
+      getProductsList({
+        page: 1,
+        pageSize: 1000,
+        status: "active",
+        sortField: "created_at",
+        sortDirection: "desc",
+      }),
+    ]);
 
-    if (!res.ok) {
-      return staticUrls;
-    }
+    const collectionUrls: MetadataRoute.Sitemap = collections.map((collection) => ({
+      url: `${baseUrl}/boutique/collection/${collection.slug}`,
+      lastModified: collection.created_at ? new Date(collection.created_at) : now,
+      changeFrequency: "weekly",
+      priority: 0.8,
+    }));
 
-    const payload = await res.json();
-    const products = Array.isArray(payload)
-      ? payload
-      : Array.isArray(payload?.data)
-      ? payload.data
-      : [];
-
-    const productUrls = products.map((product: any) => ({
+    const productUrls: MetadataRoute.Sitemap = products.map((product) => ({
       url: `${baseUrl}/boutique/${product.id}`,
-      lastModified: new Date(),
+      lastModified: product.created_at ? new Date(product.created_at) : now,
       changeFrequency: "weekly" as const,
       priority: 0.8,
     }));
 
-    return [...staticUrls, ...productUrls];
+    return [...staticUrls, ...collectionUrls, ...productUrls];
   } catch {
     return staticUrls;
   }

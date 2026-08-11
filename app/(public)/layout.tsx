@@ -19,6 +19,10 @@ export const metadata: Metadata = {
   description:
     "Maroquinerie fabriquée à Ales. Sacs et accessoires conçus à la main en petites séries.",
 
+  alternates: {
+    canonical: "/",
+  },
+
   keywords: [
     "nomade",
     "sac artisanal",
@@ -62,6 +66,13 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
   },
 };
 
