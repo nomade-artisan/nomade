@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   },
 
   description:
-    "Maroquinerie artisanale fabriquée à Nîmes. Sacs et accessoires conçus à la main en petites séries.",
+    "Maroquinerie fabriquée à Ales. Sacs et accessoires conçus à la main en petites séries.",
 
   keywords: [
     "nomade",
@@ -28,12 +28,13 @@ export const metadata: Metadata = {
     "artisan",
     "accessoires",
     "Nîmes",
+    "France",
   ],
 
   openGraph: {
     title: "Nomade",
     description:
-      "Sacs et accessoires artisanaux fabriqués à Nîmes.",
+      "Sacs et accessoires fabriqués à Ales.",
     url: "https://www.nomade-artisan.fr",
     siteName: "Nomade",
 
@@ -54,7 +55,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Nomade",
     description:
-      "Sacs et accessoires artisanaux fabriqués à Nîmes.",
+      "Sacs et accessoires artisanaux fabriqués à Ales .",
     images: ["/og-image.png"],
   },
 

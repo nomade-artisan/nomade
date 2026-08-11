@@ -285,6 +285,7 @@ export default function HomeClient({
   const heroSectionRef = useRef<HTMLElement | null>(null);
   const atelierVideoRef = useRef<HTMLVideoElement | null>(null);
   const [shouldPlayAtelierVideo, setShouldPlayAtelierVideo] = useState(false);
+  const youtubeChannelUrl = process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_URL?.trim() || "";
 
   const videoSources = useMemo(() => {
     const useNestedPath = videoPathMode === "nested";
@@ -438,17 +439,17 @@ export default function HomeClient({
   const values = [
     {
       title: "Fabriqué à la main",
-      text: "Chaque piece est realisee a la main, avec un controle exigeant a chaque etape.",
+      text: "Chaque pièce est fabriquée avec soin, de la coupe du cuir jusqu'aux dernières finitions",
       img: homeImage("valeur-artisanat.webp"),
     },
     {
-      title: "Conçu pour durer",
-      text: "Des matieres selectionnees pour traverser les annees avec elegance.",
+      title: "Des matières choisies avec soin",
+      text: "Nous sélectionnons nos cuirs et nos toiles pour leur toucher, leur tenue et leur capacité à bien vieillir",
       img: homeImage("valeur-durer.webp"),
     },
     {
-      title: "Pensé dans les moindres détails",
-      text: "Une ligne pure, fonctionnelle, sans compromis sur les finitions.",
+      title: "Pensé pour être utilisé",
+      text: "Une belle pièce doit aussi être pratique. Nous cherchons le bon équilibre entre forme, confort et fonctionnalité",
       img: homeImage("valeur-essentiel.webp"),
     },
   ];
@@ -511,10 +512,10 @@ export default function HomeClient({
               Nomade
             </h1>
             <p className="text-white/90 text-2xl sm:text-3xl md:text-4xl font-light tracking-wide max-w-2xl mx-auto mb-4">
-              Le sac signature
+             Pensé pour accompagner chaque départ
             </p>
             <p className="text-white/50 text-base sm:text-lg font-light max-w-md mx-auto mb-10">
-              Artisanat francais. Edition limitee.
+              Des pièces fabriquées en petites séries
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Link
@@ -545,14 +546,14 @@ export default function HomeClient({
               transition={{ duration: 0.8 }}
             >
               <p className="text-stone-400 text-xs tracking-[0.3em] uppercase mb-6 font-light">
-                La différence
+                Notre approche
               </p>
               <h2 className="text-3xl md:text-5xl font-light leading-tight tracking-wide mb-8">
-                Une presence. Un style.
+                Des pièces faites pour être portées au quotidien
               </h2>
               <p className="text-stone-500 text-lg leading-relaxed font-light max-w-xl">
-                Des pieces sobres et puissantes, faconnees a la main pour durer.
-              </p>
+                Nous privilégions les formes simples, les belles matières et le soin apporté à chaque détail
+                </p>
               <div className="mt-10 flex flex-wrap gap-4">
                 <Link
                   href="/boutique"
@@ -635,7 +636,7 @@ export default function HomeClient({
               Nouveautés
             </p>
             <h2 className="text-3xl md:text-4xl font-light tracking-wide leading-tight max-w-2xl mx-auto">
-              Dernieres pieces
+              Les nouveautés
             </h2>
           </motion.div>
 
@@ -693,11 +694,21 @@ export default function HomeClient({
               L’atelier
             </p>
             <h2 className="text-3xl md:text-5xl font-light mb-6 tracking-wide">
-              Le geste de l'atelier
+              Chaque détail compte
             </h2>
             <p className="text-white/80 text-lg max-w-2xl mx-auto font-light">
-              Precision. Rigueur. Matiere.
+              Coupe, assemblage, couture, finition : chaque étape est réalisée avec attention et précision.
             </p>
+            {youtubeChannelUrl && (
+              <a
+                href={youtubeChannelUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-8 inline-flex items-center gap-2 border-b border-white/50 pb-1 text-xs uppercase tracking-[0.3em] text-white/90 hover:text-white hover:border-white transition-colors"
+              >
+                Chaine YouTube
+              </a>
+            )}
           </motion.div>
         </div>
       </section>
@@ -712,10 +723,10 @@ export default function HomeClient({
             className="text-center mb-20"
           >
             <p className="text-stone-400 text-xs tracking-[0.3em] uppercase mb-4 font-light">
-              Signature
+             Notre façon de faire
             </p>
             <h2 className="text-3xl md:text-4xl font-light tracking-wide leading-tight">
-              L'essentiel, sans exces
+              Fabriqué à la main
             </h2>
           </motion.div>
 
@@ -758,10 +769,10 @@ export default function HomeClient({
             className="text-center mb-14"
           >
             <p className="text-stone-400 text-xs tracking-[0.3em] uppercase mb-4 font-light">
-              Nos clients les recommandent
+              Les pièces préférées
             </p>
             <h2 className="text-3xl md:text-4xl font-light tracking-wide leading-tight max-w-2xl mx-auto">
-              Les icones Nomade
+              Découvrez les modèles qui composent l'univers Nomade
             </h2>
           </motion.div>
 
@@ -819,13 +830,13 @@ export default function HomeClient({
                 l'univers Nomade
               </h2>
               <p className="text-white/60 text-lg md:text-xl leading-relaxed font-light mb-12 max-w-2xl mx-auto">
-                Decouvrez la collection complete.
+                Des pièces pensées pour accompagner vos journées, vos déplacements et les moments qui comptent
               </p>
               <Link
                 href="/boutique"
                 className="inline-block bg-white text-stone-900 px-10 py-4 rounded-full text-sm tracking-wider font-light hover:bg-stone-100 transition-colors"
               >
-                Voir la collection
+                Découvrir la collection
               </Link>
             </motion.div>
           </div>
