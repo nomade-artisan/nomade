@@ -61,7 +61,7 @@ function Footer() {
               href="/"
               className="text-2xl font-extralight tracking-[-0.02em]"
             >
-              Nomade
+              SCOLTA by Nomade
             </Link>
             <p className="text-stone-500 text-sm font-light mt-4 leading-relaxed max-w-xs">
               Des sacs pour ceux qui savent que l’essentiel est à l’intérieur.

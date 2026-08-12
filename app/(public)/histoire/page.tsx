@@ -4,7 +4,7 @@ import HistoireClient from "./HistoireClient";
 export const metadata: Metadata = {
   title: "Notre Histoire",
   description:
-    "L'histoire de Nomade, une marque née de la route et des mains tendues.",
+    "L'histoire de Nomade, la maison qui donne naissance a la marque SCOLTA.",
 };
 
 export default function HistoirePage() {

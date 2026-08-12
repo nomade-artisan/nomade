@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { fetchFile } from "@ffmpeg/util";
 
@@ -49,20 +49,26 @@ export function useVideoCompressor(): UseVideoCompressorReturn {
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [compressing, setCompressing] = useState(false);
-  const initRef = useRef(false);
 
-  if (!initRef.current) {
-    initRef.current = true;
+  useEffect(() => {
+    let cancelled = false;
+
     getFFmpeg()
       .then(() => {
+        if (cancelled) return;
         setReady(true);
         setError(null);
       })
       .catch((e) => {
+        if (cancelled) return;
         setReady(false);
         setError(e.message || "Erreur inconnue");
       });
-  }
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const compress = useCallback(async (file: File): Promise<Blob | null> => {
     setCompressing(true);

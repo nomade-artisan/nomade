@@ -12,12 +12,16 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://www.nomade-artisan.fr"),
 
   title: {
-    default: "Nomade",
-    template: "%s | Nomade",
+    default: "SCOLTA by Nomade",
+    template: "%s | SCOLTA by Nomade",
   },
 
   description:
-    "Maroquinerie artisanale fabriquée à Nîmes. Sacs et accessoires conçus à la main en petites séries.",
+    "Maroquinerie fabriquée à Alès. Sacs et accessoires conçus à la main en petites séries.",
+
+  alternates: {
+    canonical: "/",
+  },
 
   keywords: [
     "nomade",
@@ -28,21 +32,22 @@ export const metadata: Metadata = {
     "artisan",
     "accessoires",
     "Nîmes",
+    "France",
   ],
 
   openGraph: {
-    title: "Nomade",
+    title: "SCOLTA by Nomade",
     description:
-      "Sacs et accessoires artisanaux fabriqués à Nîmes.",
+      "Sacs et accessoires fabriqués à Alès.",
     url: "https://www.nomade-artisan.fr",
-    siteName: "Nomade",
+    siteName: "SCOLTA by Nomade",
 
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Nomade - Maroquinerie artisanale",
+        alt: "SCOLTA by Nomade - Maroquinerie artisanale",
       },
     ],
 
@@ -52,15 +57,22 @@ export const metadata: Metadata = {
 
   twitter: {
     card: "summary_large_image",
-    title: "Nomade",
+    title: "SCOLTA by Nomade",
     description:
-      "Sacs et accessoires artisanaux fabriqués à Nîmes.",
+      "Sacs et accessoires artisanaux fabriqués à Alès.",
     images: ["/og-image.png"],
   },
 
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
   },
 };
 

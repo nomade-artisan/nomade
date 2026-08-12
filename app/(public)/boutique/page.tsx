@@ -1,9 +1,26 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { getProductsList } from "@/lib/products/queries";
 import { getCollections } from "@/lib/collections/queries";
 import BoutiqueClient from "./BoutiqueClient";
 
 export const revalidate = 20; // Revalidation every 20 seconds
+
+export const metadata: Metadata = {
+  title: "Boutique",
+  description:
+    "Découvrez la boutique SCOLTA by Nomade: collections de sacs et accessoires artisanaux fabriqués en France.",
+  alternates: {
+    canonical: "/boutique",
+  },
+  openGraph: {
+    title: "Boutique | SCOLTA by Nomade",
+    description:
+      "Explorez toutes les collections et produits de maroquinerie artisanale.",
+    url: "/boutique",
+    type: "website",
+  },
+};
 
 export default function BoutiquePage() {
   return (

@@ -58,11 +58,8 @@ function BoutiqueClient({
   const [searchTerm, setSearchTerm] = useState("");
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
 
-  useEffect(() => {
-    if (filterParam === "nouveautes") {
-      setSortBy("newest");
-    }
-  }, [filterParam]);
+
+  const effectiveSortBy: SortValue = filterParam === "nouveautes" ? "newest" : sortBy;
 
   useEffect(() => {
     if (searchTerm.trim().length < 2) return;
@@ -83,7 +80,7 @@ function BoutiqueClient({
       );
     }
 
-    switch (sortBy) {
+    switch (effectiveSortBy) {
       case "price-asc":
         filtered.sort((a, b) => a.price - b.price);
         break;
@@ -98,10 +95,10 @@ function BoutiqueClient({
     }
 
     return filtered;
-  }, [products, searchTerm, sortBy]);
+  }, [effectiveSortBy, products, searchTerm]);
 
   const currentSortLabel =
-    sortOptions.find((option) => option.value === sortBy)?.label || "Par défaut";
+    sortOptions.find((option) => option.value === effectiveSortBy)?.label || "Par défaut";
 
   const visibleCollections = useMemo(
     () => collections.filter((collection) => collection.slug !== "all"),
@@ -181,13 +178,13 @@ function BoutiqueClient({
                         setSortMenuOpen(false);
                       }}
                       className={`w-full flex items-center justify-between px-4 py-3 text-left transition-colors text-sm font-light ${
-                        sortBy === option.value
+                        effectiveSortBy === option.value
                           ? "text-stone-900 bg-stone-50"
                           : "text-stone-500 hover:bg-stone-50"
                       }`}
                     >
                       <span>{option.label}</span>
-                      {sortBy === option.value && <span className="text-stone-400">•</span>}
+                      {effectiveSortBy === option.value && <span className="text-stone-400">•</span>}
                     </button>
                   ))}
                 </div>

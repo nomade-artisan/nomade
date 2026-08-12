@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import CollectionBoutiqueClient from "./CollectionBoutiqueClient";
 import { getCollections } from "@/lib/collections/queries";
 import { getCategories } from "@/lib/categories/queries";
@@ -9,6 +10,41 @@ export const revalidate = 20;
 
 interface Props {
   params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const collections = await getCollections();
+  const collection = collections.find((item) => item.slug === slug);
+
+  if (!collection) {
+    return {
+      title: "Collection introuvable",
+      robots: {
+        index: false,
+        follow: false,
+      },
+    };
+  }
+
+  const title = `${collection.name} | Collection`;
+  const description = collection.description?.trim().length
+    ? collection.description
+    : `Découvrez la collection ${collection.name} de SCOLTA by Nomade.`;
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: `/boutique/collection/${collection.slug}`,
+    },
+    openGraph: {
+      title: `${collection.name} | SCOLTA by Nomade`,
+      description,
+      url: `/boutique/collection/${collection.slug}`,
+      type: "website",
+    },
+  };
 }
 
 function getCollectionMediaUrl(path: string | null): string {
