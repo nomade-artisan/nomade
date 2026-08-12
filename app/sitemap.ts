@@ -3,7 +3,7 @@ import { getCollections } from "@/lib/collections/queries";
 import { getProductsList } from "@/lib/products/queries";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = "https://www.nomade-artisan.fr";
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://scolta.nomade-artisan.fr";
   const now = new Date();
 
   const staticUrls: MetadataRoute.Sitemap = [

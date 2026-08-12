@@ -10,6 +10,6 @@ export default function robots(): MetadataRoute.Robots {
       },
     ],
 
-    sitemap: "https://www.nomade-artisan.fr/sitemap.xml",
+    sitemap: "https://scolta.nomade-artisan.fr/sitemap.xml",
   };
 }

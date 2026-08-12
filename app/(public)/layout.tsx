@@ -9,7 +9,7 @@ import CookieConsent from "@/components/CookieConsent";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.nomade-artisan.fr"),
+  metadataBase: new URL("https://scolta.nomade-artisan.fr"),
 
   title: {
     default: "SCOLTA by Nomade",
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     title: "SCOLTA by Nomade",
     description:
       "Sacs et accessoires fabriqués à Alès.",
-    url: "https://www.nomade-artisan.fr",
+    url: "https://scolta.nomade-artisan.fr",
     siteName: "SCOLTA by Nomade",
 
     images: [
