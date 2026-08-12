@@ -95,10 +95,13 @@ function Navbar() {
             {/* Logo */}
             <Link
               href="/"
-              className={`uppercase tracking-[0.3em] font-light transition-colors duration-300 ${textColor}`}
+              className={`uppercase tracking-[0.3em] font-light transition-colors duration-300 ${textColor} flex flex-col leading-none`}
             >
               <span className="text-[18px] md:text-[22px] tracking-[0.35em]">
-                NOMADE
+                SCOLTA
+              </span>
+              <span className="text-[8px] md:text-[9px] tracking-[0.25em] opacity-75 mt-1">
+                by Nomade
               </span>
             </Link>
 

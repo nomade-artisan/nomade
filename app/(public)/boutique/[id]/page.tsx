@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = `${product.name} | Boutique`;
   const description = product.description?.trim().length
     ? product.description.slice(0, 160)
-    : `Découvrez ${product.name}, une pièce de maroquinerie artisanale SCOLTA by Nomade.`;
+    : `Découvrez ${product.name}, une pièce de maroquinerie SCOLTA by Nomade.`;
 
   return {
     title,
@@ -78,7 +78,7 @@ export default async function ProductPage({ params }: Props) {
   const { data: relatedData } = await getProductsList({
     pageSize: 4,
     status: "active",
-    category: product.category?.name || "",
+    category: product.category?.slug || "all",
   });
 
   const formattedProduct = {
