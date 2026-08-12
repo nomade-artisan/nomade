@@ -18,6 +18,7 @@ const Reviews = dynamic(() => import("@/components/Reviews"), {
 
 interface Product {
   id: number | string;
+  slug?: string;
   name: string;
   price: number;
   images: string[];
@@ -48,6 +49,7 @@ function ProductClient({
     addToCart(
       {
         id: product.id,
+        slug: product.slug || String(product.id),
         name: product.name,
         price: product.price,
         image: product.images[0],
@@ -500,7 +502,7 @@ function RelatedProducts({ products }: { products: Product[] }) {
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-5 md:gap-10">
         {products.map((p) => (
-          <Link key={p.id} href={`/boutique/${p.id}`} className="group">
+          <Link key={p.id} href={`/boutique/${p.slug || p.id}`} className="group">
             <div className="relative rounded-[22px] md:rounded-[24px] overflow-hidden bg-stone-100 aspect-4/5 mb-4">
               <Image
                 src={p.images[0] || "/placeholder.svg"}

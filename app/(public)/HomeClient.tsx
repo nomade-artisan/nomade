@@ -11,6 +11,7 @@ import type { Collection } from "@/lib/collections/types";
 // --- Types ---
 interface Product {
   id: number | string;
+  slug?: string | number;
   name: string;
   price: number;
   images: string[];
@@ -33,6 +34,7 @@ interface HomeCategoryCard {
 
 interface HomeCollectionProduct {
   id: number | string;
+  slug?: string | number;
   name: string;
   price: number;
   image: string;
@@ -115,7 +117,7 @@ function CollectionProductShowcase({
         {showcaseItems.map((product) => (
           <Link
             key={product.id}
-            href={`/boutique/${product.id}`}
+            href={`/boutique/${product.slug || product.id}`}
             className="group/showcase block w-full"
             aria-label={product.name}
           >
@@ -461,6 +463,7 @@ export default function HomeClient({
 
           current.push({
             id: product.id,
+            slug: product.slug || String(product.id),
             name: product.name,
             price: product.price,
             image: product.images[0] || "",

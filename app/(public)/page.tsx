@@ -24,6 +24,7 @@ export default async function Home() {
 
   const initialProducts = data.map((product) => ({
     id: product.id,
+    slug: product.slug || String(product.id),
     name: product.name,
     price: product.price,
     images: product.cover_image ? [product.cover_image] : [],
