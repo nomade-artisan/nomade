@@ -154,6 +154,25 @@ export async function getProductById(id: number): Promise<ProductWithImages | nu
   return product as unknown as ProductWithImages;
 }
 
+export async function getProductBySlug(slug: string): Promise<ProductWithImages | null> {
+  const { data: product, error } = await supabase
+    .from("products")
+    .select(`
+      *,
+      images:product_images(*),
+      category:categories(*)
+    `)
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Error fetching product by slug:", { slug, error });
+    return null;
+  }
+
+  return product as unknown as ProductWithImages | null;
+}
+
 export async function getProductForEdit(id: number): Promise<ProductWithImages | null> {
   // Vérifier si le produit existe
   const { data: exists, error: existError } = await supabase

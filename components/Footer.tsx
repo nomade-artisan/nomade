@@ -7,6 +7,13 @@ function Footer() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
+  const instagramUrl =
+    process.env.NEXT_PUBLIC_INSTAGRAM_URL?.trim() || "https://instagram.com";
+  const pinterestUrl =
+    process.env.NEXT_PUBLIC_PINTEREST_URL?.trim() || "https://pinterest.com";
+  const youtubeUrl =
+    process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_URL?.trim() || "https://youtube.com";
+
   const boutiqueLinks = [
     { label: "Tous les sacs", to: "/boutique" },
     { label: "Nouveautés", to: "/boutique?filter=nouveautes" },
@@ -166,14 +173,48 @@ function Footer() {
           </div>
         </div>
 
-        {/* Bottom bar */}
-        <div className="border-t border-stone-100 mt-14 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-stone-400 text-xs font-light tracking-wide">
-            © {new Date().getFullYear()} Nomade. Tous droits réservés.
-          </p>
-          <p className="text-stone-400 text-xs font-light italic text-center md:text-left">
-            « On ne possède que ce qu’on porte »
-          </p>
+        <div className="border-t border-stone-100 mt-14 pt-8 flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-xs uppercase tracking-[0.2em] text-stone-500 font-light">
+            {instagramUrl && (
+              <a
+                href={instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-stone-900 transition-colors"
+              >
+                Instagram
+              </a>
+            )}
+            {pinterestUrl && (
+              <a
+                href={pinterestUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-stone-900 transition-colors"
+              >
+                Pinterest
+              </a>
+            )}
+            {youtubeUrl && (
+              <a
+                href={youtubeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-stone-900 transition-colors"
+              >
+                YouTube
+              </a>
+            )}
+          </div>
+
+          <div className="flex flex-col md:flex-row items-center gap-4">
+            <p className="text-stone-400 text-xs font-light tracking-wide">
+              © {new Date().getFullYear()} Nomade. Tous droits réservés.
+            </p>
+            <p className="text-stone-400 text-xs font-light italic text-center md:text-left">
+              « On ne possède que ce qu’on porte »
+            </p>
+          </div>
         </div>
       </div>
     </footer>

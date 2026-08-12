@@ -179,7 +179,7 @@ function CgvClient() {
           >
             <p>
               Conformément au Code de la consommation,
-              le client dispose de 30 jours
+              le client dispose de 15 jours
               à compter de la réception
               pour exercer son droit de rétractation.
             </p>

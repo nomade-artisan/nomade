@@ -30,6 +30,8 @@ function ProductCard({
     ? product.images[0]
     : product.images || "";
 
+  const productSlug = (product as { slug?: string }).slug || String(product.id);
+
   const price =
     typeof product.price === "string"
       ? parseFloat(product.price)
@@ -46,7 +48,7 @@ function ProductCard({
       : null;
 
   return (
-    <Link href={`/boutique/${product.id}`} className="group block">
+    <Link href={`/boutique/${productSlug}`} className="group block">
       <div className="relative overflow-hidden rounded-none bg-stone-100 aspect-3/4 mb-3 shadow-sm group-hover:shadow-md transition-shadow duration-500">
         {/* Image */}
         {imageUrl ? (

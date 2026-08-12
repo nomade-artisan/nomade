@@ -104,7 +104,7 @@ const categories = [
         question:
           "Puis-je retourner mon sac ?",
         answer:
-          "Oui, sous 30 jours si le produit est inutilisé.",
+          "Oui, sous 15 jours si le produit est inutilisé.",
       },
       {
         question:

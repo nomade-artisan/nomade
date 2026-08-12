@@ -1,27 +1,24 @@
-import { getProductById, getProductsList, getProductRating } from "@/lib/products/queries";
+import {
+  getProductById,
+  getProductBySlug,
+  getProductsList,
+  getProductRating,
+} from "@/lib/products/queries";
 import { notFound } from "next/navigation";
 import ProductClient from "./ProductClient";
 import type { Metadata } from "next";
-export const revalidate = 20
+export const revalidate = 20;
+
 interface Props {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { id } = await params;
-  const productId = Number(id);
-
-  if (isNaN(productId)) {
-    return {
-      title: "Produit introuvable",
-      robots: {
-        index: false,
-        follow: false,
-      },
-    };
-  }
-
-  const product = await getProductById(productId);
+  const { slug } = await params;
+  const productBySlug = await getProductBySlug(slug);
+  const product =
+    productBySlug ||
+    (Number.isInteger(Number(slug)) ? await getProductById(Number(slug)) : null);
 
   if (!product || product.status !== "active") {
     return {
@@ -33,6 +30,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
+  const canonicalPath = `/boutique/${product.slug || product.id}`;
   const title = `${product.name} | Boutique`;
   const description = product.description?.trim().length
     ? product.description.slice(0, 160)
@@ -42,12 +40,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title,
     description,
     alternates: {
-      canonical: `/boutique/${product.id}`,
+      canonical: canonicalPath,
     },
     openGraph: {
       title: `${product.name} | SCOLTA by Nomade`,
       description,
-      url: `/boutique/${product.id}`,
+      url: canonicalPath,
       type: "website",
       images: product.images?.length
         ? [
@@ -62,19 +60,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ProductPage({ params }: Props) {
-  const { id } = await params;
-  const productId = Number(id);
+  const { slug } = await params;
+  const productBySlug = await getProductBySlug(slug);
+  const productRecord =
+    productBySlug ||
+    (Number.isInteger(Number(slug)) ? await getProductById(Number(slug)) : null);
 
-  if (isNaN(productId)) notFound();
+  if (!productRecord) notFound();
 
   const [product, ratingData] = await Promise.all([
-    getProductById(productId),
-    getProductRating(productId),
+    Promise.resolve(productRecord),
+    getProductRating(productRecord.id),
   ]);
 
-  if (!product) notFound();
-
-  // Produits de la même catégorie
   const { data: relatedData } = await getProductsList({
     pageSize: 4,
     status: "active",
@@ -83,6 +81,7 @@ export default async function ProductPage({ params }: Props) {
 
   const formattedProduct = {
     id: product.id,
+    slug: product.slug || String(product.id),
     name: product.name,
     price: product.price,
     images: product.images?.map((img: any) => img.image_url) || [],
@@ -90,7 +89,7 @@ export default async function ProductPage({ params }: Props) {
     details: product.details || [],
     category: product.category?.name || "",
     stock: product.stock,
-    rating: ratingData.rating, 
+    rating: ratingData.rating,
     reviews: ratingData.reviews,
     isNew: product.is_new,
   };
@@ -100,6 +99,7 @@ export default async function ProductPage({ params }: Props) {
     .slice(0, 3)
     .map((p) => ({
       id: p.id,
+      slug: p.slug || String(p.id),
       name: p.name,
       price: p.price,
       images: p.cover_image ? [p.cover_image] : [],

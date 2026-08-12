@@ -9,6 +9,11 @@ const contactImage = (filename: string) =>
   supabase.storage.from("contact").getPublicUrl(filename).data.publicUrl;
 
 function ContactClient() {
+  const instagramUrl =
+    process.env.NEXT_PUBLIC_INSTAGRAM_URL?.trim() || "https://instagram.com";
+  const pinterestUrl =
+    process.env.NEXT_PUBLIC_PINTEREST_URL?.trim() || "https://pinterest.com";
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -220,7 +225,7 @@ function ContactClient() {
                 </p>
                 <div className="flex gap-6">
                   <a
-                    href="https://instagram.com"
+                    href={instagramUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-stone-500 hover:text-black transition-colors text-sm font-light"
@@ -228,7 +233,7 @@ function ContactClient() {
                     Instagram
                   </a>
                   <a
-                    href="https://pinterest.com"
+                    href={pinterestUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-stone-500 hover:text-black transition-colors text-sm font-light"

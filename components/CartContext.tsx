@@ -11,6 +11,7 @@ import {
 
 export interface CartItem {
   id: number | string;
+  slug?: string | number;
   name: string;
   price: number;
   image: string;

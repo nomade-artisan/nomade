@@ -290,7 +290,7 @@ function CartClient() {
                         <div>
 
                           <Link
-                            href={`/boutique/${item.id}`}
+                            href={`/boutique/${item.slug || item.id}`}
                             className="text-base md:text-lg font-light hover:text-stone-600 transition-colors"
                           >
                             {item.name}

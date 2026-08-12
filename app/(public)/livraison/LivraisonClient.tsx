@@ -335,7 +335,7 @@ function LivraisonClient() {
               <div className="space-y-5 text-stone-500 font-light leading-relaxed">
 
                 <p>
-                  Vous disposez de 30 jours
+                  Vous disposez de 15 jours
                   pour retourner votre commande.
                 </p>
 
