@@ -10,6 +10,9 @@ import AnalyticsTracker from "@/components/AnalyticsTracker";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://scolta.nomade-artisan.fr"),
+  other: {
+    "google-site-verification": "hkZccZ963jGS25PmoKeaKPWWg8TxmLjeiCJFT_BPjR8",
+  },
 
   title: {
     default: "SCOLTA by Nomade",
