@@ -4,13 +4,6 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Eye, Search } from "lucide-react";
 import Link from "next/link";
 import type { OrderListItem } from "@/lib/orders/types";
@@ -53,20 +46,19 @@ export default function OrdersTable({ orders }: Props) {
               className="pl-9"
             />
           </div>
-          <Select name="status" defaultValue={currentParams.get("status") || "all"}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Statut" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tous les statuts</SelectItem>
-              <SelectItem value="pending">En attente</SelectItem>
-              <SelectItem value="confirmed">Confirmée</SelectItem>
-              <SelectItem value="shipped">Expédiée</SelectItem>
-              <SelectItem value="delivered">Livrée</SelectItem>
-              <SelectItem value="cancelled">Annulée</SelectItem>
-              <SelectItem value="returned">Retournée</SelectItem>
-            </SelectContent>
-          </Select>
+          <select
+            name="status"
+            defaultValue={currentParams.get("status") || "all"}
+            className="flex h-9 w-[180px] rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+          >
+            <option value="all">Tous les statuts</option>
+            <option value="pending">En attente</option>
+            <option value="confirmed">Confirmée</option>
+            <option value="shipped">Expédiée</option>
+            <option value="delivered">Livrée</option>
+            <option value="cancelled">Annulée</option>
+            <option value="returned">Retournée</option>
+          </select>
           <Button type="submit">Filtrer</Button>
         </form>
       </CardHeader>

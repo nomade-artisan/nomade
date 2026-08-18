@@ -3,13 +3,6 @@
 import { Dispatch, SetStateAction, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { ProductFormState } from "../types";
 
 interface Category {
@@ -104,77 +97,69 @@ export default function ProductCategory({
         {/* Sélection de la collection */}
         <div className="space-y-2">
           <Label>Collection</Label>
-          <Select
+          <select
             value={product.collectionId?.toString() ?? ""}
-            onValueChange={(value) =>
+            onChange={(event) =>
               setProduct((prev) => ({
                 ...prev,
-                collectionId: Number(value),
+                collectionId: Number(event.target.value) || null,
                 categoryId: null,
               }))
             }
+            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
           >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Choisir une collection" />
-            </SelectTrigger>
-            <SelectContent>
-              {collections.length === 0 ? (
-                <SelectItem value="" disabled>
-                  Aucune collection disponible
-                </SelectItem>
-              ) : (
-                collections.map((collection) => (
-                  <SelectItem key={collection.id} value={collection.id.toString()}>
-                    {collection.name}
-                  </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
+            <option value="">Choisir une collection</option>
+            {collections.length === 0 ? (
+              <option value="" disabled>
+                Aucune collection disponible
+              </option>
+            ) : (
+              collections.map((collection) => (
+                <option key={collection.id} value={collection.id.toString()}>
+                  {collection.name}
+                </option>
+              ))
+            )}
+          </select>
         </div>
 
         {/* Sélection de la catégorie */}
         <div className="space-y-2">
           <Label>Catégorie du produit</Label>
-          <Select
+          <select
             value={product.categoryId?.toString() ?? ""}
-            onValueChange={(value) => {
+            onChange={(event) => {
               const selectedCategory = categories.find(
-                (category) => category.id === Number(value)
+                (category) => category.id === Number(event.target.value)
               );
               setProduct((prev) => ({
                 ...prev,
                 collectionId: selectedCategory?.collection_id ?? prev.collectionId,
-                categoryId: Number(value),
+                categoryId: Number(event.target.value) || null,
               }));
             }}
             disabled={!product.collectionId}
+            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <SelectTrigger className="w-full">
-              <SelectValue
-                placeholder={
-                  product.collectionId
-                    ? "Choisir une catégorie"
-                    : "Choisissez d'abord une collection"
-                }
-              />
-            </SelectTrigger>
-            <SelectContent>
-              {filteredCategories.length === 0 ? (
-                <SelectItem value="" disabled>
-                  {product.collectionId
-                    ? "Aucune catégorie dans cette collection"
-                    : "Sélectionnez d'abord une collection"}
-                </SelectItem>
-              ) : (
-                filteredCategories.map((category) => (
-                  <SelectItem key={category.id} value={category.id.toString()}>
-                    {category.name}
-                  </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
+            <option value="">
+              {product.collectionId
+                ? "Choisir une catégorie"
+                : "Choisissez d'abord une collection"}
+            </option>
+            {filteredCategories.length === 0 ? (
+              <option value="" disabled>
+                {product.collectionId
+                  ? "Aucune catégorie dans cette collection"
+                  : "Sélectionnez d'abord une collection"}
+              </option>
+            ) : (
+              filteredCategories.map((category) => (
+                <option key={category.id} value={category.id.toString()}>
+                  {category.name}
+                </option>
+              ))
+            )}
+          </select>
         </div>
       </CardContent>
     </Card>

@@ -14,14 +14,6 @@ import { Label } from "@/components/ui/label";
 
 import { Checkbox } from "@/components/ui/checkbox";
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
 import { ProductFormState } from "../types";
 
 interface ProductInventoryProps {
@@ -89,37 +81,20 @@ export default function ProductInventory({
             Statut
           </Label>
 
-          <Select
+          <select
             value={product.status}
-            onValueChange={(value) =>
+            onChange={(event) =>
               setProduct((prev) => ({
                 ...prev,
-                status:
-                  value as ProductFormState["status"],
+                status: event.target.value as ProductFormState["status"],
               }))
             }
+            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
           >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-
-            <SelectContent>
-
-              <SelectItem value="draft">
-                Brouillon
-              </SelectItem>
-
-              <SelectItem value="active">
-                Actif
-              </SelectItem>
-
-              <SelectItem value="archived">
-                Archivé
-              </SelectItem>
-
-            </SelectContent>
-
-          </Select>
+            <option value="draft">Brouillon</option>
+            <option value="active">Actif</option>
+            <option value="archived">Archivé</option>
+          </select>
         </div>
 
         <div className="flex items-center gap-3">
