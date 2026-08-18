@@ -9,13 +9,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Category, CategoryFormState } from "@/lib/categories/types";
 import type { Collection } from "@/lib/collections/types";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 interface Props {
   initialData?: Category;
@@ -93,21 +86,18 @@ export default function CategoryForm({ initialData, collections }: Props) {
           )}
           <div>
             <Label className="text-sm font-medium">Collection</Label>
-            <Select
+            <select
               value={form.collectionId?.toString() || ""}
-              onValueChange={(value) => setForm({ ...form, collectionId: Number(value) })}
+              onChange={(e) => setForm({ ...form, collectionId: Number(e.target.value) || null })}
+              className="mt-2 flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <SelectTrigger className="mt-2 w-full">
-                <SelectValue placeholder="Choisir une collection" />
-              </SelectTrigger>
-              <SelectContent>
-                {collections.map((collection) => (
-                  <SelectItem key={collection.id} value={collection.id.toString()}>
-                    {collection.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <option value="">Choisir une collection</option>
+              {collections.map((collection) => (
+                <option key={collection.id} value={collection.id.toString()}>
+                  {collection.name}
+                </option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="text-sm font-medium">Nom</label>
