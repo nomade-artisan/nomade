@@ -6,13 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Table,
   TableBody,
   TableCell,
@@ -202,20 +195,19 @@ export default function PromoCodesManager() {
 
             <div>
               <label className="text-sm font-medium">Type</label>
-              <Select
+              <select
                 value={form.discount_type}
-                onValueChange={(value) =>
-                  setForm((prev) => ({ ...prev, discount_type: value as DiscountType }))
+                onChange={(event) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    discount_type: event.target.value as DiscountType,
+                  }))
                 }
+                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
               >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="fixed">Montant fixe</SelectItem>
-                  <SelectItem value="percent">Pourcentage</SelectItem>
-                </SelectContent>
-              </Select>
+                <option value="fixed">Montant fixe</option>
+                <option value="percent">Pourcentage</option>
+              </select>
             </div>
 
             <div>

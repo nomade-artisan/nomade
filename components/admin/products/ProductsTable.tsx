@@ -4,13 +4,6 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Pencil, Search, ArrowUpDown, X } from "lucide-react";
 import Link from "next/link";
 import ProductStatusBadge from "./ProductStatusBadge";
@@ -91,32 +84,30 @@ export default function ProductsTable({
             </div>
 
             {/* Filtre statut */}
-            <Select name="status" defaultValue={currentStatus}>
-              <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="Statut" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les statuts</SelectItem>
-                <SelectItem value="active">Actif</SelectItem>
-                <SelectItem value="draft">Brouillon</SelectItem>
-                <SelectItem value="archived">Archivé</SelectItem>
-              </SelectContent>
-            </Select>
+            <select
+              name="status"
+              defaultValue={currentStatus}
+              className="flex h-9 w-[160px] rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+            >
+              <option value="all">Tous les statuts</option>
+              <option value="active">Actif</option>
+              <option value="draft">Brouillon</option>
+              <option value="archived">Archivé</option>
+            </select>
 
             {/* Filtre catégorie */}
-            <Select name="category" defaultValue={currentCategory}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Catégorie" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toutes les catégories</SelectItem>
-                {categories.map((cat) => (
-                  <SelectItem key={cat} value={cat}>
-                    {cat}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <select
+              name="category"
+              defaultValue={currentCategory}
+              className="flex h-9 w-[180px] rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+            >
+              <option value="all">Toutes les catégories</option>
+              {categories.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
 
             <Button type="submit">
               <Search className="mr-2 h-4 w-4" />
