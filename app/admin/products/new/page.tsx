@@ -2,6 +2,8 @@
 import ProductForm from "@/components/admin/products/ProductForm";
 import { getCategories } from "@/lib/categories/queries";
 
+export const dynamic = "force-dynamic";
+
 export default async function NewProductPage() {
   const categories = await getCategories();
 
