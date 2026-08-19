@@ -290,7 +290,7 @@ function CartClient() {
                         <div>
 
                           <Link
-                            href={`/boutique/${item.slug || item.id}`}
+                            href={`/boutique/${item.id}`}
                             className="text-base md:text-lg font-light hover:text-stone-600 transition-colors"
                           >
                             {item.name}
@@ -367,6 +367,7 @@ function CartClient() {
                        onClick={() => {
                         trackEvent("remove_from_cart", {
                           product_id: String(item.id),
+                          page_url: window.location.pathname,
                         });
 
                         removeFromCart(item.id);
