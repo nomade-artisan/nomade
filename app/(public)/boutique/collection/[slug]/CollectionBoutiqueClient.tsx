@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import ProductCard from "@/components/ProductCard";
+import { trackEvent } from "@/lib/analytics/tracking";
 
 interface Product {
   id: number | string;
@@ -111,6 +112,18 @@ export default function CollectionBoutiqueClient({
 }: Props) {
   const [activeCategory, setActiveCategory] = useState<string>("all");
 
+  useEffect(() => {
+    trackEvent("collection_view", {
+      page_url: window.location.pathname,
+      metadata: {
+        collection_name: collectionName,
+        collection_slug: collectionSlug,
+        category: activeCategory,
+        product_count: products.length,
+      },
+    });
+  }, [activeCategory, collectionName, collectionSlug, products.length]);
+
   const sortedProducts = useMemo(() => {
     const items = products.filter((product) => product.collectionSlug === collectionSlug);
     items.sort((a, b) => {
@@ -145,6 +158,19 @@ export default function CollectionBoutiqueClient({
   const subtitle = collectionDescription?.trim().length
     ? collectionDescription
     : "Une collection pensee pour durer.";
+
+  const handleCategoryChange = (nextCategory: string) => {
+    setActiveCategory(nextCategory);
+    trackEvent("collection_category_click", {
+      page_url: window.location.pathname,
+      metadata: {
+        collection_name: collectionName,
+        collection_slug: collectionSlug,
+        category: nextCategory,
+        product_count: products.length,
+      },
+    });
+  };
 
   return (
     <div className="bg-white text-stone-800 pt-20">
@@ -186,7 +212,7 @@ export default function CollectionBoutiqueClient({
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mb-6">
           <button
             type="button"
-            onClick={() => setActiveCategory("all")}
+            onClick={() => handleCategoryChange("all")}
             className={`text-[11px] uppercase tracking-[0.25em] font-light transition-colors ${
               activeCategory === "all" ? "text-stone-900" : "text-stone-400 hover:text-stone-600"
             }`}
@@ -198,7 +224,7 @@ export default function CollectionBoutiqueClient({
             <button
               key={category.slug}
               type="button"
-              onClick={() => setActiveCategory(category.slug)}
+              onClick={() => handleCategoryChange(category.slug)}
               className={`text-[11px] uppercase tracking-[0.25em] font-light transition-colors ${
                 activeCategory === category.slug
                   ? "text-stone-900"
