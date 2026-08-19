@@ -10,6 +10,12 @@ export async function getCategories(): Promise<Category[]> {
     `)
     .order("name");
 
+  console.log("[getCategories] query result:", {
+    count: data?.length ?? 0,
+    error: error ? { message: error.message, details: error.details, hint: error.hint } : null,
+    sample: data?.slice(0, 3) ?? [],
+  });
+
   if (error) {
     console.error("Error fetching categories:", error);
     return [];

@@ -125,6 +125,13 @@ export default function ProductForm({
   );
 
   useEffect(() => {
+    console.log("[ProductForm] props received:", {
+      mode,
+      categoryCount: categories.length,
+      hasInitialProduct: !!initialProduct,
+      sampleCategories: categories.slice(0, 3),
+    });
+
     if (initialProduct) {
       setProduct({
         name: initialProduct.name,
@@ -147,7 +154,7 @@ export default function ProductForm({
           })) || [],
       });
     }
-  }, [initialProduct]);
+  }, [categories, initialProduct, mode]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
