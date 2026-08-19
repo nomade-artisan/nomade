@@ -6,6 +6,8 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
+export const dynamic = "force-dynamic";
+
 export default async function EditCollectionPage({ params }: Props) {
   const { id } = await params;
   const collectionId = Number(id);

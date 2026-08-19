@@ -4,6 +4,8 @@ import { Plus } from "lucide-react";
 import Link from "next/link";
 import CategoriesTable from "@/components/admin/categories/CategoriesTable";
 
+export const dynamic = "force-dynamic";
+
 export default async function CategoriesPage() {
   const categories = await getCategories();
 

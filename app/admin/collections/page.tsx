@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import CollectionsTable from "@/components/admin/collections/CollectionsTable";
 import { getCollections } from "@/lib/collections/queries";
 
+export const dynamic = "force-dynamic";
+
 export default async function CollectionsPage() {
   const collections = await getCollections();
 
