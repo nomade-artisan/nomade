@@ -27,12 +27,17 @@ export default function ProductCategory({
   setProduct,
   categories,
 }: ProductCategoryProps) {
-  // 🔍 Debug : afficher les catégories reçues
   useEffect(() => {
-    console.log("📦 Catégories reçues :", categories);
-  }, [categories]);
+    console.log("[ProductCategory] categories prop:", {
+      count: categories.length,
+      sample: categories.slice(0, 3),
+      product: {
+        collectionId: product.collectionId,
+        categoryId: product.categoryId,
+      },
+    });
+  }, [categories, product.categoryId, product.collectionId]);
 
-  // Extraire les collections uniques (avec fallback si la relation n'est pas chargée)
   const collections = useMemo(() => {
     const collectionMap = new Map<number, { id: number; name: string }>();
 
@@ -53,7 +58,14 @@ export default function ProductCategory({
       }
     });
 
-    return Array.from(collectionMap.values());
+    const builtCollections = Array.from(collectionMap.values());
+
+    console.log("[ProductCategory] built collections:", {
+      count: builtCollections.length,
+      values: builtCollections,
+    });
+
+    return builtCollections;
   }, [categories]);
 
   // Filtrer les catégories selon la collection sélectionnée
