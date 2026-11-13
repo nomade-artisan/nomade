@@ -3,6 +3,9 @@ import { Metadata } from "next";
 import ConfidentialiteClient from "./ConfidentialiteClient";
 
 export const metadata: Metadata = {
+  alternates: {
+    canonical: "/confidentialite",
+  },
   title: "Politique de confidentialité",
   description: "Politique de confidentialité de Nomade.",
 };

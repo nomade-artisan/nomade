@@ -2,17 +2,149 @@ import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/client";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
-export async function GET() {
+function normalizeProductIds(rawValue: string | number | null | undefined): string[] {
+  if (rawValue == null || rawValue === "") return [];
+
+  const asString = String(rawValue);
+  return asString
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .filter((value, index, array) => array.indexOf(value) === index);
+}
+
+async function getProjectDailyContext(date: string) {
+  const dayStart = `${date}T00:00:00.000Z`;
+  const dayEnd = `${date}T23:59:59.999Z`;
+
+  const { data: orders, error: ordersError } = await supabaseAdmin
+    .from("orders")
+    .select("id, total, subtotal, discount_amount, promo_code, created_at")
+    .gte("created_at", dayStart)
+    .lte("created_at", dayEnd)
+    .not("status", "eq", "cancelled");
+
+  if (ordersError) {
+    console.warn("Unable to load daily orders for analytics context:", ordersError.message);
+  }
+
+  const orderMap = new Map<string, any>();
+  for (const order of orders || []) {
+    orderMap.set(String(order.id), order);
+  }
+
+  const { data: orderItems, error: orderItemsError } = await supabaseAdmin
+    .from("order_items")
+    .select("id, order_id, product_id, quantity, total")
+    .gte("created_at", dayStart)
+    .lte("created_at", dayEnd);
+
+  if (orderItemsError) {
+    console.warn("Unable to load daily order items for analytics context:", orderItemsError.message);
+  }
+
+  const productRevenue = new Map<string, number>();
+  const productDiscount = new Map<string, number>();
+  const productPromoFlag = new Map<string, number>();
+
+  for (const item of orderItems || []) {
+    const productId = String(item.product_id);
+    const order = orderMap.get(String(item.order_id));
+    const itemRevenue = Number(item.total || 0);
+    const itemDiscount = order && Number(order.discount_amount || 0) > 0 ? itemRevenue * (Number(order.discount_amount || 0) / Math.max(Number(order.total || itemRevenue), 1)) : 0;
+
+    productRevenue.set(productId, (productRevenue.get(productId) || 0) + itemRevenue);
+    productDiscount.set(productId, (productDiscount.get(productId) || 0) + itemDiscount);
+
+    if (order && (order.promo_code || Number(order.discount_amount || 0) > 0)) {
+      productPromoFlag.set(productId, 1);
+    }
+  }
+
+  const totalRevenue = Array.from(productRevenue.values()).reduce((sum, value) => sum + value, 0);
+  const totalDiscount = Array.from(productDiscount.values()).reduce((sum, value) => sum + value, 0);
+  const projectDiscountPercent = totalRevenue > 0 ? (totalDiscount / totalRevenue) * 100 : 0;
+
+  let projectAdSpend = 0;
+
+  const candidateTables = [
+    "marketing_spend",
+    "daily_ad_spend",
+    "campaign_daily_spend",
+    "marketing_daily_spend",
+    "ad_spend_daily",
+  ];
+
+  for (const tableName of candidateTables) {
+    try {
+      const { data: adRows, error: adError } = await supabaseAdmin
+        .from(tableName)
+        .select("date, ad_spend, spend, amount")
+        .or(`date.eq.${date},metric_date.eq.${date}`)
+        .limit(100);
+
+      if (!adError && adRows) {
+        for (const row of adRows) {
+          const value = Number(row.ad_spend ?? row.spend ?? row.amount ?? 0);
+          if (Number.isFinite(value)) {
+            projectAdSpend += value;
+          }
+        }
+      }
+    } catch {
+      // tableau absent ou non conforme ; on ignore proprement
+    }
+  }
+
+  return {
+    totalRevenue,
+    totalDiscount,
+    projectDiscountPercent,
+    projectAdSpend,
+    productRevenue,
+    productDiscount,
+    productPromoFlag,
+  };
+}
+
+export async function GET(request: Request) {
   try {
     const today = new Date().toISOString().split("T")[0];
+    const url = new URL(request.url);
+    const forceAll = url.searchParams.get("all") === "true";
+    const overrideSinceDate = url.searchParams.get("since_date");
 
-    const { data: events, error: readError } = await supabase
+    let sinceDateIso: string | null = null;
+    if (!forceAll) {
+      const { data: latestMetricRow, error: latestMetricError } = await supabaseAdmin
+        .from("product_daily_metrics")
+        .select("metric_date")
+        .order("metric_date", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!latestMetricError && latestMetricRow?.metric_date) {
+        sinceDateIso = new Date(`${latestMetricRow.metric_date}T00:00:00.000Z`).toISOString();
+      }
+    }
+
+    const effectiveSinceDate = overrideSinceDate || sinceDateIso;
+
+    let eventsQuery = supabase
       .from("analytics_events")
       .select("*");
+
+    if (!forceAll && effectiveSinceDate) {
+      eventsQuery = eventsQuery.gte("created_at", effectiveSinceDate);
+    }
+
+    const { data: events, error: readError } = await eventsQuery;
 
     if (readError) {
       throw readError;
     }
+
+    const context = await getProjectDailyContext(today);
 
     const products = new Map<string, {
       views: number;
@@ -23,35 +155,38 @@ export async function GET() {
     }>();
 
     for (const event of events || []) {
-      const productId = event.product_id;
-      if (!productId) continue;
+      const productIds = normalizeProductIds(event.product_id);
 
-      if (!products.has(productId)) {
-        products.set(productId, {
-          views: 0,
-          carts: 0,
-          purchases: 0,
-          totalTime: 0,
-          timeCount: 0,
-        });
-      }
+      if (productIds.length === 0) continue;
 
-      const stats = products.get(productId)!;
+      for (const productId of productIds) {
+        if (!products.has(productId)) {
+          products.set(productId, {
+            views: 0,
+            carts: 0,
+            purchases: 0,
+            totalTime: 0,
+            timeCount: 0,
+          });
+        }
 
-      switch (event.event_type) {
-        case "product_view":
-          stats.views++;
-          break;
-        case "add_to_cart":
-          stats.carts++;
-          break;
-        case "purchase_completed":
-          stats.purchases++;
-          break;
-        case "product_time_spent":
-          stats.totalTime += Number(event.metadata?.seconds || 0);
-          stats.timeCount++;
-          break;
+        const stats = products.get(productId)!;
+
+        switch (event.event_type) {
+          case "product_view":
+            stats.views++;
+            break;
+          case "add_to_cart":
+            stats.carts++;
+            break;
+          case "purchase_completed":
+            stats.purchases++;
+            break;
+          case "product_time_spent":
+            stats.totalTime += Number(event.metadata?.seconds || 0);
+            stats.timeCount++;
+            break;
+        }
       }
     }
 
@@ -69,6 +204,14 @@ export async function GET() {
         stats.purchases * 0.4 +
         avgTime * 0.2;
 
+      const productRevenue = Number(context.productRevenue.get(productId) || 0);
+      const productDiscount = Number(context.productDiscount.get(productId) || 0);
+      const promoFlag = context.productPromoFlag.get(productId) === 1 ? 1 : 0;
+      const discountPercent = productRevenue > 0 ? (productDiscount / productRevenue) * 100 : 0;
+      const adSpend = context.totalRevenue > 0 && context.projectAdSpend > 0
+        ? context.projectAdSpend * (productRevenue / context.totalRevenue)
+        : 0;
+
       const { error: upsertError } = await supabaseAdmin
         .from("product_daily_metrics")
         .upsert(
@@ -80,6 +223,9 @@ export async function GET() {
             purchases: stats.purchases,
             avg_time_spent: avgTime,
             trend_score: trendScore,
+            promo_flag: promoFlag,
+            discount_percent: discountPercent,
+            ad_spend: adSpend,
           },
           { onConflict: "metric_date, product_id" }
         );
@@ -89,6 +235,7 @@ export async function GET() {
           productId,
           today,
           stats,
+          context,
           error: upsertError,
         });
 
@@ -108,6 +255,11 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       products_processed: generated,
+      project_context: {
+        totalRevenue: context.totalRevenue,
+        projectDiscountPercent: context.projectDiscountPercent,
+        projectAdSpend: context.projectAdSpend,
+      },
     });
   } catch (error: any) {
     console.error("build-metrics failed", error);
