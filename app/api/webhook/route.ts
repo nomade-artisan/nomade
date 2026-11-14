@@ -184,11 +184,27 @@ export async function POST(req: NextRequest) {
     }
     // Line items
     const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
+    const isShippingLineItem = (item: (typeof lineItems.data)[number]) =>
+      item.description?.trim().toLocaleLowerCase("fr-FR") === "livraison";
+    const productLineItems = lineItems.data.filter((item) => !isShippingLineItem(item));
+    const shippingLineItems = lineItems.data.filter(isShippingLineItem);
     const generatedOrderNumber = "NOM-" + crypto.randomBytes(3).toString("hex").toUpperCase();
     const totalAmount = (session.amount_total || 0) / 100;
-    const shippingAmount = (session.total_details?.amount_shipping || session.shipping_cost?.amount_total || 0) / 100;
     const discountAmount = (session.total_details?.amount_discount || 0) / 100;
-    const subtotal = totalAmount - shippingAmount + discountAmount;
+    const metadataSubtotal = Number.parseFloat(session.metadata?.subtotal ?? "");
+    const metadataShipping = Number.parseFloat(session.metadata?.shipping ?? "");
+    const shippingLineItemAmount = shippingLineItems.reduce(
+      (sum, item) => sum + (item.amount_total || 0),
+      0
+    ) / 100;
+    const shippingAmount = Number.isFinite(metadataShipping)
+      ? metadataShipping
+      : shippingLineItems.length > 0
+        ? shippingLineItemAmount
+        : (session.total_details?.amount_shipping ?? session.shipping_cost?.amount_total ?? 0) / 100;
+    const subtotal = Number.isFinite(metadataSubtotal)
+      ? metadataSubtotal
+      : totalAmount - shippingAmount + discountAmount;
     const appliedPromoCode =
       typeof session.metadata?.promo_code === "string" && session.metadata.promo_code.trim()
         ? session.metadata.promo_code.trim().toUpperCase()
@@ -472,7 +488,7 @@ export async function POST(req: NextRequest) {
       resolvedSession.customer_details?.email ||
       "";
     if (customerEmail && order) {
-      const itemsForEmail = lineItems.data.map((item: any) => ({
+      const itemsForEmail = productLineItems.map((item: any) => ({
         name: item.description || "Produit",
         quantity: item.quantity || 1,
         price: (item.amount_total || 0) / 100 / (item.quantity || 1),
@@ -489,6 +505,7 @@ export async function POST(req: NextRequest) {
             items: itemsForEmail,
             subtotal: subtotal,
             shipping: shippingAmount,
+            discountAmount,
             total: totalAmount,
             invoicePdfUrl: invoiceUrl,
             idempotencyKey: `stripe:${event.id}:customer-confirmation`,
@@ -516,7 +533,7 @@ export async function POST(req: NextRequest) {
     );
 
     // --- Email admin ---
-    const itemsList = lineItems.data
+    const itemsList = productLineItems
       .map(
         (item: any) =>
           `<tr>
@@ -562,6 +579,12 @@ export async function POST(req: NextRequest) {
             </tr></thead>
             <tbody>${itemsList}</tbody>
           </table>
+          <p style="color:#57534e;font-size:13px;line-height:1.8;">
+            Sous-total : ${formatEuro(subtotal)}<br/>
+            ${discountAmount > 0 ? `Réduction : ${formatEuro(-discountAmount)}<br/>` : ""}
+            Livraison : ${formatEuro(shippingAmount)}<br/>
+            <strong>Total payé : ${formatEuro(totalAmount)}</strong>
+          </p>
           <p>📍 ${escapeHtml(shippingAddressText)}</p>
           <a href="${process.env.NEXT_PUBLIC_BASE_URL}/admin/orders/${order?.id}" style="display: inline-block; background: #1c1917; color: white; padding: 10px 20px; border-radius: 24px; text-decoration: none;">Voir dans l'admin</a>
         </div>`,

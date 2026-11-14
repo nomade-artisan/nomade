@@ -55,6 +55,7 @@ export async function POST(req: NextRequest) {
       items,
       subtotal: order.subtotal,
       shipping: order.shipping,
+      discountAmount: Number(order.discount_amount) || 0,
       total: order.total,
       invoicePdfUrl: order.invoice_pdf_url,
       idempotencyKey: `admin-resend-order-confirmed:${order.id}`,

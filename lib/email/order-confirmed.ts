@@ -11,6 +11,7 @@ export async function sendOrderConfirmedEmail({
   items,
   subtotal,
   shipping,
+  discountAmount = 0,
   total,
   invoicePdfUrl,
   idempotencyKey,
@@ -21,6 +22,7 @@ export async function sendOrderConfirmedEmail({
   items: { name: string; quantity: number; price: number }[];
   subtotal: number;
   shipping: number;
+  discountAmount?: number;
   total: number;
   invoicePdfUrl?: string | null;
   idempotencyKey?: string;
@@ -61,6 +63,9 @@ export async function sendOrderConfirmedEmail({
     details: [
       { label: "N° de commande", value: orderNumber },
       { label: "Sous-total", value: formatEuro(subtotal) },
+      ...(discountAmount > 0
+        ? [{ label: "Réduction", value: formatEuro(-discountAmount) }]
+        : []),
       { label: "Livraison", value: formatEuro(shipping) },
       { label: "Total payé", value: formatEuro(total) },
     ],
