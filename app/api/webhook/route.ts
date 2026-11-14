@@ -14,6 +14,7 @@ const redis = Redis.fromEnv();
 const resend = new Resend(process.env.RESEND_API_KEY);
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const NOREPLY_EMAIL = process.env.NOREPLY_EMAIL;
+type ResendEmailResult = Awaited<ReturnType<typeof resend.emails.send>>;
 
 function escapeHtml(value: unknown) {
   const entities: Record<string, string> = {
@@ -24,6 +25,33 @@ function escapeHtml(value: unknown) {
     "'": "&#39;",
   };
   return String(value ?? "").replace(/[&<>\"']/g, (character) => entities[character]);
+}
+
+async function sendEmailOrLog(
+  emailType: string,
+  eventId: string,
+  send: () => Promise<ResendEmailResult>
+): Promise<boolean> {
+  try {
+    const result = await send();
+    if (!result.error) return true;
+
+    console.error("Resend a refusé un email de commande", {
+      eventId,
+      emailType,
+      code: result.error.name,
+      statusCode: result.error.statusCode,
+      message: result.error.message,
+    });
+  } catch (error) {
+    console.error("Échec réseau lors de l'envoi d'un email de commande", {
+      eventId,
+      emailType,
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+
+  return false;
 }
 
 export async function POST(req: NextRequest) {
@@ -47,7 +75,19 @@ export async function POST(req: NextRequest) {
 
     // --- Idempotence ---
   const eventKey = `stripe:event:${event.id}`;
-  const claim = await redis.set(eventKey, "processing", { nx: true, ex: 300 });
+  let claim: string | null;
+  try {
+    claim = await redis.set(eventKey, "processing", { nx: true, ex: 300 });
+  } catch (error) {
+    console.error("Stockage d'idempotence Stripe indisponible", {
+      eventId: event.id,
+      message: error instanceof Error ? error.message : String(error),
+    });
+    return NextResponse.json(
+      { error: "Webhook temporairement indisponible" },
+      { status: 503 }
+    );
+  }
   if (!claim) {
     const currentState = await redis.get(eventKey);
     if (currentState === "processed") {
@@ -250,12 +290,14 @@ export async function POST(req: NextRequest) {
       }
 
       // Tracking
-      const { error: trackingError } = await supabaseAdmin.from("order_tracking").insert({
-        order_id: order.id,
-        status: "confirmed",
-        comment: "Paiement validé via Stripe",
-      });
-      if (trackingError) console.error("Tracking commande non enregistré:", trackingError);
+      if (isNewOrder) {
+        const { error: trackingError } = await supabaseAdmin.from("order_tracking").insert({
+          order_id: order.id,
+          status: "confirmed",
+          comment: "Paiement validé via Stripe",
+        });
+        if (trackingError) console.error("Tracking commande non enregistré:", trackingError);
+      }
 
       // Gestion client
       const customerEmail = session.customer_details?.email || session.customer?.email || "";
@@ -291,8 +333,8 @@ export async function POST(req: NextRequest) {
                     country: shippingAddress.country || "",
                   }
                 : existingCustomer.address,
-              total_orders: existingCustomer.total_orders + 1,
-              total_spent: existingCustomer.total_spent + totalAmount,
+              total_orders: existingCustomer.total_orders + (isNewOrder ? 1 : 0),
+              total_spent: existingCustomer.total_spent + (isNewOrder ? totalAmount : 0),
               updated_at: new Date().toISOString(),
             })
             .eq("id", existingCustomer.id);
@@ -422,7 +464,12 @@ export async function POST(req: NextRequest) {
     }
 
     // --- Email client ---
-    const customerEmail = session.customer_details?.email || "";
+    const customerEmail =
+      session.customer_details?.email ||
+      session.customer_email ||
+      session.customer?.email ||
+      resolvedSession.customer_details?.email ||
+      "";
     if (customerEmail && order) {
       const itemsForEmail = lineItems.data.map((item: any) => ({
         name: item.description || "Produit",
@@ -430,16 +477,31 @@ export async function POST(req: NextRequest) {
         price: (item.amount_total || 0) / 100 / (item.quantity || 1),
       }));
 
-      await sendOrderConfirmedEmail({
-        to: customerEmail,
-        customerName: customerName || "Client",
-        orderNumber,
-        items: itemsForEmail,
-        subtotal: subtotal,
-        shipping: shippingAmount,
-        total: totalAmount,
-        invoicePdfUrl: invoiceUrl,
-      });
+      const confirmationSent = await sendEmailOrLog(
+        "confirmation client",
+        event.id,
+        () =>
+          sendOrderConfirmedEmail({
+            to: customerEmail,
+            customerName: customerName || "Client",
+            orderNumber,
+            items: itemsForEmail,
+            subtotal: subtotal,
+            shipping: shippingAmount,
+            total: totalAmount,
+            invoicePdfUrl: invoiceUrl,
+            idempotencyKey: `stripe:${event.id}:customer-confirmation`,
+          })
+      );
+      if (!confirmationSent) {
+        await redis.del(eventKey);
+        return NextResponse.json(
+          { error: "Email de confirmation temporairement indisponible" },
+          { status: 503 }
+        );
+      }
+    } else if (!customerEmail) {
+      console.error("Email de commande non envoyé : adresse client absente", { eventId: event.id });
     }
 
     console.log("Metadata :", session.metadata);
@@ -468,11 +530,21 @@ export async function POST(req: NextRequest) {
       ? `${shippingAddress.line1 || ""}, ${shippingAddress.postal_code || ""} ${shippingAddress.city || ""}, ${shippingAddress.country || ""}`
       : "Adresse communiquée";
 
-    await resend.emails.send({
-      from: `Nomade <${NOREPLY_EMAIL}>`,
-      to: `${ADMIN_EMAIL}`,
-      subject: `Nouvelle commande ${orderNumber} — ${totalAmount.toFixed(2)} €`,
-      html: `
+    if (!ADMIN_EMAIL || !NOREPLY_EMAIL) {
+      console.error("Email de commande non envoyé : ADMIN_EMAIL ou NOREPLY_EMAIL absent", {
+        eventId: event.id,
+      });
+      await redis.del(eventKey);
+      return NextResponse.json({ error: "Configuration email incomplète" }, { status: 503 });
+    }
+
+    const adminEmailSent = await sendEmailOrLog("notification admin", event.id, () =>
+      resend.emails.send(
+        {
+          from: `Nomade <${NOREPLY_EMAIL}>`,
+          to: ADMIN_EMAIL,
+          subject: `Nouvelle commande ${orderNumber} — ${totalAmount.toFixed(2)} €`,
+          html: `
         <div style="font-family: Inter, system-ui, sans-serif; max-width: 520px; margin: auto; padding: 30px; background: #fafaf9; border-radius: 12px;">
           <h2 style="font-weight: 400; color: #1c1917;">Nouvelle commande</h2>
           <div style="background: #1c1917; color: white; padding: 12px 16px; border-radius: 8px;">
@@ -484,7 +556,17 @@ export async function POST(req: NextRequest) {
           <p>📍 ${escapeHtml(shippingAddressText)}</p>
           <a href="${process.env.NEXT_PUBLIC_BASE_URL}/admin/orders/${order?.id}" style="display: inline-block; background: #1c1917; color: white; padding: 10px 20px; border-radius: 24px; text-decoration: none;">Voir dans l'admin</a>
         </div>`,
-    });
+        },
+        { idempotencyKey: `stripe:${event.id}:admin-notification` }
+      )
+    );
+    if (!adminEmailSent) {
+      await redis.del(eventKey);
+      return NextResponse.json(
+        { error: "Email de notification temporairement indisponible" },
+        { status: 503 }
+      );
+    }
   }
 
   // --- Marquer l'événement comme traité ---

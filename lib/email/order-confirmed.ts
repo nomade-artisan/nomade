@@ -13,6 +13,7 @@ export async function sendOrderConfirmedEmail({
   shipping,
   total,
   invoicePdfUrl,
+  idempotencyKey,
 }: {
   to: string;
   customerName: string;
@@ -22,6 +23,7 @@ export async function sendOrderConfirmedEmail({
   shipping: number;
   total: number;
   invoicePdfUrl?: string | null;
+  idempotencyKey?: string;
 }) {
   const html = renderEmailTemplate({
     title: "Confirmation de commande",
@@ -62,11 +64,14 @@ export async function sendOrderConfirmedEmail({
       '<p style="margin:0;font-size:13px;line-height:1.7;color:#374151;">Prochaine etape: vous recevrez un email des que la commande passe en preparation puis lors de l\'expedition.</p>',
   });
 
-  return resend.emails.send({
-    from: `Nomade <${NOREPLY_EMAIL}>`,
-    to,
-    subject: `Commande ${orderNumber} confirmée`,
-    html,
-    text: renderEmailText(html),
-  });
+  return resend.emails.send(
+    {
+      from: `Nomade <${NOREPLY_EMAIL}>`,
+      to,
+      subject: `Commande ${orderNumber} confirmée`,
+      html,
+      text: renderEmailText(html),
+    },
+    idempotencyKey ? { idempotencyKey } : undefined
+  );
 }
