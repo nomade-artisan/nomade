@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { requireAdminAuthorization } from "@/lib/security/admin-auth";
+import { enforceRateLimit } from "@/lib/security/rate-limit";
 
 const MAX_SIZE = 20 * 1024 * 1024; // 20 Mo
 
 export async function POST(req: NextRequest) {
+  const rateLimitError = await enforceRateLimit(req, "admin-upload-video", {
+    windowMs: 60_000,
+    maxRequests: 5,
+  });
+  if (rateLimitError) return rateLimitError;
+  const authError = requireAdminAuthorization(req);
+  if (authError) return authError;
+
   try {
     const formData = await req.formData();
 
@@ -17,7 +27,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!file.type.startsWith("video/")) {
+    if (!["video/mp4", "video/webm"].includes(file.type)) {
       return NextResponse.json(
         { error: "Le fichier doit être une vidéo." },
         { status: 400 }

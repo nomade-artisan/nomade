@@ -41,9 +41,25 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const refund = await stripe.refunds.create({
-      payment_intent: paymentIntentId,
-    });
+    let refundId = order.stripe_refund_id as string | null;
+    if (!refundId) {
+      const refund = await stripe.refunds.create(
+        { payment_intent: paymentIntentId },
+        { idempotencyKey: `nomade-refund-${order.id}` }
+      );
+      refundId = refund.id;
+
+      const { error: updateError } = await supabaseAdmin
+        .from("orders")
+        .update({
+          stripe_refund_id: refundId,
+          refunded_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", order.id);
+
+      if (updateError) throw updateError;
+    }
 
     const shippingAddress = order.shipping_address || {};
     const customerEmail =
@@ -64,7 +80,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({ success: true, refundId: refund.id });
+    return NextResponse.json({ success: true, refundId });
 
   } catch (error: unknown) {
     console.error("Erreur refund:", error);

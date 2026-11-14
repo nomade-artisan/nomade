@@ -1,11 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validatePromoCode } from "@/lib/promotions";
+import { enforceRateLimit } from "@/lib/security/rate-limit";
 
 export async function POST(req: NextRequest) {
   try {
-    const { promoCode, subtotal } = await req.json();
+    const rateLimitError = await enforceRateLimit(req, "promo-validate", {
+      windowMs: 60_000,
+      maxRequests: 20,
+    });
+    if (rateLimitError) return rateLimitError;
 
-    if (!promoCode || typeof promoCode !== "string") {
+    const contentLength = Number(req.headers.get("content-length") || 0);
+    if (contentLength > 8192) {
+      return NextResponse.json({ error: "RequÃªte trop volumineuse." }, { status: 413 });
+    }
+    const rawBody = await req.text();
+    if (rawBody.length > 8192) {
+      return NextResponse.json({ error: "RequÃªte trop volumineuse." }, { status: 413 });
+    }
+    const { promoCode, subtotal } = JSON.parse(rawBody);
+
+    if (!promoCode || typeof promoCode !== "string" || promoCode.trim().length > 100) {
       return NextResponse.json(
         { valid: false, error: "Code promo manquant." },
         { status: 400 }
@@ -13,7 +28,7 @@ export async function POST(req: NextRequest) {
     }
 
     const numericSubtotal = Number(subtotal);
-    if (!Number.isFinite(numericSubtotal) || numericSubtotal < 0) {
+    if (!Number.isFinite(numericSubtotal) || numericSubtotal < 0 || numericSubtotal > 1_000_000) {
       return NextResponse.json(
         { valid: false, error: "Sous-total invalide." },
         { status: 400 }

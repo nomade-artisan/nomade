@@ -40,7 +40,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 Set these variables in your deployment platform before going live:
 
 - `ADMIN_PASSWORD`: Required for admin login.
-- `ADMIN_SESSION_SECRET`: Recommended. Session cookie secret for admin authentication.
+- `ADMIN_SESSION_SECRET`: Strongly recommended in production. Use a unique random value (for example, `openssl rand -base64 32`); the app falls back to `ADMIN_PASSWORD` if it is absent.
 - `ADMIN_CANCEL_PASSWORD`: Required to confirm cancellation actions.
 - `ENABLE_TEST_EMAIL_ENDPOINT`: Keep unset or set to `false` in production.
 - `ENABLE_BOXTAL_TEST_ENDPOINT`: Keep unset or set to `false` in production.

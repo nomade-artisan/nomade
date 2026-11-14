@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAdminSessionValid } from "@/lib/security/admin-session";
+import { getAdminSessionSecret, isAdminSessionValid } from "@/lib/security/admin-session";
 
 export function isAdminAuthorized(request: NextRequest): boolean {
   return isAdminSessionValid(request);
@@ -8,7 +8,7 @@ export function isAdminAuthorized(request: NextRequest): boolean {
 export function requireAdminAuthorization(
   request: NextRequest
 ): NextResponse | null {
-  if (!process.env.ADMIN_PASSWORD) {
+  if (!getAdminSessionSecret()) {
     return NextResponse.json(
       { error: "ADMIN_PASSWORD non configuré" },
       { status: 503 }

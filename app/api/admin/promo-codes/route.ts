@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { requireAdminAuthorization } from "@/lib/security/admin-auth";
 
 type DiscountType = "fixed" | "percent";
 
@@ -20,7 +21,10 @@ function toNullableDate(value: unknown): string | null {
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const authError = requireAdminAuthorization(request);
+  if (authError) return authError;
+
   const { data, error } = await supabaseAdmin
     .from("promo_codes")
     .select("*")
@@ -34,6 +38,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const authError = requireAdminAuthorization(request);
+  if (authError) return authError;
+
   try {
     const body = await request.json();
 
@@ -113,6 +120,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  const authError = requireAdminAuthorization(request);
+  if (authError) return authError;
+
   try {
     const body = await request.json();
     const id = Number(body.id);
@@ -231,6 +241,9 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const authError = requireAdminAuthorization(request);
+  if (authError) return authError;
+
   try {
     const { searchParams } = new URL(request.url);
     const id = Number(searchParams.get("id"));

@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase/client";
+import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { requireAdminAuthorization } from "@/lib/security/admin-auth";
+import { enforceRateLimit } from "@/lib/security/rate-limit";
 
 function normalizeProductIds(rawValue: string | number | null | undefined): string[] {
   if (rawValue == null || rawValue === "") return [];
@@ -107,7 +108,16 @@ async function getProjectDailyContext(date: string) {
   };
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  const rateLimitError = await enforceRateLimit(request, "build-metrics", {
+    windowMs: 60_000,
+    maxRequests: 5,
+  });
+  if (rateLimitError) return rateLimitError;
+
+  const authError = requireAdminAuthorization(request);
+  if (authError) return authError;
+
   try {
     const today = new Date().toISOString().split("T")[0];
     const url = new URL(request.url);
@@ -130,7 +140,7 @@ export async function GET(request: Request) {
 
     const effectiveSinceDate = overrideSinceDate || sinceDateIso;
 
-    let eventsQuery = supabase
+    let eventsQuery = supabaseAdmin
       .from("analytics_events")
       .select("*");
 

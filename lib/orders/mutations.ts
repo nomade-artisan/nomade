@@ -1,4 +1,5 @@
-import { supabase } from "@/lib/supabase/client";
+import "server-only";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { OrderStatus } from "./types";
 
 export async function updateOrderStatus(
@@ -7,7 +8,7 @@ export async function updateOrderStatus(
   comment?: string
 ): Promise<void> {
   // Mettre à jour la commande
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from("orders")
     .update({ status, updated_at: new Date().toISOString() })
     .eq("id", orderId);
@@ -15,7 +16,7 @@ export async function updateOrderStatus(
   if (error) throw new Error(`Erreur mise à jour: ${error.message}`);
 
   // Ajouter dans l'historique
-  const { error: trackError } = await supabase
+  const { error: trackError } = await supabaseAdmin
     .from("order_tracking")
     .insert({
       order_id: orderId,
@@ -27,7 +28,7 @@ export async function updateOrderStatus(
 }
 
 export async function deleteOrder(orderId: string): Promise<void> {
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from("orders")
     .delete()
     .eq("id", orderId);

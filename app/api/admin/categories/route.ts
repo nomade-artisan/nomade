@@ -2,13 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCategories } from "@/lib/categories/queries";
 import { createCategory, updateCategory, deleteCategory } from "@/lib/categories/mutations";
 import { revalidatePath } from "next/cache";
+import { requireAdminAuthorization } from "@/lib/security/admin-auth";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const authError = requireAdminAuthorization(request);
+  if (authError) return authError;
+
   const categories = await getCategories();
   return NextResponse.json(categories);
 }
 
 export async function POST(request: NextRequest) {
+  const authError = requireAdminAuthorization(request);
+  if (authError) return authError;
+
   try {
     const body = await request.json();
     const category = await createCategory(body);
@@ -20,6 +27,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  const authError = requireAdminAuthorization(request);
+  if (authError) return authError;
+
   try {
     const body = await request.json();
     const { id, ...data } = body;
@@ -32,6 +42,9 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const authError = requireAdminAuthorization(request);
+  if (authError) return authError;
+
   try {
     const { searchParams } = new URL(request.url);
     const id = Number(searchParams.get("id"));

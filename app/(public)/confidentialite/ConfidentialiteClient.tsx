@@ -210,8 +210,7 @@ function ConfidentialiteClient() {
                 </p>
 
                 <p className="text-stone-500 font-light leading-relaxed">
-                  Certaines données anonymisées
-                  permettent d’améliorer l’expérience du site.
+                  Les statistiques de navigation sont pseudonymisees et collectees uniquement apres consentement.
                 </p>
 
               </div>
@@ -245,7 +244,7 @@ function ConfidentialiteClient() {
               />
 
               <MiniCard
-                title="Colissimo / Mondial Relay"
+                title="Boxtal"
                 text="Livraison des commandes"
               />
 
@@ -259,6 +258,20 @@ function ConfidentialiteClient() {
                 text="Base de données"
               />
 
+              <MiniCard
+                title="Brevo"
+                text="Gestion des abonnements à la newsletter"
+              />
+
+              <MiniCard
+                title="Vercel Analytics"
+                text="Mesure d’audience et performance du site"
+              />
+
+              <MiniCard
+                title="Upstash"
+                text="Limitation du nombre de requêtes"
+              />
             </div>
 
           </Section>
@@ -304,8 +317,7 @@ function ConfidentialiteClient() {
           >
 
             <p>
-              Le site utilise uniquement des cookies nécessaires
-              à son bon fonctionnement.
+              Le site utilise uniquement les cookies necessaires a son fonctionnement. Les outils de mesure d'audience ne s'activent qu'apres votre consentement.
             </p>
 
             <div className="space-y-4 mt-6">

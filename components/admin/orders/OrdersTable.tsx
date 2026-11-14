@@ -89,6 +89,11 @@ export default function OrdersTable({ orders }: Props) {
                 <tr key={order.id} className="border-b hover:bg-muted/50 transition-colors">
                   <td className="p-4 font-mono text-sm">
                     #{order.order_number || order.id.substring(0, 8)}
+                    {order.refunded_at && (
+                      <span className="ml-2 rounded-full bg-rose-100 px-2 py-1 font-sans text-[10px] text-rose-800">
+                        Remboursée
+                      </span>
+                    )}
                     </td>
                   <td className="p-4 text-sm">{order.customer_name}</td>
                   <td className="p-4 text-sm">{order.items_count}</td>

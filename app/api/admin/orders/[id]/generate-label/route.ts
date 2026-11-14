@@ -1,8 +1,9 @@
 // app/api/admin/orders/[id]/generate-label/route.ts
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { BOXTAL } from "@/lib/boxtal/constants";
 import { Boxtal } from "@/lib/boxtal";
+import { requireAdminAuthorization } from "@/lib/security/admin-auth";
 
 function normalizeShippingAddress(value: any) {
   const address = value || {};
@@ -36,9 +37,12 @@ function mapBoxtalValidation(details: any): string[] {
 }
 
 export async function POST(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authError = requireAdminAuthorization(request);
+  if (authError) return authError;
+
   const { id } = await params;
 
   // 1. Récupérer la commande

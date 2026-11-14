@@ -1,4 +1,6 @@
-import { supabase } from "@/lib/supabase/client";import { supabaseAdmin } from "@/lib/supabase/admin";import type {
+import "server-only";
+import { supabaseAdmin } from "@/lib/supabase/admin";
+import type {
   OrderWithRelations,
   OrderListItem,
   OrderTracking,
@@ -14,7 +16,7 @@ export async function getOrdersList(
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
-  let query = supabase
+  let query = supabaseAdmin
     .from("orders")
     .select(
       `
@@ -24,6 +26,7 @@ export async function getOrdersList(
       total,
       discount_amount,
       promo_code,
+      refunded_at,
       order_number,
       created_at,
       customer:customers(id, first_name, last_name),
@@ -64,6 +67,7 @@ export async function getOrdersList(
     total: order.total,
     discount_amount: order.discount_amount ?? 0,
     promo_code: order.promo_code ?? null,
+    refunded_at: order.refunded_at ?? null,
     items_count: order.items?.[0]?.count || 0,
     created_at: order.created_at,
   }));

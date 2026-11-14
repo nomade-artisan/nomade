@@ -110,7 +110,7 @@ function CartClient() {
   );
   const SHIPPING_COST = parseEnvNumber(
     process.env.NEXT_PUBLIC_SHIPPING_COST,
-    7
+    8.11
   );
   const hasFreeShipping = subtotal >= FREE_SHIPPING_THRESHOLD;
   const shipping = hasFreeShipping ? 0 : SHIPPING_COST;
