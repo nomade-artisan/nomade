@@ -1,8 +1,8 @@
 import { Resend } from "resend";
+import { EMAIL_FROM, EMAIL_REPLY_TO } from "./config";
 import { escapeHtml, formatEuro, renderEmailTemplate, renderEmailText } from "./template";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const NOREPLY_EMAIL = process.env.NOREPLY_EMAIL!;
 
 export async function sendOrderConfirmedEmail({
   to,
@@ -25,50 +25,61 @@ export async function sendOrderConfirmedEmail({
   invoicePdfUrl?: string | null;
   idempotencyKey?: string;
 }) {
+  const itemRows = items
+    .map(
+      (item) => `
+        <tr>
+          <td style="padding:12px 8px 12px 0;border-top:1px solid #eeeae6;color:#292524;font-size:14px;line-height:1.5;">${escapeHtml(item.name)}</td>
+          <td align="center" style="padding:12px 8px;border-top:1px solid #eeeae6;color:#57534e;font-size:14px;white-space:nowrap;">${item.quantity}</td>
+          <td align="right" style="padding:12px 0 12px 8px;border-top:1px solid #eeeae6;color:#292524;font-size:14px;font-weight:600;white-space:nowrap;">${formatEuro(item.price * item.quantity)}</td>
+        </tr>
+      `
+    )
+    .join("");
+
   const html = renderEmailTemplate({
-    title: "Confirmation de commande",
-    preheader: `Votre commande ${orderNumber} est confirmee`,
+    title: "Votre commande est confirmée",
+    preheader: `Paiement reçu : retrouvez le récapitulatif de la commande ${orderNumber}.`,
     customerName,
     intro:
-      "Merci pour votre commande. Nous avons bien recu votre paiement et votre commande est maintenant confirmee.",
+      "Merci d’avoir choisi Nomade. Votre paiement a bien été reçu et votre commande est confirmée. Notre équipe prend le relais ; nous vous informerons par email de chaque étape importante.",
+    mainHtml: `
+      <div style="margin:22px 0 8px;">
+        <h2 style="margin:0 0 8px;color:#292524;font-size:17px;line-height:1.4;">Les articles de votre commande</h2>
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col" align="left" style="padding:8px 8px 8px 0;color:#78716c;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Article</th>
+              <th scope="col" align="center" style="padding:8px;color:#78716c;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Qté</th>
+              <th scope="col" align="right" style="padding:8px 0 8px 8px;color:#78716c;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Montant</th>
+            </tr>
+          </thead>
+          <tbody>${itemRows}</tbody>
+        </table>
+      </div>
+    `,
     details: [
-      { label: "Commande", value: orderNumber },
+      { label: "N° de commande", value: orderNumber },
       { label: "Sous-total", value: formatEuro(subtotal) },
       { label: "Livraison", value: formatEuro(shipping) },
-      { label: "Total", value: formatEuro(total) },
+      { label: "Total payé", value: formatEuro(total) },
     ],
     cta: invoicePdfUrl
       ? {
-          label: "Telecharger ma facture",
+          label: "Télécharger votre facture",
           href: invoicePdfUrl,
         }
       : undefined,
-    mainHtml: `
-      <div style="border:1px solid #e5e7eb;border-radius:8px;padding:14px 16px;margin:0 0 18px;background:#ffffff;">
-        <p style="margin:0 0 10px;font-size:13px;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;">Articles commandes</p>
-        ${items
-          .map(
-            (item) => `
-              <div style="padding:8px 0;border-top:1px solid #f3f4f6;display:flex;justify-content:space-between;gap:10px;">
-                <span style="font-size:13px;color:#111827;">${escapeHtml(item.name)} x${item.quantity} _ </span>
-                <span style="font-size:13px;color:#111827;font-weight:600;"> ${ formatEuro(
-                  item.price * item.quantity
-                )}</span>
-              </div>
-            `
-          )
-          .join("")}
-      </div>
-    `,
     secondaryHtml:
-      '<p style="margin:0;font-size:13px;line-height:1.7;color:#374151;">Prochaine etape: vous recevrez un email des que la commande passe en preparation puis lors de l\'expedition.</p>',
+      '<p style="margin:18px 0 0;color:#57534e;font-size:14px;line-height:1.7;">Gardez cet email pour retrouver facilement les informations de votre commande. Vous recevrez un autre message lorsque sa préparation commencera, puis à son expédition.</p>',
   });
 
   return resend.emails.send(
     {
-      from: `Nomade <${NOREPLY_EMAIL}>`,
+      from: EMAIL_FROM,
+      replyTo: EMAIL_REPLY_TO,
       to,
-      subject: `Commande ${orderNumber} confirmée`,
+      subject: `Votre commande ${orderNumber} est confirmée`,
       html,
       text: renderEmailText(html),
     },

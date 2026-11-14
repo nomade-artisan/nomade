@@ -3,10 +3,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { enforceRateLimit } from "@/lib/security/rate-limit";
 import { Resend } from "resend";
+import { CONTACT_EMAIL, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/email/config";
+import { renderEmailTemplate, renderEmailText } from "@/lib/email/template";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const NOREPLY_EMAIL = process.env.NOREPLY_EMAIL!;
-const CONTACT_EMAIL = process.env.CONTACT_EMAIL?.split(",").map((e) => e.trim()) || [];
 
 function escapeHtml(value: string) {
   const entities: Record<string, string> = {
@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
   // --- 4. Envoi de l'email (notification admin) ---
   try {
     await resend.emails.send({
-      from: `Nomade <${NOREPLY_EMAIL}>`,
+      from: EMAIL_FROM,
       to: CONTACT_EMAIL,
       replyTo: email,
       subject: `Message de ${name.replace(/[\r\n]/g, " ").slice(0, 100)}`,
@@ -124,23 +124,23 @@ export async function POST(req: NextRequest) {
 
   // --- 5. Accusé de réception (email au client) ---
   try {
+    const acknowledgementHtml = renderEmailTemplate({
+      title: "Nous avons bien reçu votre message",
+      preheader: "Merci d’avoir pris le temps de nous écrire.",
+      customerName: name,
+      intro:
+        "Votre message est bien arrivé. Notre équipe en prendra connaissance et vous répondra à l’adresse que vous nous avez indiquée.",
+      secondaryHtml:
+        '<p style="margin:0;color:#57534e;font-size:14px;line-height:1.7;">En attendant, vous pouvez découvrir les créations de la boutique. Pour toute précision, écrivez-nous à l’adresse indiquée ci-dessous.</p>',
+    });
+
     await resend.emails.send({
-      from: `Nomade <${NOREPLY_EMAIL}>`,
+      from: EMAIL_FROM,
+      replyTo: EMAIL_REPLY_TO,
       to: email,
-      subject: "Votre message a bien été reçu",
-      html: `
-        <div style="font-family: Inter, system-ui, sans-serif; max-width: 500px; margin: auto; padding: 30px; background: #fafaf9; border-radius: 12px;">
-          <h2 style="font-weight: 400; color: #1c1917; font-size: 20px; margin-bottom: 16px;">
-            Bonjour ${safeName},
-          </h2>
-          <p style="color: #44403c; font-size: 14px; line-height: 1.6;">
-            Nous avons bien reçu votre message. Notre équipe vous répondra dans les plus brefs délais.
-          </p>
-          <p style="color: #a8a29e; font-size: 12px; margin-top: 24px; text-align: center;">
-            Nomade — L'essentiel est à l'intérieur
-          </p>
-        </div>
-      `,
+      subject: "Nous avons bien reçu votre message",
+      html: acknowledgementHtml,
+      text: renderEmailText(acknowledgementHtml),
     });
   } catch (emailError) {
     console.error("❌ Erreur envoi accusé de réception:", emailError);

@@ -1,8 +1,8 @@
 import { Resend } from "resend";
+import { EMAIL_FROM, EMAIL_REPLY_TO } from "./config";
 import { renderEmailTemplate, renderEmailText } from "./template";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const NOREPLY_EMAIL = process.env.NOREPLY_EMAIL!;
 
 export async function sendOrderInTransitEmail({
   to,
@@ -15,28 +15,33 @@ export async function sendOrderInTransitEmail({
   orderNumber: string;
   trackingUrl: string;
 }) {
+  const hasTrackingUrl = Boolean(trackingUrl && trackingUrl.trim());
   const html = renderEmailTemplate({
-    title: "Votre colis est en transit",
-    preheader: `Suivi en cours pour la commande ${orderNumber}`,
+    title: "Votre colis poursuit son acheminement",
+    preheader: `Suivez l’avancement de la commande ${orderNumber}.`,
     customerName,
     intro:
-      "Bonne nouvelle, votre colis est maintenant en cours d'acheminement. Vous pouvez consulter son avancee en temps reel.",
+      "Votre colis est en route et poursuit son acheminement. Nous vous tiendrons informé de sa livraison.",
     details: [
-      { label: "Commande", value: orderNumber },
-      { label: "Etat", value: "En transit" },
+      { label: "N° de commande", value: orderNumber },
+      { label: "État", value: "En cours d’acheminement" },
     ],
-    cta: {
-      label: "Suivre mon colis",
-      href: trackingUrl,
-    },
-    secondaryHtml:
-      '<p style="margin:0;font-size:13px;line-height:1.7;color:#6b7280;">Les delais peuvent varier selon les zones de distribution et les jours feries.</p>',
+    cta: hasTrackingUrl
+      ? {
+          label: "Suivre mon colis",
+          href: trackingUrl,
+        }
+      : undefined,
+    secondaryHtml: hasTrackingUrl
+      ? '<p style="margin:0;color:#57534e;font-size:14px;line-height:1.7;">Les délais peuvent varier selon la destination et les jours fériés. Votre colis continue son parcours.</p>'
+      : '<p style="margin:0;color:#57534e;font-size:14px;line-height:1.7;">Le suivi en ligne n’est pas encore disponible. Votre colis poursuit son acheminement ; vous recevrez un nouveau message à la prochaine étape.</p>',
   });
 
   return resend.emails.send({
-    from: `Nomade <${NOREPLY_EMAIL}>`,
+    from: EMAIL_FROM,
+    replyTo: EMAIL_REPLY_TO,
     to,
-    subject: `Votre commande ${orderNumber} est en cours d'acheminement`,
+    subject: `Votre commande ${orderNumber} est en cours d’acheminement`,
     html,
     text: renderEmailText(html),
   });

@@ -5,6 +5,8 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { Resend } from "resend";
 import { sendOrderConfirmedEmail } from "@/lib/email/order-confirmed";
 import { sendOrderRefundedEmail } from "@/lib/email/order-refunded";
+import { EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/email/config";
+import { formatEuro } from "@/lib/email/template";
 import Stripe from "stripe";
 import crypto from "crypto";
 import { revalidatePath } from "next/cache";
@@ -13,7 +15,6 @@ import { Redis } from "@upstash/redis";
 const redis = Redis.fromEnv();
 const resend = new Resend(process.env.RESEND_API_KEY);
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
-const NOREPLY_EMAIL = process.env.NOREPLY_EMAIL;
 type ResendEmailResult = Awaited<ReturnType<typeof resend.emails.send>>;
 
 function escapeHtml(value: unknown) {
@@ -521,7 +522,7 @@ export async function POST(req: NextRequest) {
           `<tr>
             <td style="padding: 8px 0; color: #44403c; font-size: 14px;">${escapeHtml(item.description)}</td>
             <td style="padding: 8px 0; color: #78716c; font-size: 14px; text-align: center;">x${item.quantity}</td>
-            <td style="padding: 8px 0; color: #44403c; font-size: 14px; text-align: right;">${(item.amount_total / 100).toFixed(2)} €</td>
+            <td style="padding: 8px 0; color: #44403c; font-size: 14px; text-align: right;">${formatEuro(item.amount_total / 100)}</td>
           </tr>`
       )
       .join("");
@@ -530,8 +531,8 @@ export async function POST(req: NextRequest) {
       ? `${shippingAddress.line1 || ""}, ${shippingAddress.postal_code || ""} ${shippingAddress.city || ""}, ${shippingAddress.country || ""}`
       : "Adresse communiquée";
 
-    if (!ADMIN_EMAIL || !NOREPLY_EMAIL) {
-      console.error("Email de commande non envoyé : ADMIN_EMAIL ou NOREPLY_EMAIL absent", {
+    if (!ADMIN_EMAIL) {
+      console.error("Email de commande non envoyé : ADMIN_EMAIL absent", {
         eventId: event.id,
       });
       await redis.del(eventKey);
@@ -541,18 +542,26 @@ export async function POST(req: NextRequest) {
     const adminEmailSent = await sendEmailOrLog("notification admin", event.id, () =>
       resend.emails.send(
         {
-          from: `Nomade <${NOREPLY_EMAIL}>`,
+          from: EMAIL_FROM,
+          replyTo: EMAIL_REPLY_TO,
           to: ADMIN_EMAIL,
-          subject: `Nouvelle commande ${orderNumber} — ${totalAmount.toFixed(2)} €`,
+          subject: `Nouvelle commande ${orderNumber} — ${formatEuro(totalAmount)}`,
           html: `
         <div style="font-family: Inter, system-ui, sans-serif; max-width: 520px; margin: auto; padding: 30px; background: #fafaf9; border-radius: 12px;">
-          <h2 style="font-weight: 400; color: #1c1917;">Nouvelle commande</h2>
+          <h1 style="font-weight: 500; color: #1c1917; font-size: 22px;">Nouvelle commande</h1>
           <div style="background: #1c1917; color: white; padding: 12px 16px; border-radius: 8px;">
-            <p style="font-size: 18px;">${totalAmount.toFixed(2)} €</p>
+            <p style="font-size: 18px;">${formatEuro(totalAmount)}</p>
             <p style="font-size: 13px; opacity: 0.7;">${orderNumber}</p>
           </div>
           <p><strong>${escapeHtml(customerName)}</strong><br/>${escapeHtml(customerEmail)}</p>
-          <table style="width:100%;">${itemsList}</table>
+          <table style="width:100%;border-collapse:collapse;">
+            <thead><tr>
+              <th scope="col" align="left" style="padding:8px 0;color:#78716c;font-size:12px;">Article</th>
+              <th scope="col" align="center" style="padding:8px 0;color:#78716c;font-size:12px;">Qté</th>
+              <th scope="col" align="right" style="padding:8px 0;color:#78716c;font-size:12px;">Montant</th>
+            </tr></thead>
+            <tbody>${itemsList}</tbody>
+          </table>
           <p>📍 ${escapeHtml(shippingAddressText)}</p>
           <a href="${process.env.NEXT_PUBLIC_BASE_URL}/admin/orders/${order?.id}" style="display: inline-block; background: #1c1917; color: white; padding: 10px 20px; border-radius: 24px; text-decoration: none;">Voir dans l'admin</a>
         </div>`,
