@@ -6,121 +6,26 @@ import {
   motion,
   AnimatePresence,
 } from "framer-motion";
+import {
+  CreditCard,
+  MessageCircle,
+  Package,
+  RotateCcw,
+  ShoppingBag,
+  Truck,
+} from "lucide-react";
 
 import Link from "next/link";
 const contactEmail = 'contact@nomade-artisan.fr';
 
-const categories = [
-  {
-    title: "Les sacs",
-    image:
-      "https://images.unsplash.com/photo-1584917865442-de89df76afd3",
-    questions: [
-      {
-        question:
-          "D'où viennent les sacs SCOLTA ?",
-        answer:
-          "Chaque sac SCOLTA est fabrique a la main dans l'atelier Nomade. Nous travaillons des cuirs pleine fleur et des toiles resistantes, choisis pour leur qualite et leur durabilite.",
-      },
-      {
-        question:
-          "Quels matériaux utilisez-vous ?",
-        answer:
-          "Du cuir pleine fleur tanné végétal, de la toile épaisse et des matières pensées pour durer.",
-      },
-      {
-        question:
-          "Comment entretenir mon sac ?",
-        answer:
-          "Un chiffon doux suffit pour le cuir. Avec le temps, les matières se patinent naturellement.",
-      },
-      {
-        question:
-          "Les couleurs sont-elles fidèles ?",
-        answer:
-          "Chaque écran est différent. Le cuir étant vivant, certaines nuances peuvent légèrement varier.",
-      },
-    ],
-  },
+function parseShippingSetting(value: string | undefined, fallback: number) {
+  const parsed = Number.parseFloat(value ?? "");
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+}
 
-  {
-    title: "Commande",
-    image:
-      "https://images.unsplash.com/photo-1559526324-4b87b5ae7252",
-    questions: [
-      {
-        question:
-          "Comment passer commande ?",
-        answer:
-          "Ajoutez vos pièces au panier puis suivez les étapes de paiement.",
-      },
-      {
-        question:
-          "Quels moyens de paiement acceptez-vous ?",
-        answer:
-          "Visa, Mastercard, Apple Pay et Google Pay via Stripe.",
-      },
-      {
-        question:
-          "Puis-je modifier ma commande ?",
-        answer:
-          "Oui, dans l'heure suivant votre commande selon l'état de préparation.",
-      },
-    ],
-  },
-
-  {
-    title: "Livraison",
-    image:
-      "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d",
-    questions: [
-      {
-        question:
-          "Quels sont les délais ?",
-        answer:
-          "Préparation sous 24-48h. Livraison standard : 3 à 5 jours.",
-      },
-      {
-        question:
-          "La livraison est-elle offerte ?",
-        answer:
-          "Oui, dès 120€ dans les zones desservies.",
-      },
-      {
-        question:
-          "Livrez-vous à l'international ?",
-        answer:
-          "Oui, selon les destinations disponibles au moment de la commande.",
-      },
-    ],
-  },
-
-  {
-    title: "Retours",
-    image:
-      "https://images.unsplash.com/photo-1563013544-824ae1b704d3",
-    questions: [
-      {
-        question:
-          "Puis-je retourner mon sac ?",
-        answer:
-          "Oui, sous 15 jours si le produit est inutilisé.",
-      },
-      {
-        question:
-          "Quand serai-je remboursé ?",
-        answer:
-          "Sous 5 à 7 jours après réception du retour.",
-      },
-      {
-        question:
-          "Et si mon sac est défectueux ?",
-        answer:
-          "Nous prenons tout en charge : retour, échange ou réparation.",
-      },
-    ],
-  },
-];
+function formatEuro(value: number, maximumFractionDigits = 2) {
+  return `${value.toLocaleString("fr-FR", { maximumFractionDigits })} €`;
+}
 
 function FaqClient() {
   const [openCategory, setOpenCategory] =
@@ -138,6 +43,110 @@ function FaqClient() {
         : question
     );
   };
+
+  const shippingCost = parseShippingSetting(
+    process.env.NEXT_PUBLIC_SHIPPING_COST,
+    8.11
+  );
+  const freeShippingThreshold = parseShippingSetting(
+    process.env.NEXT_PUBLIC_FREE_SHIPPING_THRESHOLD,
+    120
+  );
+
+  const categories = [
+    {
+      title: "Les sacs",
+      icon: ShoppingBag,
+      questions: [
+        {
+          question: "Où sont conçus les sacs SCOLTA ?",
+          answer:
+            "Les sacs SCOLTA sont conçus par Nomade à Alès. Les matières et les détails de fabrication peuvent varier selon le modèle : consultez sa fiche produit pour les informations précises.",
+        },
+        {
+          question: "Quels matériaux utilisez-vous ?",
+          answer:
+            "Les matières varient selon les modèles. La fiche de chaque sac précise sa composition et ses caractéristiques.",
+        },
+        {
+          question: "Comment entretenir mon sac ?",
+          answer:
+            "Les conseils dépendent des matières du modèle. Consultez sa fiche produit ou écrivez-nous si vous avez un doute avant de le nettoyer.",
+        },
+        {
+          question: "Les couleurs sont-elles fidèles ?",
+          answer:
+            "Le rendu peut varier d’un écran à l’autre. De légères différences de teinte peuvent aussi exister d’une pièce à l’autre.",
+        },
+      ],
+    },
+    {
+      title: "Commande",
+      icon: CreditCard,
+      questions: [
+        {
+          question: "Comment passer commande ?",
+          answer:
+            "Ajoutez vos articles au panier, renseignez vos coordonnées et votre adresse de livraison, puis finalisez le paiement. Un email confirme la commande.",
+        },
+        {
+          question: "Quels moyens de paiement acceptez-vous ?",
+          answer:
+            "Le paiement est sécurisé par Stripe. Les moyens disponibles s’affichent au moment du règlement.",
+        },
+        {
+          question: "Puis-je modifier ma commande ?",
+          answer:
+            "Écrivez-nous dès que possible après votre achat. Nous vérifierons si une modification est encore possible avant l’expédition.",
+        },
+      ],
+    },
+    {
+      title: "Livraison",
+      icon: Truck,
+      questions: [
+        {
+          question: "Quels sont les délais ?",
+          answer:
+            "La préparation prend 24 à 48 heures ouvrées. La livraison standard prend ensuite 3 à 5 jours ouvrés et comprend un suivi.",
+        },
+        {
+          question: "Combien coûte la livraison ?",
+          answer:
+            `La livraison standard coûte ${formatEuro(shippingCost)}. Elle est offerte dès ${formatEuro(freeShippingThreshold, 0)} d’achat dans les destinations desservies.`,
+        },
+        {
+          question: "Dans quels pays livrez-vous ?",
+          answer:
+            "Les commandes peuvent être livrées en France, en Belgique, au Luxembourg et en Suisse.",
+        },
+      ],
+    },
+    {
+      title: "Retours",
+      icon: RotateCcw,
+      questions: [
+        {
+          question: "Puis-je retourner mon sac ?",
+          answer:
+            "Oui, dans les 15 jours suivant sa réception. Pour organiser un retour gratuit, contactez-nous : nous vous indiquerons la marche à suivre et vous transmettrons une étiquette prépayée. Le produit doit être dans son état d’origine.",
+        },
+        {
+          question: "Quand serai-je remboursé ?",
+          answer:
+            "Le remboursement est effectué sous 5 à 7 jours ouvrés après réception et vérification du colis retourné.",
+        },
+        {
+          question: "Et si mon sac est défectueux ?",
+          answer:
+            "Écrivez-nous avec votre numéro de commande et une photo du problème. Nous étudierons votre demande et vous proposerons une solution adaptée.",
+        },
+      ],
+    },
+  ];
+
+  const activeCategory = openCategory === null ? null : categories[openCategory];
+  const ActiveCategoryIcon = activeCategory?.icon ?? Package;
 
   return (
     <div className="bg-stone-50 min-h-screen pt-[64px]">
@@ -190,62 +199,47 @@ function FaqClient() {
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
 
-          {categories.map(
-            (cat, index) => (
+          {categories.map((cat, index) => {
+            const CategoryIcon = cat.icon;
+            const isActive = openCategory === index;
 
+            return (
               <button
                 key={cat.title}
+                type="button"
+                aria-pressed={isActive}
                 onClick={() => {
-                  setOpenCategory(
-                    openCategory ===
-                      index
-                      ? null
-                      : index
-                  );
-
-                  setOpenQuestion(
-                    null
-                  );
+                  setOpenCategory(isActive ? null : index);
+                  setOpenQuestion(null);
                 }}
-                className="group relative overflow-hidden rounded-[28px] aspect-[4/5]"
+                className={`group flex min-h-44 flex-col justify-between rounded-[28px] border p-5 text-left transition-colors md:min-h-48 ${
+                  isActive
+                    ? "border-stone-400 bg-white"
+                    : "border-stone-200/60 bg-white/60 hover:bg-white"
+                }`}
               >
+                <span
+                  aria-hidden="true"
+                  className={`flex h-12 w-12 items-center justify-center rounded-2xl transition-colors ${
+                    isActive
+                      ? "bg-stone-900 text-white"
+                      : "bg-stone-100 text-stone-500 group-hover:bg-stone-200"
+                  }`}
+                >
+                  <CategoryIcon className="h-5 w-5" strokeWidth={1.5} />
+                </span>
 
-                <img
-                  src={cat.image}
-                  alt={cat.title}
-                  className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700"
-                />
-
-                <div
-                  className={`absolute inset-0 transition-colors duration-300
-                    ${
-                      openCategory ===
-                      index
-                        ? "bg-stone-900/60"
-                        : "bg-stone-900/30 group-hover:bg-stone-900/45"
-                    }`}
-                />
-
-                <div className="absolute bottom-0 left-0 right-0 p-5 text-left">
-
-                  <h3 className="text-white text-sm md:text-base font-light tracking-tight">
+                <span>
+                  <span className="block text-sm font-light tracking-tight text-stone-900 md:text-base">
                     {cat.title}
-                  </h3>
-
-                  <p className="text-white/60 text-[11px] uppercase tracking-[0.18em] mt-2 font-light">
-                    {
-                      cat.questions
-                        .length
-                    }{" "}
-                    questions
-                  </p>
-
-                </div>
-
+                  </span>
+                  <span className="mt-2 block text-[11px] font-light uppercase tracking-[0.18em] text-stone-400">
+                    {cat.questions.length} questions
+                  </span>
+                </span>
               </button>
-
-            )
-          )}
+            );
+          })}
 
         </div>
 
@@ -253,11 +247,10 @@ function FaqClient() {
 
         <AnimatePresence mode="wait">
 
-          {openCategory !==
-            null && (
+          {activeCategory && (
 
             <motion.div
-              key={openCategory}
+              key={activeCategory.title}
               initial={{
                 opacity: 0,
                 y: 8,
@@ -280,36 +273,19 @@ function FaqClient() {
 
               <div className="flex items-center gap-4 mb-6">
 
-                <div className="w-11 h-11 rounded-2xl overflow-hidden flex-shrink-0">
-
-                  <img
-                    src={
-                      categories[
-                        openCategory
-                      ].image
-                    }
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
-
+                <div aria-hidden="true" className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-stone-900 text-white">
+                  <ActiveCategoryIcon className="h-5 w-5" strokeWidth={1.5} />
                 </div>
 
                 <h2 className="text-xl font-light tracking-tight">
-                  {
-                    categories[
-                      openCategory
-                    ].title
-                  }
+                  {activeCategory.title}
                 </h2>
 
               </div>
 
               {/* ITEMS */}
 
-              {categories[
-                openCategory
-              ].questions.map(
-                (faq) => (
+              {activeCategory.questions.map((faq) => (
 
                   <div
                     key={
@@ -390,8 +366,7 @@ function FaqClient() {
 
                   </div>
 
-                )
-              )}
+              ))}
 
             </motion.div>
 
@@ -419,15 +394,15 @@ function FaqClient() {
           className="mt-16 md:mt-20 rounded-[36px] overflow-hidden relative"
         >
 
-          <img
-            src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1"
-            alt=""
-            className="w-full h-[320px] md:h-[360px] object-cover"
-          />
+          <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-br from-stone-700 via-stone-800 to-stone-950" />
+          <div aria-hidden="true" className="absolute -right-16 -top-24 h-80 w-80 rounded-full border border-white/10" />
+          <div aria-hidden="true" className="absolute -right-2 -top-10 h-52 w-52 rounded-full border border-white/10" />
 
-          <div className="absolute inset-0 bg-stone-900/55 flex items-center justify-center">
+          <div className="relative flex min-h-[320px] items-center justify-center md:min-h-[360px]">
 
             <div className="text-center px-6 max-w-2xl">
+
+              <MessageCircle aria-hidden="true" className="mx-auto mb-5 h-8 w-8 text-white/75" strokeWidth={1.25} />
 
               <h2 className="text-2xl md:text-4xl font-light text-white tracking-tight leading-tight mb-5">
                 Vous ne trouvez
