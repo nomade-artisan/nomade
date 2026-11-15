@@ -1,11 +1,12 @@
-import { supabase } from "@/lib/supabase/client";
+import "server-only";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { GlobalMetrics, ProductPrediction, SalesDataPoint } from "./types";
 
 export async function getGlobalMetrics(): Promise<GlobalMetrics> {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
   // CA et commandes
-  const { data: orders, error } = await supabase
+  const { data: orders, error } = await supabaseAdmin
     .from("orders")
     .select("total")
     .gte("created_at", thirtyDaysAgo)
@@ -17,7 +18,7 @@ export async function getGlobalMetrics(): Promise<GlobalMetrics> {
   const totalOrders = orders.length;
 
   // Visites (à adapter selon ton tracking)
-  const { count: visits } = await supabase
+  const { count: visits } = await supabaseAdmin
     .from("analytics_events")
     .select("*", { count: "exact", head: true })
     .eq("event_type", "page_view")
@@ -36,31 +37,15 @@ export async function getGlobalMetrics(): Promise<GlobalMetrics> {
 
 export async function getLatestPredictions(): Promise<ProductPrediction[]> {
   // Sous-requête pour obtenir la dernière date de prédiction par produit
-  const { data, error } = await supabase
-    .from("product_predictions")
-    .select(`
-      product_id,
-      predicted_sales_7d,
-      predicted_sales_14d,
-      predicted_sales_30d,
-      avg_daily_demand,
-      days_until_out_of_stock,
-      trend_score,
-      trend_direction,
-      alert_type,
-      products!inner(id, name, stock)
-    `)
-    .order("prediction_date", { ascending: false })
-    .limit(1, { foreignTable: "products" }); // à affiner, voir ci-dessous
-
-  // La requête ci-dessus n'est pas optimale. On utilise une approche plus robuste :
-  // 1. Récupérer les dernières prédictions via une sous-requête
-  const { data: latestPredictions, error: predError } = await supabase
+  const { data: latestPredictions, error: predError } = await supabaseAdmin
     .from("product_predictions")
     .select("product_id, prediction_date")
     .order("prediction_date", { ascending: false });
 
-  if (predError) throw predError;
+  if (predError) {
+    if (predError.code === "42P01" || predError.code === "PGRST205") return [];
+    throw predError;
+  }
 
   // Obtenir la date la plus récente par produit
   const latestDates = new Map<number, string>();
@@ -74,7 +59,7 @@ export async function getLatestPredictions(): Promise<ProductPrediction[]> {
   const productIds = Array.from(latestDates.keys());
   if (productIds.length === 0) return [];
 
-  const { data: predictions, error: predError2 } = await supabase
+  const { data: predictions, error: predError2 } = await supabaseAdmin
     .from("product_predictions")
     .select(`
       product_id,
@@ -91,7 +76,10 @@ export async function getLatestPredictions(): Promise<ProductPrediction[]> {
     .in("product_id", productIds)
     .in("prediction_date", Array.from(latestDates.values()));
 
-  if (predError2) throw predError2;
+  if (predError2) {
+    if (predError2.code === "42P01" || predError2.code === "PGRST205") return [];
+    throw predError2;
+  }
 
   return (predictions || []).map((p: any) => ({
     product_id: p.product_id,
@@ -111,7 +99,7 @@ export async function getLatestPredictions(): Promise<ProductPrediction[]> {
 export async function getDailySales(): Promise<SalesDataPoint[]> {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-  const { data: orders, error } = await supabase
+  const { data: orders, error } = await supabaseAdmin
     .from("orders")
     .select("total, created_at")
     .gte("created_at", thirtyDaysAgo)

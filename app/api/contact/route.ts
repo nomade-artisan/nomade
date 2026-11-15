@@ -1,45 +1,45 @@
 // app/api/contact/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase/client";
+import { supabaseAdmin } from "@/lib/supabase/admin";
+import { enforceRateLimit } from "@/lib/security/rate-limit";
 import { Resend } from "resend";
-import { Redis } from "@upstash/redis";
+import { CONTACT_EMAIL, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/email/config";
+import { renderEmailTemplate, renderEmailText } from "@/lib/email/template";
 
-const redis = Redis.fromEnv();
 const resend = new Resend(process.env.RESEND_API_KEY);
-const NOREPLY_EMAIL = process.env.NOREPLY_EMAIL!;
-const CONTACT_EMAIL = process.env.CONTACT_EMAIL?.split(",").map((e) => e.trim()) || [];
+
+function escapeHtml(value: string) {
+  const entities: Record<string, string> = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "\"": "&quot;",
+    "'": "&#39;",
+  };
+  return value.replace(/[&<>\"']/g, (character) => entities[character]);
+}
 
 export async function POST(req: NextRequest) {
-  // --- 1. Rate limiting avec Redis (persistant) ---
-  const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
-  const rateKey = `contact:${ip}`;
-  const limit = 5;          // 5 requêtes maximum
-  const window = 60;        // en 60 secondes
-
-  try {
-    const current = await redis.incr(rateKey);
-    if (current === 1) {
-      await redis.expire(rateKey, window);
-    }
-    if (current > limit) {
-      return NextResponse.json(
-        { error: "Trop de tentatives. Veuillez réessayer dans une minute." },
-        { status: 429 }
-      );
-    }
-  } catch (redisError) {
-    console.error("⚠️ Erreur Redis (rate limiting désactivé):", redisError);
-    // Fallback : si Redis est indisponible, on laisse passer
-    // (optionnel, à désactiver en production pour la sécurité)
-  }
-
+  const rateLimitError = await enforceRateLimit(req, "contact", {
+    windowMs: 60_000,
+    maxRequests: 5,
+  });
+  if (rateLimitError) return rateLimitError;
   // --- 2. Récupération et validation ---
-  let name, email, message;
+  let name: string, email: string, message: string;
   try {
-    const body = await req.json();
-    name = body.name;
-    email = body.email;
-    message = body.message;
+    const contentLength = Number(req.headers.get("content-length") || 0);
+    if (contentLength > 8192) {
+      return NextResponse.json({ error: "RequÃªte trop volumineuse." }, { status: 413 });
+    }
+    const rawBody = await req.text();
+    if (rawBody.length > 8192) {
+      return NextResponse.json({ error: "RequÃªte trop volumineuse." }, { status: 413 });
+    }
+    const body = JSON.parse(rawBody);
+    name = typeof body.name === "string" ? body.name.trim() : "";
+    email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+    message = typeof body.message === "string" ? body.message.trim() : "";
   } catch {
     return NextResponse.json(
       { error: "Format de requête invalide." },
@@ -54,7 +54,11 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (!email.includes("@") || !email.includes(".")) {
+  if (name.length > 100 || email.length > 254 || message.length > 3000) {
+    return NextResponse.json({ error: "Un ou plusieurs champs sont trop longs." }, { status: 400 });
+  }
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json(
       { error: "Email invalide." },
       { status: 400 }
@@ -69,7 +73,11 @@ export async function POST(req: NextRequest) {
   }
 
   // --- 3. Sauvegarde dans Supabase ---
-  const { error: dbError } = await supabase
+  const safeName = escapeHtml(name);
+  const safeEmail = escapeHtml(email);
+  const safeMessage = escapeHtml(message).replace(/\r?\n/g, "<br />");
+
+  const { error: dbError } = await supabaseAdmin
     .from("contacts")
     .insert([{ name, email, message }]);
 
@@ -84,24 +92,24 @@ export async function POST(req: NextRequest) {
   // --- 4. Envoi de l'email (notification admin) ---
   try {
     await resend.emails.send({
-      from: `Nomade <${NOREPLY_EMAIL}>`,
+      from: EMAIL_FROM,
       to: CONTACT_EMAIL,
       replyTo: email,
-      subject: `Message de ${name}`,
+      subject: `Message de ${name.replace(/[\r\n]/g, " ").slice(0, 100)}`,
       html: `
         <div style="font-family: Inter, system-ui, sans-serif; max-width: 500px; margin: auto; padding: 30px; background: #fafaf9; border-radius: 12px;">
           <h2 style="font-weight: 400; color: #1c1917; font-size: 20px; margin-bottom: 16px;">
             Nouveau message
           </h2>
           <p style="color: #78716c; font-size: 14px; margin-bottom: 4px;">
-            <strong>De :</strong> ${name}
+            <strong>De :</strong> ${safeName}
           </p>
           <p style="color: #78716c; font-size: 14px; margin-bottom: 20px;">
-            <strong>Email :</strong> ${email}
+            <strong>Email :</strong> ${safeEmail}
           </p>
           <hr style="border: none; border-top: 1px solid #e7e5e4; margin: 20px 0;" />
           <p style="color: #44403c; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">
-            ${message.replace(/\n/g, "<br />")}
+            ${safeMessage}
           </p>
           <p style="color: #a8a29e; font-size: 12px; margin-top: 24px; text-align: center;">
             Nomade — L'essentiel est à l'intérieur
@@ -116,23 +124,23 @@ export async function POST(req: NextRequest) {
 
   // --- 5. Accusé de réception (email au client) ---
   try {
+    const acknowledgementHtml = renderEmailTemplate({
+      title: "Nous avons bien reçu votre message",
+      preheader: "Merci d’avoir pris le temps de nous écrire.",
+      customerName: name,
+      intro:
+        "Votre message est bien arrivé. Notre équipe en prendra connaissance et vous répondra à l’adresse que vous nous avez indiquée.",
+      secondaryHtml:
+        '<p style="margin:0;color:#57534e;font-size:14px;line-height:1.7;">En attendant, vous pouvez découvrir les créations de la boutique. Pour toute précision, écrivez-nous à l’adresse indiquée ci-dessous.</p>',
+    });
+
     await resend.emails.send({
-      from: `Nomade <${NOREPLY_EMAIL}>`,
+      from: EMAIL_FROM,
+      replyTo: EMAIL_REPLY_TO,
       to: email,
-      subject: "Votre message a bien été reçu",
-      html: `
-        <div style="font-family: Inter, system-ui, sans-serif; max-width: 500px; margin: auto; padding: 30px; background: #fafaf9; border-radius: 12px;">
-          <h2 style="font-weight: 400; color: #1c1917; font-size: 20px; margin-bottom: 16px;">
-            Bonjour ${name},
-          </h2>
-          <p style="color: #44403c; font-size: 14px; line-height: 1.6;">
-            Nous avons bien reçu votre message. Notre équipe vous répondra dans les plus brefs délais.
-          </p>
-          <p style="color: #a8a29e; font-size: 12px; margin-top: 24px; text-align: center;">
-            Nomade — L'essentiel est à l'intérieur
-          </p>
-        </div>
-      `,
+      subject: "Nous avons bien reçu votre message",
+      html: acknowledgementHtml,
+      text: renderEmailText(acknowledgementHtml),
     });
   } catch (emailError) {
     console.error("❌ Erreur envoi accusé de réception:", emailError);

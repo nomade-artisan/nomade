@@ -482,7 +482,7 @@ function Tabs({
           {activeTab === "livraison" && (
             <div className="space-y-3">
               <p>Livraison standard : 3 à 5 jours ouvrés.</p>
-              <p className="text-emerald-700">Offerte à partir de 100€.</p>
+              <p className="text-emerald-700">Offerte à partir de 120€.</p>
             </div>
           )}
         </div>

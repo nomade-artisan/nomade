@@ -53,5 +53,7 @@ export const config = {
     "/api/admin/:path*",
     "/api/refund",
     "/api/test-email",
+    "/api/emails/:path*",
+    "/api/analytics/build-metrics",
   ],
 };

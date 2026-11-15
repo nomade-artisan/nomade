@@ -1,8 +1,8 @@
 import { Resend } from "resend";
+import { EMAIL_FROM, EMAIL_REPLY_TO } from "./config";
 import { renderEmailTemplate, renderEmailText } from "./template";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const NOREPLY_EMAIL = process.env.NOREPLY_EMAIL!;
 
 export async function sendOrderPreparingEmail({
   to,
@@ -14,23 +14,24 @@ export async function sendOrderPreparingEmail({
   orderNumber: string;
 }) {
   const html = renderEmailTemplate({
-    title: "Preparation de votre commande",
-    preheader: `Votre commande ${orderNumber} est en preparation`,
+    title: "Votre commande entre en préparation",
+    preheader: `Notre équipe prépare la commande ${orderNumber} avec soin.`,
     customerName,
     intro:
-      "Nous avons commence la preparation de votre commande dans notre atelier. Chaque article est verifie avant expedition.",
+      "La préparation de votre commande a commencé dans notre atelier. Chaque article est vérifié avec attention avant son expédition.",
     details: [
-      { label: "Commande", value: orderNumber },
-      { label: "Etat", value: "Preparation en cours" },
+      { label: "N° de commande", value: orderNumber },
+      { label: "État", value: "Préparation en cours" },
     ],
     secondaryHtml:
-      '<p style="margin:0;font-size:13px;line-height:1.7;color:#374151;">Vous recevrez un prochain email avec votre suivi des remise au transporteur.</p>',
+      '<p style="margin:0;color:#57534e;font-size:14px;line-height:1.7;">Nous vous écrirons dès que le transporteur aura pris votre colis en charge, avec les informations de suivi.</p>',
   });
 
   return resend.emails.send({
-    from: `Nomade <${NOREPLY_EMAIL}>`,
+    from: EMAIL_FROM,
+    replyTo: EMAIL_REPLY_TO,
     to,
-    subject: `Préparation de votre commande ${orderNumber}`,
+    subject: `Votre commande ${orderNumber} est en préparation`,
     html,
     text: renderEmailText(html),
   });

@@ -25,6 +25,7 @@ import {
   Printer,
   ExternalLink,
   RefreshCw,
+  Mail,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { OrderWithRelations, OrderStatus } from "@/lib/orders/types";
@@ -44,6 +45,7 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
   const [cancelWithRefund, setCancelWithRefund] = useState(true);
   const [adminCancelPassword, setAdminCancelPassword] = useState("");
   const [cancelError, setCancelError] = useState("");
+  const [isResendingConfirmation, setIsResendingConfirmation] = useState(false);
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [labelData, setLabelData] = useState<{
@@ -230,6 +232,27 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
     }
   }
 
+  async function handleResendConfirmation() {
+    setIsResendingConfirmation(true);
+    try {
+      const res = await fetch("/api/emails/order_confirmed", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId: order.id }),
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(payload.error || "Échec de l'envoi de l'email");
+
+      toast.success("Email de confirmation envoyé");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Échec de l'envoi de l'email";
+      toast.error(message);
+      console.error("Échec du renvoi de confirmation", error);
+    } finally {
+      setIsResendingConfirmation(false);
+    }
+  }
+
   const shippingAddress = order.shipping_address;
   const depositedToCarrier =
     order.status === "shipped" ||
@@ -357,6 +380,20 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
             >
               {ORDER_STATUS_LABELS[order.status] || order.status}
             </span>
+
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={handleResendConfirmation}
+              disabled={isResendingConfirmation}
+            >
+              {isResendingConfirmation ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Mail className="mr-2 h-4 w-4" />
+              )}
+              Renvoyer l'email de confirmation
+            </Button>
 
             {order.status === "confirmed" && (
               <p className="text-xs text-muted-foreground text-center">

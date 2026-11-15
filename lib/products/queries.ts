@@ -1,5 +1,7 @@
 // lib/products/queries.ts
+import "server-only";
 import { supabase } from "@/lib/supabase/client";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { ProductWithImages, Category, Review, CreateReviewInput, ProductRating } from "./types";
 
 export interface ProductListItem {
@@ -54,7 +56,7 @@ export async function getProductsList(
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
-  let query = supabase
+  let query = supabaseAdmin
     .from("products")
     .select(
       `
@@ -175,7 +177,7 @@ export async function getProductBySlug(slug: string): Promise<ProductWithImages 
 
 export async function getProductForEdit(id: number): Promise<ProductWithImages | null> {
   // Vérifier si le produit existe
-  const { data: exists, error: existError } = await supabase
+  const { data: exists, error: existError } = await supabaseAdmin
     .from("products")
     .select("id")
     .eq("id", id)
@@ -186,7 +188,7 @@ export async function getProductForEdit(id: number): Promise<ProductWithImages |
     return null;
   }
 
-  const { data: product, error } = await supabase
+  const { data: product, error } = await supabaseAdmin
     .from("products")
     .select(`
       id,
@@ -319,13 +321,14 @@ export async function getProductRating(productId: number): Promise<ProductRating
 }
 
 export async function createReview(input: CreateReviewInput): Promise<Review> {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from("reviews")
     .insert({
       product_id: input.product_id,
       user_name: input.user_name,
       rating: input.rating,
       comment: input.comment,
+      is_verified: false,
     })
     .select()
     .single();

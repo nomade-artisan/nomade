@@ -27,6 +27,8 @@ export interface Order {
   order_number: string | null;
   payment_intent_id?: string | null; // ✅ Ajouté pour le remboursement
   status: OrderStatus;
+  stripe_refund_id?: string | null;
+  refunded_at?: string | null;
   subtotal: number;
   shipping: number;
   discount_amount?: number;
@@ -88,6 +90,7 @@ export interface OrderListItem {
   promo_code?: string | null;
   items_count: number;
   created_at: string;
+  refunded_at?: string | null;
 }
 
 export interface PaginatedResponse<T> {

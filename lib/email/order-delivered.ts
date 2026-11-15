@@ -1,8 +1,8 @@
 import { Resend } from "resend";
+import { EMAIL_FROM, EMAIL_REPLY_TO } from "./config";
 import { renderEmailTemplate, renderEmailText } from "./template";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const NOREPLY_EMAIL = process.env.NOREPLY_EMAIL!;
 
 export async function sendOrderDeliveredEmail({
   to,
@@ -14,21 +14,22 @@ export async function sendOrderDeliveredEmail({
   orderNumber: string;
 }) {
   const html = renderEmailTemplate({
-    title: "Commande livree",
-    preheader: `La commande ${orderNumber} est bien arrivee`,
+    title: "Votre commande a été livrée",
+    preheader: `Le transporteur indique que la commande ${orderNumber} a été livrée.`,
     customerName,
     intro:
-      "Votre commande a ete marquee comme livree. Nous esperons que tout est conforme a vos attentes.",
+      "Le transporteur indique que votre commande a été livrée. Nous espérons qu’elle vous plaira et qu’elle trouvera sa place chez vous.",
     details: [
-      { label: "Commande", value: orderNumber },
-      { label: "Etat", value: "Livree" },
+      { label: "N° de commande", value: orderNumber },
+      { label: "État", value: "Livrée" },
     ],
     secondaryHtml:
-      '<p style="margin:0;font-size:13px;line-height:1.7;color:#374151;">Si vous constatez un probleme sur votre colis, repondez simplement a cet email pour que nous puissions vous aider rapidement.</p>',
+      '<p style="margin:0;color:#57534e;font-size:14px;line-height:1.7;">Si vous ne retrouvez pas votre colis ou si vous avez la moindre question, écrivez-nous à l’adresse indiquée ci-dessous. Nous vous aiderons.</p>',
   });
 
   return resend.emails.send({
-    from: `Nomade <${NOREPLY_EMAIL}>`,
+    from: EMAIL_FROM,
+    replyTo: EMAIL_REPLY_TO,
     to,
     subject: `Votre commande ${orderNumber} a été livrée`,
     html,

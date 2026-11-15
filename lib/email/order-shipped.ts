@@ -1,8 +1,8 @@
 import { Resend } from "resend";
+import { EMAIL_FROM, EMAIL_REPLY_TO } from "./config";
 import { escapeHtml, renderEmailTemplate, renderEmailText } from "./template";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const NOREPLY_EMAIL = process.env.NOREPLY_EMAIL!;
 
 export async function sendOrderShippedEmail({
   to,
@@ -21,15 +21,15 @@ export async function sendOrderShippedEmail({
 }) {
   const hasTrackingUrl = Boolean(trackingUrl && trackingUrl.trim());
   const html = renderEmailTemplate({
-    title: "Votre commande est expédiee",
-    preheader: `Commande ${orderNumber} remise au transporteur`,
+    title: "Votre commande a été expédiée",
+    preheader: `La commande ${orderNumber} a été remise au transporteur.`,
     customerName,
     intro:
-      "Votre colis a ete pris en charge par le transporteur. Vous pouvez suivre l'acheminement de votre envoi des maintenant.",
+      "Votre colis a été confié au transporteur. Vous pouvez suivre son acheminement grâce aux informations ci-dessous.",
     details: [
-      { label: "Commande", value: orderNumber },
-      { label: "Transporteur", value: carrier || "Non precise" },
-      { label: "Numero de suivi", value: trackingNumber || "A venir" },
+      { label: "N° de commande", value: orderNumber },
+      { label: "Transporteur", value: carrier || "À confirmer" },
+      { label: "N° de suivi", value: trackingNumber || "En cours de génération" },
     ],
     cta: hasTrackingUrl
       ? {
@@ -37,18 +37,21 @@ export async function sendOrderShippedEmail({
           href: trackingUrl,
         }
       : undefined,
+    mainHtml: `<p style="margin:0;color:#57534e;font-size:14px;line-height:1.7;">${
+      trackingNumber
+        ? `Conservez votre numéro de suivi <strong>${escapeHtml(trackingNumber)}</strong> pour retrouver facilement votre colis.`
+        : "Le numéro de suivi sera ajouté dès qu’il sera communiqué par le transporteur."
+    }</p>`,
     secondaryHtml: hasTrackingUrl
       ? ""
-      : `<p style="margin:0;font-size:13px;line-height:1.7;color:#6b7280;">Le lien de suivi sera active des que le transporteur le rendra disponible.</p>`,
-    mainHtml: `<p style="margin:0 0 16px;font-size:13px;line-height:1.7;color:#374151;">Conseil: conservez votre numero de suivi <strong>${escapeHtml(
-      trackingNumber || ""
-    )}</strong> pour vos echanges avec le support.</p>`,
+      : '<p style="margin:14px 0 0;color:#57534e;font-size:14px;line-height:1.7;">Le lien de suivi n’est pas encore disponible. Il apparaîtra dès que le transporteur l’aura activé.</p>',
   });
 
   return resend.emails.send({
-    from: `Nomade <${NOREPLY_EMAIL}>`,
+    from: EMAIL_FROM,
+    replyTo: EMAIL_REPLY_TO,
     to,
-    subject: `Votre commande ${orderNumber} est expédiée`,
+    subject: `Votre commande ${orderNumber} a été expédiée`,
     html,
     text: renderEmailText(html),
   });

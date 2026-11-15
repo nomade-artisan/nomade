@@ -25,9 +25,13 @@ function getStore(): Map<string, Entry> {
 }
 
 function getClientIdentifier(request: NextRequest): string {
+  const trustedRealIp = request.headers.get("x-real-ip");
+  if (trustedRealIp) return trustedRealIp.trim();
+
   const forwarded = request.headers.get("x-forwarded-for");
   if (forwarded) {
-    const ip = forwarded.split(",")[0]?.trim();
+    const forwardedParts = forwarded.split(",");
+    const ip = forwardedParts[forwardedParts.length - 1]?.trim();
     if (ip) return ip;
   }
 

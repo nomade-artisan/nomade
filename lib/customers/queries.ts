@@ -1,4 +1,5 @@
-import { supabase } from "@/lib/supabase/client";
+import "server-only";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { CustomerListItem, CustomerWithOrders } from "./types";
 
 export interface PaginatedResponse<T> {
@@ -17,7 +18,7 @@ export async function getCustomersList(
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
-  let query = supabase
+  let query = supabaseAdmin
     .from("customers")
     .select(
       `
@@ -70,7 +71,7 @@ export async function getCustomersList(
 }
 
 export async function getCustomerById(id: string): Promise<CustomerWithOrders | null> {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from("customers")
     .select(
       `

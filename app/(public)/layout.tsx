@@ -3,10 +3,10 @@
 import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import MaintenanceBanner from "@/components/MaintenanceBanner";
-import { Analytics } from "@vercel/analytics/next";
 import Footer from "@/components/Footer";
 import CookieConsent from "@/components/CookieConsent";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
+import ConsentMetrics from "@/components/ConsentMetrics";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://scolta.nomade-artisan.fr"),
@@ -82,7 +82,7 @@ export default function PublicLayout({
 }) {
   return (
     <div className="flex flex-col min-h-screen">
-      <Analytics />
+      <ConsentMetrics />
       <AnalyticsTracker />
       <CookieConsent/>
       <Navbar />

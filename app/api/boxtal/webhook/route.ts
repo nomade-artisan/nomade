@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import crypto, { timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { sendOrderPreparingEmail } from "@/lib/email/order-preparing";
@@ -7,12 +7,16 @@ import { sendOrderInTransitEmail } from "@/lib/email/order-in-transit";
 import { sendOrderDeliveredEmail } from "@/lib/email/order-delivered";
 
 function verifySignature(body: string, signature: string): boolean {
-  const secret = process.env.BOXTAL_WEBHOOK_SECRET!;
+  const secret = process.env.BOXTAL_WEBHOOK_SECRET;
+  if (!secret) return false;
+  if (!/^[0-9a-f]{64}$/i.test(signature)) return false;
+
   const expected = crypto
     .createHmac("sha256", secret)
     .update(body)
-    .digest("hex");
-  return expected === signature;
+    .digest();
+  const actual = Buffer.from(signature, "hex");
+  return actual.length === expected.length && timingSafeEqual(actual, expected);
 }
 
 /**
@@ -54,7 +58,18 @@ function mapBoxtalStatusToOrderStatus(status?: string): string | null {
 export async function POST(req: NextRequest) {
   console.log("🔥 BOXTAL WEBHOOK RECEIVED");
 
+  if (!process.env.BOXTAL_WEBHOOK_SECRET) {
+    return NextResponse.json({ error: "Webhook non configurÃ©" }, { status: 503 });
+  }
+
+  const contentLength = Number(req.headers.get("content-length") || 0);
+  if (contentLength > 262144) {
+    return NextResponse.json({ error: "Payload too large" }, { status: 413 });
+  }
   const rawBody = await req.text();
+  if (rawBody.length > 262144) {
+    return NextResponse.json({ error: "RequÃªte trop volumineuse" }, { status: 413 });
+  }
   const signature = req.headers.get("x-bxt-signature");
 
   if (!signature) {
@@ -65,15 +80,29 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
   }
 
-  const payload = JSON.parse(rawBody);
+  let payload: any;
+  try {
+    payload = JSON.parse(rawBody);
+  } catch {
+    return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+  }
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+  }
 
   // Déterminer le type et générer un hash
   let eventType = payload.type;
   let eventHash: string;
 
   if (eventType === "DOCUMENT_CREATED") {
+    if (typeof payload.shippingOrderId !== "string" || !payload.shippingOrderId) {
+      return NextResponse.json({ error: "Invalid shipping order" }, { status: 400 });
+    }
     eventHash = generateDocumentEventHash(payload);
   } else if (eventType === "TRACKING_CHANGED") {
+    if (typeof payload.shippingOrderId !== "string" || !payload.shippingOrderId) {
+      return NextResponse.json({ error: "Invalid shipping order" }, { status: 400 });
+    }
     eventHash = generateTrackingEventHash(payload);
   } else {
     // Autre type non géré, on ignore
@@ -81,19 +110,22 @@ export async function POST(req: NextRequest) {
   }
 
   // Vérifier si cet événement a déjà été traité
-  const { data: existing } = await supabaseAdmin
+  const { data: existing, error: lookupError } = await supabaseAdmin
     .from("webhook_events")
     .select("id")
     .eq("event_hash", eventHash)
     .maybeSingle();
+
+  if (lookupError) {
+    console.error("Boxtal event lookup failed:", lookupError.message);
+    return NextResponse.json({ error: "Webhook temporairement indisponible" }, { status: 500 });
+  }
 
   if (existing) {
     console.log(`🔄 Événement déjà traité (hash: ${eventHash}), ignoré.`);
     return NextResponse.json({ received: true, alreadyProcessed: true });
   }
 
-  // Insérer l'événement pour marquer le traitement (même si le traitement échoue, on considère qu'il est en cours)
-  // On fait l'insertion avant de traiter pour éviter les doublons en cas de traitement long
   const { error: insertError } = await supabaseAdmin
     .from("webhook_events")
     .insert({
@@ -101,6 +133,11 @@ export async function POST(req: NextRequest) {
       event_type: eventType,
       shipping_order_id: payload.shippingOrderId || null,
     });
+
+  if (insertError && insertError.code !== "23505") {
+    console.error("Boxtal event insert failed:", insertError.message);
+    return NextResponse.json({ error: "Webhook temporarily unavailable" }, { status: 500 });
+  }
 
   if (insertError) {
     // Si l'insertion échoue (conflit), on ignore (doublon détecté)
@@ -129,29 +166,36 @@ export async function POST(req: NextRequest) {
     // mais cela créerait des doublons si le problème est intermittent.
     // Ici on choisit de renvoyer 200 et de logger l'erreur.
     // On pourrait aussi supprimer l'entrée webhook_events pour permettre un retraitement ultérieur ? Non, car on ne sait pas si c'est une erreur temporaire.
-    return NextResponse.json({ received: true, error: err.message });
+    const { error: cleanupError } = await supabaseAdmin
+      .from("webhook_events")
+      .delete()
+      .eq("event_hash", eventHash);
+    if (cleanupError) console.error("Boxtal event retry cleanup failed:", cleanupError.message);
+    return NextResponse.json({ error: "Webhook processing failed" }, { status: 500 });
   }
 
   return NextResponse.json({ received: true });
 }
 
 async function handleDocumentCreated(payload: any) {
-  const document = payload.payload.documents[0];
-  await supabaseAdmin
+  const document = payload.payload?.documents?.[0];
+  if (!document?.url) throw new Error("Boxtal document URL missing");
+  const { data, error } = await supabaseAdmin
     .from("shipments")
     .update({
       label_url: document.url,
       updated_at: new Date(),
     })
-    .eq("shipping_order_id", payload.shippingOrderId);
+    .eq("shipping_order_id", payload.shippingOrderId)
+    .select("id")
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error("Shipment not found for Boxtal document");
 }
 
 async function handleTrackingChanged(payload: any) {
   const tracking = payload.payload?.trackings?.[0];
-  if (!tracking) {
-    console.log("Aucun tracking reçu");
-    return;
-  }
+  if (!tracking) throw new Error("Boxtal tracking data missing");
 
   const shippingOrderId = payload.shippingOrderId;
   console.log("Shipping Order:", shippingOrderId);
@@ -164,8 +208,7 @@ async function handleTrackingChanged(payload: any) {
     .maybeSingle();
 
   if (shipmentError || !shipment) {
-    console.error("Shipment introuvable", shipmentError);
-    return;
+    throw shipmentError || new Error("Shipment not found");
   }
 
   const previousStatus = shipment.status;
@@ -197,8 +240,7 @@ async function handleTrackingChanged(payload: any) {
     .single();
 
   if (updateError) {
-    console.error("Erreur mise à jour shipment:", updateError);
-    return;
+    throw updateError;
   }
 
   console.log("Shipment mis à jour :", updated);
@@ -211,16 +253,14 @@ async function handleTrackingChanged(payload: any) {
     .single();
 
   if (orderError || !order) {
-    console.error("Commande introuvable pour envoi email", orderError);
-    return;
+    throw orderError || new Error("Order not found for shipment");
   }
 
   const mappedOrderStatus = mapBoxtalStatusToOrderStatus(newStatus);
   const shipmentStatusChanged = previousStatus !== newStatus;
+  const orderStatusChanged = Boolean(mappedOrderStatus && order.status !== mappedOrderStatus);
 
-  if (shipmentStatusChanged && mappedOrderStatus) {
-    const orderStatusChanged = order.status !== mappedOrderStatus;
-
+  if (mappedOrderStatus && (shipmentStatusChanged || orderStatusChanged)) {
     if (orderStatusChanged) {
       const { error: orderStatusError } = await supabaseAdmin
         .from("orders")
@@ -231,7 +271,7 @@ async function handleTrackingChanged(payload: any) {
         .eq("id", order.id);
 
       if (orderStatusError) {
-        console.error("Erreur mise à jour order.status :", orderStatusError);
+        throw orderStatusError;
       } else {
         console.log(
           `orders.status mis à jour : ${order.status} -> ${mappedOrderStatus}`
@@ -249,10 +289,7 @@ async function handleTrackingChanged(payload: any) {
       });
 
     if (trackingInsertError) {
-      console.error(
-        "Erreur insertion order_tracking :",
-        trackingInsertError
-      );
+      throw trackingInsertError;
     }
   }
 
@@ -261,7 +298,7 @@ async function handleTrackingChanged(payload: any) {
   const orderNumber = order.order_number;
 
   // Si le statut shipment n'a pas changé, on ne réenvoie pas d'email
-  if (!shipmentStatusChanged) {
+  if (!shipmentStatusChanged && !orderStatusChanged) {
     console.log("Statut shipment inchangé, pas d'email");
     return;
   }

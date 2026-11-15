@@ -2,10 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import sharp from "sharp";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { requireAdminAuthorization } from "@/lib/security/admin-auth";
+import { enforceRateLimit } from "@/lib/security/rate-limit";
 
 const MAX_SIZE = 10 * 1024 * 1024; // 10 Mo
 
 export async function POST(req: NextRequest) {
+  const rateLimitError = await enforceRateLimit(req, "admin-upload-image", {
+    windowMs: 60_000,
+    maxRequests: 10,
+  });
+  if (rateLimitError) return rateLimitError;
+  const authError = requireAdminAuthorization(req);
+  if (authError) return authError;
+
   try {
     const formData = await req.formData();
     const file = formData.get("image");

@@ -2,8 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { sendOrderPreparingEmail } from "@/lib/email/order-preparing";
+import { requireAdminAuthorization } from "@/lib/security/admin-auth";
+import { enforceRateLimit } from "@/lib/security/rate-limit";
 
 export async function POST(req: NextRequest) {
+  const rateLimitError = await enforceRateLimit(req, "admin-email-preparing", { windowMs: 60_000, maxRequests: 10 });
+  if (rateLimitError) return rateLimitError;
+  const authError = requireAdminAuthorization(req);
+  if (authError) return authError;
+
   try {
     const { orderId } = await req.json();
 

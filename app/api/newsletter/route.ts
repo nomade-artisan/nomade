@@ -9,10 +9,23 @@ export async function POST(req: NextRequest) {
   if (rateLimitError) return rateLimitError;
 
   try {
-    const { email } = await req.json();
+    const contentLength = Number(req.headers.get("content-length") || 0);
+    if (contentLength > 4096) {
+      return NextResponse.json({ error: "RequÃªte trop volumineuse." }, { status: 413 });
+    }
+    const rawBody = await req.text();
+    if (rawBody.length > 4096) {
+      return NextResponse.json({ error: "RequÃªte trop volumineuse." }, { status: 413 });
+    }
+    const { email: rawEmail } = JSON.parse(rawBody);
+    const email = typeof rawEmail === "string" ? rawEmail.trim().toLowerCase() : "";
 
-    if (!email || !email.includes("@")) {
+    if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json({ error: "Email invalide" }, { status: 400 });
+    }
+
+    if (!process.env.BREVO_API_KEY || !process.env.BREVO_LIST_ID) {
+      return NextResponse.json({ error: "Newsletter temporairement indisponible" }, { status: 503 });
     }
 
     const response = await fetch("https://api.brevo.com/v3/contacts", {
@@ -23,7 +36,7 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         email,
-        listIds: [parseInt(process.env.BREVO_LIST_ID || "2")],
+        listIds: [Number(process.env.BREVO_LIST_ID)],
         updateEnabled: true,
       }),
     });

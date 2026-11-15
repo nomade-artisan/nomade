@@ -1,10 +1,12 @@
 // app/api/webhook/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
-import { supabase } from "@/lib/supabase/client";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { Resend } from "resend";
 import { sendOrderConfirmedEmail } from "@/lib/email/order-confirmed";
+import { sendOrderRefundedEmail } from "@/lib/email/order-refunded";
+import { EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/email/config";
+import { formatEuro } from "@/lib/email/template";
 import Stripe from "stripe";
 import crypto from "crypto";
 import { revalidatePath } from "next/cache";
@@ -13,48 +15,87 @@ import { Redis } from "@upstash/redis";
 const redis = Redis.fromEnv();
 const resend = new Resend(process.env.RESEND_API_KEY);
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
-const NOREPLY_EMAIL = process.env.NOREPLY_EMAIL;
+type ResendEmailResult = Awaited<ReturnType<typeof resend.emails.send>>;
 
-export async function POST(req: NextRequest) {
-  // --- Rate limiting ---
-  const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
-  const rateKey = `stripe-webhook:rate:${ip}`;
-  const rateLimit = 10;
-  const rateWindow = 60;
-  const current = await redis.incr(rateKey);
-  if (current === 1) await redis.expire(rateKey, rateWindow);
-  if (current > rateLimit) {
-    console.warn(`🚫 Rate limit dépassé pour IP ${ip}`);
-    return NextResponse.json(
-      { error: "Trop de requêtes, veuillez réessayer dans une minute." },
-      { status: 429 }
-    );
+function escapeHtml(value: unknown) {
+  const entities: Record<string, string> = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "\"": "&quot;",
+    "'": "&#39;",
+  };
+  return String(value ?? "").replace(/[&<>\"']/g, (character) => entities[character]);
+}
+
+async function sendEmailOrLog(
+  emailType: string,
+  eventId: string,
+  send: () => Promise<ResendEmailResult>
+): Promise<boolean> {
+  try {
+    const result = await send();
+    if (!result.error) return true;
+
+    console.error("Resend a refusé un email de commande", {
+      eventId,
+      emailType,
+      code: result.error.name,
+      statusCode: result.error.statusCode,
+      message: result.error.message,
+    });
+  } catch (error) {
+    console.error("Échec réseau lors de l'envoi d'un email de commande", {
+      eventId,
+      emailType,
+      message: error instanceof Error ? error.message : String(error),
+    });
   }
 
-  // --- Vérification signature ---
+  return false;
+}
+
+export async function POST(req: NextRequest) {
   const body = await req.text();
-  const signature = req.headers.get("stripe-signature")!;
+  const signature = req.headers.get("stripe-signature");
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!signature || !webhookSecret) {
+    return NextResponse.json({ error: "Webhook Stripe non configuré" }, { status: 400 });
+  }
   let event: Stripe.Event;
   try {
     event = stripe.webhooks.constructEvent(
       body,
       signature,
-      process.env.STRIPE_WEBHOOK_SECRET!
+      webhookSecret
     );
   } catch (error: any) {
     console.error("❌ Signature webhook invalide:", error.message);
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 
-  // --- Idempotence ---
+    // --- Idempotence ---
   const eventKey = `stripe:event:${event.id}`;
-  const alreadyProcessed = await redis.get(eventKey);
-  if (alreadyProcessed) {
-    console.log(`♻️ Événement ${event.id} déjà traité, ignoré.`);
-    return NextResponse.json({ received: true, alreadyProcessed: true });
+  let claim: string | null;
+  try {
+    claim = await redis.set(eventKey, "processing", { nx: true, ex: 300 });
+  } catch (error) {
+    console.error("Stockage d'idempotence Stripe indisponible", {
+      eventId: event.id,
+      message: error instanceof Error ? error.message : String(error),
+    });
+    return NextResponse.json(
+      { error: "Webhook temporairement indisponible" },
+      { status: 503 }
+    );
   }
-
-  // --- Traitement de l'événement ---
+  if (!claim) {
+    const currentState = await redis.get(eventKey);
+    if (currentState === "processed") {
+      return NextResponse.json({ received: true, alreadyProcessed: true });
+    }
+    return NextResponse.json({ error: "Traitement déjà en cours" }, { status: 409 });
+  }
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as any;
 
@@ -84,42 +125,86 @@ export async function POST(req: NextRequest) {
       "";
 
     // Métadonnées produits
-    const productIds: string[] =
-      session.metadata?.product_ids?.split(",").filter(Boolean) || [];
-    const quantities: number[] =
-      session.metadata?.quantities?.split(",").map(Number).filter(Boolean) || [];
+    const productIds: string[] = session.metadata?.product_ids?.split(",") || [];
+    const quantities: number[] = session.metadata?.quantities?.split(",").map(Number) || [];
+    const paymentIntentId = typeof session.payment_intent === "string"
+      ? session.payment_intent
+      : session.payment_intent?.id;
 
-    // Mise à jour des stocks
-    const { data: products } = await supabase
-      .from("products")
-      .select("id, stock")
-      .in("id", productIds.map(Number));
+    if (!paymentIntentId || productIds.length === 0 || productIds.length !== quantities.length) {
+      await redis.del(eventKey);
+      return NextResponse.json({ error: "Données de commande invalides" }, { status: 500 });
+    }
 
-    const updates = productIds
-      .map((id: string, i: number) => {
-        const product = products?.find((p) => p.id === Number(id));
-        if (!product) return null;
-        const qty = quantities[i] ?? 1;
-        return {
-          id: Number(id),
-          stock: Math.max(0, product.stock - qty),
-        };
-      })
-      .filter((u): u is { id: number; stock: number } => u !== null);
+    const stockItems = productIds.map((id, index) => ({
+      id: Number(id),
+      quantity: quantities[index],
+    }));
+    if (stockItems.some((item) => !Number.isSafeInteger(item.id) || item.id <= 0 || !Number.isSafeInteger(item.quantity) || item.quantity <= 0)) {
+      await redis.del(eventKey);
+      return NextResponse.json({ error: "Quantités de commande invalides" }, { status: 500 });
+    }
 
-    await Promise.all(
-      updates.map((u) =>
-        supabase.from("products").update({ stock: u.stock }).eq("id", u.id)
-      )
-    );
+    const { error: stockError } = await supabaseAdmin.rpc("reserve_products_for_payment", {
+      p_payment_intent_id: paymentIntentId,
+      p_items: stockItems,
+    });
+    if (stockError) {
+      if (/Insufficient product stock/i.test(stockError.message)) {
+        try {
+          await stripe.refunds.create(
+            { payment_intent: paymentIntentId },
+            { idempotencyKey: `stock-refund-${event.id}` }
+          );
+          await redis.set(eventKey, "processed", { ex: 7 * 24 * 60 * 60 });
+          const email = session.customer_details?.email;
+          if (email) {
+            try {
+              await sendOrderRefundedEmail({
+                to: email,
+                customerName: shippingName || "Client",
+                orderNumber: session.id,
+                total: (session.amount_total || 0) / 100,
+              });
+            } catch (emailError) {
+              console.error("Impossible d'envoyer l'email de remboursement:", emailError);
+            }
+          }
+          return NextResponse.json({ received: true, refunded: true });
+        } catch (refundError) {
+          console.error("Remboursement automatique impossible:", refundError);
+          await redis.del(eventKey);
+          return NextResponse.json({ error: "Remboursement à traiter manuellement" }, { status: 500 });
+        }
+      }
 
+      console.error("Réservation de stock impossible:", stockError);
+      await redis.del(eventKey);
+      return NextResponse.json({ error: "Réservation de stock impossible" }, { status: 500 });
+    }
     // Line items
     const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
-    const orderNumber = "NOM-" + crypto.randomBytes(3).toString("hex").toUpperCase();
+    const isShippingLineItem = (item: (typeof lineItems.data)[number]) =>
+      item.description?.trim().toLocaleLowerCase("fr-FR") === "livraison";
+    const productLineItems = lineItems.data.filter((item) => !isShippingLineItem(item));
+    const shippingLineItems = lineItems.data.filter(isShippingLineItem);
+    const generatedOrderNumber = "NOM-" + crypto.randomBytes(3).toString("hex").toUpperCase();
     const totalAmount = (session.amount_total || 0) / 100;
-    const shippingAmount = (session.total_details?.amount_shipping || session.shipping_cost?.amount_total || 0) / 100;
     const discountAmount = (session.total_details?.amount_discount || 0) / 100;
-    const subtotal = totalAmount - shippingAmount + discountAmount;
+    const metadataSubtotal = Number.parseFloat(session.metadata?.subtotal ?? "");
+    const metadataShipping = Number.parseFloat(session.metadata?.shipping ?? "");
+    const shippingLineItemAmount = shippingLineItems.reduce(
+      (sum, item) => sum + (item.amount_total || 0),
+      0
+    ) / 100;
+    const shippingAmount = Number.isFinite(metadataShipping)
+      ? metadataShipping
+      : shippingLineItems.length > 0
+        ? shippingLineItemAmount
+        : (session.total_details?.amount_shipping ?? session.shipping_cost?.amount_total ?? 0) / 100;
+    const subtotal = Number.isFinite(metadataSubtotal)
+      ? metadataSubtotal
+      : totalAmount - shippingAmount + discountAmount;
     const appliedPromoCode =
       typeof session.metadata?.promo_code === "string" && session.metadata.promo_code.trim()
         ? session.metadata.promo_code.trim().toUpperCase()
@@ -130,9 +215,9 @@ export async function POST(req: NextRequest) {
     const lastName = rest.join(" ");
 
     // Création de la commande
-    const { data: order, error: orderError } = await supabase
+    const { data: insertedOrder, error: insertError } = await supabaseAdmin
       .from("orders")
-      .insert({
+      .upsert({
         customer_id: null,
         status: "confirmed",
         subtotal: subtotal,
@@ -159,15 +244,31 @@ export async function POST(req: NextRequest) {
               phone: shippingPhone || session.customer_details?.phone || "",
             },
         notes: `Commande passée via Stripe`,
-        payment_intent_id: session.payment_intent,
-        order_number: orderNumber,
-      })
-      .select("id")
-      .single();
+        payment_intent_id: paymentIntentId,
+      order_number: generatedOrderNumber,
+      }, { onConflict: "payment_intent_id", ignoreDuplicates: true })
+      .select("id, customer_id, order_number")
+      .maybeSingle();
+
+    let order = insertedOrder;
+    let orderError = insertError;
+    if (!order && !orderError) {
+      const existing = await supabaseAdmin
+        .from("orders")
+        .select("id, customer_id, order_number")
+        .eq("payment_intent_id", paymentIntentId)
+        .maybeSingle();
+      order = existing.data;
+      orderError = existing.error;
+    }
+    const isNewOrder = Boolean(insertedOrder);
+    let orderNumber = generatedOrderNumber;
 
     if (orderError || !order) {
-      console.error("❌ Erreur création commande :", orderError);
+      await redis.del(eventKey);
+      return NextResponse.json({ error: 'Enregistrement de commande impossible' }, { status: 500 });
     } else {
+      orderNumber = order.order_number || generatedOrderNumber;
       // Persistance promo (sécurité)
       const { error: promoTraceError } = await supabaseAdmin
         .from("orders")
@@ -196,30 +297,34 @@ export async function POST(req: NextRequest) {
       // ✅ Correction : on ne garde que les items avec un product_id valide (> 0)
       const validOrderItems = orderItems.filter((oi) => oi.product_id > 0);
       if (validOrderItems.length > 0) {
-        const { error: itemsError } = await supabase
+        const { error: itemsError } = await supabaseAdmin
           .from("order_items")
-          .insert(validOrderItems);
+          .upsert(validOrderItems, { onConflict: "order_id,product_id" });
         if (itemsError) {
-          console.error("❌ Erreur order_items :", itemsError);
+          await redis.del(eventKey);
+          return NextResponse.json({ error: 'Enregistrement des articles impossible' }, { status: 500 });
         }
       }
 
       // Tracking
-      await supabase.from("order_tracking").insert({
-        order_id: order.id,
-        status: "confirmed",
-        comment: "Paiement validé via Stripe",
-      });
+      if (isNewOrder) {
+        const { error: trackingError } = await supabaseAdmin.from("order_tracking").insert({
+          order_id: order.id,
+          status: "confirmed",
+          comment: "Paiement validé via Stripe",
+        });
+        if (trackingError) console.error("Tracking commande non enregistré:", trackingError);
+      }
 
       // Gestion client
       const customerEmail = session.customer_details?.email || session.customer?.email || "";
-      if (customerEmail) {
+      if (customerEmail && !order.customer_id) {
         const normalizedEmail = customerEmail.toLowerCase().trim();
         const nameParts = customerName.trim().split(" ");
         const firstName = nameParts[0] || "";
         const lastName = nameParts.slice(1).join(" ") || "";
 
-        const { data: existingCustomer, error: lookupError } = await supabase
+        const { data: existingCustomer, error: lookupError } = await supabaseAdmin
           .from("customers")
           .select("id, first_name, last_name, phone, address, total_orders, total_spent")
           .eq("email", normalizedEmail)
@@ -230,7 +335,7 @@ export async function POST(req: NextRequest) {
         }
 
         if (existingCustomer) {
-          await supabase
+          await supabaseAdmin
             .from("customers")
             .update({
               first_name: firstName || existingCustomer.first_name,
@@ -245,18 +350,18 @@ export async function POST(req: NextRequest) {
                     country: shippingAddress.country || "",
                   }
                 : existingCustomer.address,
-              total_orders: existingCustomer.total_orders + 1,
-              total_spent: existingCustomer.total_spent + totalAmount,
+              total_orders: existingCustomer.total_orders + (isNewOrder ? 1 : 0),
+              total_spent: existingCustomer.total_spent + (isNewOrder ? totalAmount : 0),
               updated_at: new Date().toISOString(),
             })
             .eq("id", existingCustomer.id);
 
-          await supabase
+          await supabaseAdmin
             .from("orders")
             .update({ customer_id: existingCustomer.id })
             .eq("id", order.id);
         } else {
-          const { data: newCustomer, error: customerError } = await supabase
+          const { data: newCustomer, error: customerError } = await supabaseAdmin
             .from("customers")
             .insert({
               email: normalizedEmail,
@@ -279,11 +384,11 @@ export async function POST(req: NextRequest) {
             .single();
 
           if (newCustomer && !customerError) {
-            await supabase
+            await supabaseAdmin
               .from("orders")
               .update({ customer_id: newCustomer.id })
               .eq("id", order.id);
-          } else {
+    } else {
             console.error("❌ Erreur création client :", customerError);
           }
         }
@@ -292,29 +397,35 @@ export async function POST(req: NextRequest) {
       // Analytics : 1 événement par produit pour pouvoir agréger proprement par produit.
       const purchaseAnalyticsRows = productIds.map((productId, index) => ({
         event_type: "purchase_completed",
+        session_id: session.id,
         product_id: String(productId),
         metadata: {
-          order_id: order.id,
-          order_number: orderNumber,
           amount: totalAmount,
           shipping: shippingAmount,
           discount: discountAmount,
-          promo_code: session.metadata?.promo_code || "",
-          products: productIds,
-          quantities,
-          customer_email: customerEmail,
           product_index: index,
           quantity: Number(quantities[index] ?? 1),
         },
       }));
 
       if (purchaseAnalyticsRows.length > 0) {
-        const { error: analyticsError } = await supabase
+        const { data: existingPurchaseEvents, error: purchaseLookupError } = await supabaseAdmin
           .from("analytics_events")
-          .insert(purchaseAnalyticsRows);
+          .select("id")
+          .eq("event_type", "purchase_completed")
+          .eq("session_id", session.id)
+          .limit(1);
 
-        if (analyticsError) {
-          console.error("Analytics purchase rows failed:", analyticsError);
+        if (purchaseLookupError) {
+          console.error("Analytics purchase lookup failed:", purchaseLookupError);
+        } else if (!existingPurchaseEvents?.length) {
+          const { error: analyticsError } = await supabaseAdmin
+            .from("analytics_events")
+            .insert(purchaseAnalyticsRows);
+
+          if (analyticsError) {
+            console.error("Analytics purchase rows failed:", analyticsError);
+          }
         }
       }
 
@@ -322,7 +433,7 @@ export async function POST(req: NextRequest) {
       const promoIdRaw = session.metadata?.promo_id;
       const promoCodeRaw = session.metadata?.promo_code;
       const promoId = promoIdRaw ? Number(promoIdRaw) : NaN;
-      if (Number.isFinite(promoId) || promoCodeRaw) {
+      if (isNewOrder && (Number.isFinite(promoId) || promoCodeRaw)) {
         let promoCodeRecord: { id: number; used_count: number } | null = null;
         if (Number.isFinite(promoId)) {
           const { data, error } = await supabaseAdmin
@@ -370,24 +481,45 @@ export async function POST(req: NextRequest) {
     }
 
     // --- Email client ---
-    const customerEmail = session.customer_details?.email || "";
+    const customerEmail =
+      session.customer_details?.email ||
+      session.customer_email ||
+      session.customer?.email ||
+      resolvedSession.customer_details?.email ||
+      "";
     if (customerEmail && order) {
-      const itemsForEmail = lineItems.data.map((item: any) => ({
+      const itemsForEmail = productLineItems.map((item: any) => ({
         name: item.description || "Produit",
         quantity: item.quantity || 1,
         price: (item.amount_total || 0) / 100 / (item.quantity || 1),
       }));
 
-      await sendOrderConfirmedEmail({
-        to: customerEmail,
-        customerName: customerName || "Client",
-        orderNumber,
-        items: itemsForEmail,
-        subtotal: subtotal,
-        shipping: shippingAmount,
-        total: totalAmount,
-        invoicePdfUrl: invoiceUrl,
-      });
+      const confirmationSent = await sendEmailOrLog(
+        "confirmation client",
+        event.id,
+        () =>
+          sendOrderConfirmedEmail({
+            to: customerEmail,
+            customerName: customerName || "Client",
+            orderNumber,
+            items: itemsForEmail,
+            subtotal: subtotal,
+            shipping: shippingAmount,
+            discountAmount,
+            total: totalAmount,
+            invoicePdfUrl: invoiceUrl,
+            idempotencyKey: `stripe:${event.id}:customer-confirmation`,
+          })
+      );
+      if (!confirmationSent) {
+        await redis.del(eventKey);
+        return NextResponse.json(
+          { error: "Email de confirmation temporairement indisponible" },
+          { status: 503 }
+        );
+      }
+    } else if (!customerEmail) {
+      console.error("Email de commande non envoyé : adresse client absente", { eventId: event.id });
     }
 
     console.log("Metadata :", session.metadata);
@@ -401,13 +533,13 @@ export async function POST(req: NextRequest) {
     );
 
     // --- Email admin ---
-    const itemsList = lineItems.data
+    const itemsList = productLineItems
       .map(
         (item: any) =>
           `<tr>
-            <td style="padding: 8px 0; color: #44403c; font-size: 14px;">${item.description}</td>
+            <td style="padding: 8px 0; color: #44403c; font-size: 14px;">${escapeHtml(item.description)}</td>
             <td style="padding: 8px 0; color: #78716c; font-size: 14px; text-align: center;">x${item.quantity}</td>
-            <td style="padding: 8px 0; color: #44403c; font-size: 14px; text-align: right;">${(item.amount_total / 100).toFixed(2)} €</td>
+            <td style="padding: 8px 0; color: #44403c; font-size: 14px; text-align: right;">${formatEuro(item.amount_total / 100)}</td>
           </tr>`
       )
       .join("");
@@ -416,27 +548,61 @@ export async function POST(req: NextRequest) {
       ? `${shippingAddress.line1 || ""}, ${shippingAddress.postal_code || ""} ${shippingAddress.city || ""}, ${shippingAddress.country || ""}`
       : "Adresse communiquée";
 
-    await resend.emails.send({
-      from: `Nomade <${NOREPLY_EMAIL}>`,
-      to: `${ADMIN_EMAIL}`,
-      subject: `Nouvelle commande ${orderNumber} — ${totalAmount.toFixed(2)} €`,
-      html: `
+    if (!ADMIN_EMAIL) {
+      console.error("Email de commande non envoyé : ADMIN_EMAIL absent", {
+        eventId: event.id,
+      });
+      await redis.del(eventKey);
+      return NextResponse.json({ error: "Configuration email incomplète" }, { status: 503 });
+    }
+
+    const adminEmailSent = await sendEmailOrLog("notification admin", event.id, () =>
+      resend.emails.send(
+        {
+          from: EMAIL_FROM,
+          replyTo: EMAIL_REPLY_TO,
+          to: ADMIN_EMAIL,
+          subject: `Nouvelle commande ${orderNumber} — ${formatEuro(totalAmount)}`,
+          html: `
         <div style="font-family: Inter, system-ui, sans-serif; max-width: 520px; margin: auto; padding: 30px; background: #fafaf9; border-radius: 12px;">
-          <h2 style="font-weight: 400; color: #1c1917;">Nouvelle commande</h2>
+          <h1 style="font-weight: 500; color: #1c1917; font-size: 22px;">Nouvelle commande</h1>
           <div style="background: #1c1917; color: white; padding: 12px 16px; border-radius: 8px;">
-            <p style="font-size: 18px;">${totalAmount.toFixed(2)} €</p>
+            <p style="font-size: 18px;">${formatEuro(totalAmount)}</p>
             <p style="font-size: 13px; opacity: 0.7;">${orderNumber}</p>
           </div>
-          <p><strong>${customerName}</strong><br/>${customerEmail}</p>
-          <table style="width:100%;">${itemsList}</table>
-          <p>📍 ${shippingAddressText}</p>
+          <p><strong>${escapeHtml(customerName)}</strong><br/>${escapeHtml(customerEmail)}</p>
+          <table style="width:100%;border-collapse:collapse;">
+            <thead><tr>
+              <th scope="col" align="left" style="padding:8px 0;color:#78716c;font-size:12px;">Article</th>
+              <th scope="col" align="center" style="padding:8px 0;color:#78716c;font-size:12px;">Qté</th>
+              <th scope="col" align="right" style="padding:8px 0;color:#78716c;font-size:12px;">Montant</th>
+            </tr></thead>
+            <tbody>${itemsList}</tbody>
+          </table>
+          <p style="color:#57534e;font-size:13px;line-height:1.8;">
+            Sous-total : ${formatEuro(subtotal)}<br/>
+            ${discountAmount > 0 ? `Réduction : ${formatEuro(-discountAmount)}<br/>` : ""}
+            Livraison : ${formatEuro(shippingAmount)}<br/>
+            <strong>Total payé : ${formatEuro(totalAmount)}</strong>
+          </p>
+          <p>📍 ${escapeHtml(shippingAddressText)}</p>
           <a href="${process.env.NEXT_PUBLIC_BASE_URL}/admin/orders/${order?.id}" style="display: inline-block; background: #1c1917; color: white; padding: 10px 20px; border-radius: 24px; text-decoration: none;">Voir dans l'admin</a>
         </div>`,
-    });
+        },
+        { idempotencyKey: `stripe:${event.id}:admin-notification` }
+      )
+    );
+    if (!adminEmailSent) {
+      await redis.del(eventKey);
+      return NextResponse.json(
+        { error: "Email de notification temporairement indisponible" },
+        { status: 503 }
+      );
+    }
   }
 
   // --- Marquer l'événement comme traité ---
-  await redis.set(eventKey, "processed", { ex: 86400 });
+  await redis.set(eventKey, "processed", { ex: 7 * 24 * 60 * 60 });
 
   return NextResponse.json({ received: true });
 }

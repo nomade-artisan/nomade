@@ -1,3 +1,5 @@
+import { CONTACT_EMAIL } from "./config";
+
 type Cta = {
   label: string;
   href: string;
@@ -15,10 +17,6 @@ type EmailTemplateInput = {
 };
 
 const BRAND = "Nomade";
-const CONTACT_EMAIL =
-  process.env.CONTACT_EMAIL ||
-  process.env.NOREPLY_EMAIL ||
-  "contact@nomade-artisan.fr";
 const SHOP_URL =
   process.env.NEXT_PUBLIC_BASE_URL || "https://scolta.nomade-artisan.fr";
 
@@ -32,7 +30,10 @@ export function escapeHtml(value: string): string {
 }
 
 export function formatEuro(amount: number): string {
-  return `${amount.toFixed(2)} EUR`;
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency: "EUR",
+  }).format(amount);
 }
 
 export function renderEmailTemplate({
@@ -47,19 +48,27 @@ export function renderEmailTemplate({
 }: EmailTemplateInput): string {
   const detailsRows = details
     .map(
-      (d) => `
+      ({ label, value }) => `
         <tr>
-          <td style="padding:8px 0;color:#6b7280;font-size:13px;">${escapeHtml(d.label)}</td>
-          <td style="padding:8px 0;color:#111827;font-size:13px;text-align:right;font-weight:600;">${escapeHtml(d.value)}</td>
+          <td style="padding:10px 0;color:#57534e;font-size:14px;line-height:1.5;">${escapeHtml(label)}</td>
+          <td style="padding:10px 0;color:#1c1917;font-size:14px;line-height:1.5;text-align:right;font-weight:600;">${escapeHtml(value)}</td>
         </tr>
       `
     )
     .join("");
 
+  const detailsBlock = details.length
+    ? `
+      <div style="background:#faf9f7;border:1px solid #e7e5e4;border-radius:10px;padding:12px 18px;margin:20px 0;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${detailsRows}</table>
+      </div>
+    `
+    : "";
+
   const ctaBlock = cta
     ? `
-      <div style="text-align:center;margin:24px 0;">
-        <a href="${escapeHtml(cta.href)}" style="display:inline-block;background:#111827;color:#ffffff;padding:12px 22px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:600;">
+      <div style="text-align:center;margin:28px 0;">
+        <a href="${escapeHtml(cta.href)}" style="display:inline-block;min-height:44px;box-sizing:border-box;background:#292524;color:#ffffff;padding:13px 24px;border-radius:7px;text-decoration:none;font-size:15px;line-height:20px;font-weight:600;">
           ${escapeHtml(cta.label)}
         </a>
       </div>
@@ -67,51 +76,46 @@ export function renderEmailTemplate({
     : "";
 
   return `
-    <!DOCTYPE html>
-    <html>
+    <!doctype html>
+    <html lang="fr" dir="ltr">
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>${escapeHtml(title)}</title>
       </head>
-      <body style="margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#111827;">
-        <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${escapeHtml(preheader)}</div>
-        <table width="100%" cellpadding="0" cellspacing="0" style="padding:24px 12px;background:#f3f4f6;">
+      <body style="margin:0;padding:0;background:#f5f3f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#292524;">
+        <div lang="fr" dir="ltr" style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;mso-hide:all;">${escapeHtml(preheader)}</div>
+        <table lang="fr" dir="ltr" role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="padding:32px 14px;background:#f5f3f0;">
           <tr>
             <td align="center">
-              <table width="640" cellpadding="0" cellspacing="0" style="max-width:640px;width:100%;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #e5e7eb;">
+              <table role="presentation" width="640" cellpadding="0" cellspacing="0" border="0" style="max-width:640px;width:100%;background:#ffffff;border:1px solid #e7e5e4;border-radius:12px;overflow:hidden;">
                 <tr>
-                  <td style="padding:28px 28px 20px;background:#ffffff;border-bottom:1px solid #e5e7eb;">
-                    <p style="margin:0 0 8px;font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:#6b7280;">${escapeHtml(BRAND)}</p>
-                    <h1 style="margin:0;font-size:24px;line-height:1.3;color:#111827;">${escapeHtml(title)}</h1>
+                  <td style="height:4px;background:#a87954;font-size:0;line-height:0;">&nbsp;</td>
+                </tr>
+                <tr>
+                  <td style="padding:30px 30px 24px;border-bottom:1px solid #eeeae6;">
+                    <p style="margin:0 0 10px;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#7c6f64;">${BRAND}</p>
+                    <h1 style="margin:0;font-size:25px;line-height:1.3;font-weight:600;color:#292524;">${escapeHtml(title)}</h1>
                   </td>
                 </tr>
-
                 <tr>
-                  <td style="padding:28px;">
-                    <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#111827;">Bonjour <strong>${escapeHtml(customerName)}</strong>,</p>
-                    <p style="margin:0 0 18px;font-size:14px;line-height:1.7;color:#374151;">${escapeHtml(intro)}</p>
-
-                    ${
-                      details.length > 0
-                        ? `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:14px 16px;margin:0 0 20px;"><table width="100%" cellpadding="0" cellspacing="0">${detailsRows}</table></div>`
-                        : ""
-                    }
-
+                  <td style="padding:28px 30px 32px;">
+                    <p style="margin:0 0 14px;font-size:16px;line-height:1.6;color:#292524;">Bonjour${customerName ? ` <strong>${escapeHtml(customerName)}</strong>` : ""},</p>
+                    <p style="margin:0 0 18px;font-size:16px;line-height:1.7;color:#44403c;">${escapeHtml(intro)}</p>
                     ${mainHtml}
+                    ${detailsBlock}
                     ${ctaBlock}
                     ${secondaryHtml}
                   </td>
                 </tr>
-
                 <tr>
-                  <td style="padding:18px 28px;background:#111827;">
-                    <p style="margin:0 0 8px;color:#ffffff;font-size:13px;">Besoin d'aide ?</p>
-                    <p style="margin:0;color:#d1d5db;font-size:12px;line-height:1.6;">
-                      Contact : <a href="mailto:${escapeHtml(CONTACT_EMAIL)}" style="color:#ffffff;text-decoration:none;">${escapeHtml(CONTACT_EMAIL)}</a><br />
-                      Boutique : <a href="${escapeHtml(SHOP_URL)}" style="color:#ffffff;text-decoration:none;">${escapeHtml(SHOP_URL)}</a>
+                  <td style="padding:22px 30px;background:#292524;">
+                    <p style="margin:0 0 8px;color:#ffffff;font-size:14px;line-height:1.5;font-weight:600;">Une question ? Nous sommes là pour vous aider.</p>
+                    <p style="margin:0;color:#e7e5e4;font-size:14px;line-height:1.7;">
+                      Écrivez-nous à <a href="mailto:${escapeHtml(CONTACT_EMAIL)}" style="color:#ffffff;text-decoration:underline;">${escapeHtml(CONTACT_EMAIL)}</a>.<br />
+                      Retrouvez-nous sur <a href="${escapeHtml(SHOP_URL)}" style="color:#ffffff;text-decoration:underline;">la boutique Nomade</a>.
                     </p>
-                    <p style="margin:10px 0 0;color:#9ca3af;font-size:11px;">© ${new Date().getFullYear()} ${escapeHtml(BRAND)}</p>
+                    <p style="margin:16px 0 0;color:#d6d3d1;font-size:12px;line-height:1.5;">© ${new Date().getFullYear()} ${BRAND}</p>
                   </td>
                 </tr>
               </table>
@@ -128,6 +132,9 @@ export function renderEmailText(html: string): string {
     .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
     .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
     .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/h[1-6]>/gi, "\n\n")
+    .replace(/<\/tr>/gi, "\n")
+    .replace(/<\/td>/gi, "\t")
     .replace(/<\/p>/gi, "\n\n")
     .replace(/<\/div>/gi, "\n")
     .replace(/<li>/gi, "- ")
@@ -138,6 +145,7 @@ export function renderEmailText(html: string): string {
     .replace(/&#39;/g, "'")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
+    .replace(/\t+\n/g, "\n")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }

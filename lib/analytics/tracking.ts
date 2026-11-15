@@ -1,11 +1,10 @@
-import { supabase } from "@/lib/supabase/client";
 import { getVisitorId, getSessionId } from "./visitor";
 
 interface AnalyticsEvent {
   user_id?: string;
   product_id?: string;
   page_url?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 function hasConsent() {
@@ -30,30 +29,15 @@ export async function trackEvent(
       ...data,
     };
 
-    const { error } = await supabase.from("analytics_events").insert(payload);
+    const response = await fetch("/api/analytics/events", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      keepalive: true,
+    });
 
-    if (error) {
-      const message = String(error.message ?? "Unknown analytics insert error");
-      const isRlsOrPermissionIssue =
-        /row-level security|permission denied|policy|unauthorized/i.test(message) ||
-        /row-level security|permission denied|policy|unauthorized/i.test(String(error.details ?? "")) ||
-        /row-level security|permission denied|policy|unauthorized/i.test(String(error.hint ?? ""));
-
-      console.error("Analytics insert failed:", {
-        eventType,
-        message,
-        code: error.code,
-        details: error.details,
-        hint: error.hint,
-        payload,
-        isRlsOrPermissionIssue,
-      });
-
-      if (isRlsOrPermissionIssue) {
-        console.warn(
-          "DB write may be blocked by Supabase RLS or table permissions for analytics_events."
-        );
-      }
+    if (!response.ok) {
+      console.warn("Analytics event not accepted:", eventType, response.status);
     }
   } catch (err) {
     console.error("Tracking failed:", err);

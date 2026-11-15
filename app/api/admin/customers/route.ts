@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCustomersList } from "@/lib/customers/queries";
+import { requireAdminAuthorization } from "@/lib/security/admin-auth";
 
 export async function GET(request: NextRequest) {
+  const authError = requireAdminAuthorization(request);
+  if (authError) return authError;
+
   try {
     const { searchParams } = new URL(request.url);
     const page = Number(searchParams.get("page")) || 1;
