@@ -2,9 +2,28 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { MessageCircle, PackageCheck, RotateCcw, Truck } from "lucide-react";
 import Link from "next/link";
 
+function parseShippingSetting(value: string | undefined, fallback: number) {
+  const parsed = Number.parseFloat(value ?? "");
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+}
+
+function formatEuro(value: number, maximumFractionDigits = 2) {
+  return `${value.toLocaleString("fr-FR", { maximumFractionDigits })} €`;
+}
+
 function LivraisonClient() {
+  const shippingCost = parseShippingSetting(
+    process.env.NEXT_PUBLIC_SHIPPING_COST,
+    8.11
+  );
+  const freeShippingThreshold = parseShippingSetting(
+    process.env.NEXT_PUBLIC_FREE_SHIPPING_THRESHOLD,
+    120
+  );
+
   return (
     <div className="bg-stone-50 min-h-screen pt-[64px]">
 
@@ -57,7 +76,7 @@ function LivraisonClient() {
 
         {/* DELIVERY CARDS */}
 
-        <div className="grid md:grid-cols-3 gap-4 mb-12">
+        <div className="grid items-stretch md:grid-cols-3 gap-4 mb-12">
 
           {/* STANDARD */}
 
@@ -74,27 +93,21 @@ function LivraisonClient() {
               delay: 0.02,
               duration: 0.35,
             }}
-            className="bg-white/70 backdrop-blur-sm border border-stone-200/60 rounded-[30px] overflow-hidden"
+            className="h-full flex flex-col bg-white/70 backdrop-blur-sm border border-stone-200/60 rounded-[30px] overflow-hidden"
           >
 
-            <div className="aspect-[4/3] overflow-hidden">
-
-              <img
-                src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d"
-                alt=""
-                className="w-full h-full object-cover"
-              />
-
+            <div aria-hidden="true" className="flex h-28 shrink-0 items-center justify-center bg-stone-100/80">
+              <Truck className="h-10 w-10 text-stone-500" strokeWidth={1.25} />
             </div>
 
-            <div className="p-5">
+            <div className="flex flex-1 flex-col p-5">
 
               <p className="text-[10px] uppercase tracking-[0.22em] text-stone-400 font-light mb-3">
                 Standard
               </p>
 
               <h2 className="text-lg font-light tracking-tight text-stone-900 mb-2">
-                Livraison classique
+                Livraison standard
               </h2>
 
               <p className="text-stone-500 text-sm font-light leading-relaxed mb-5">
@@ -103,8 +116,8 @@ function LivraisonClient() {
                 Colissimo suivi
               </p>
 
-              <p className="text-2xl font-light tracking-tight">
-                9,90 €
+              <p className="mt-auto pt-5 text-2xl font-light tracking-tight">
+                {formatEuro(shippingCost)}
               </p>
 
             </div>
@@ -126,37 +139,31 @@ function LivraisonClient() {
               delay: 0.05,
               duration: 0.35,
             }}
-            className="bg-white/70 backdrop-blur-sm border border-stone-200/60 rounded-[30px] overflow-hidden"
+            className="h-full flex flex-col bg-white/70 backdrop-blur-sm border border-stone-200/60 rounded-[30px] overflow-hidden"
           >
 
-            <div className="aspect-[4/3] overflow-hidden">
-
-              <img
-                src="https://images.unsplash.com/photo-1559526324-4b87b5ae7252"
-                alt=""
-                className="w-full h-full object-cover"
-              />
-
+            <div aria-hidden="true" className="flex h-28 shrink-0 items-center justify-center bg-stone-100/80">
+              <RotateCcw className="h-10 w-10 text-stone-500" strokeWidth={1.25} />
             </div>
 
-            <div className="p-5">
+            <div className="flex flex-1 flex-col p-5">
 
               <p className="text-[10px] uppercase tracking-[0.22em] text-stone-400 font-light mb-3">
-                Express
+                Retours
               </p>
 
               <h2 className="text-lg font-light tracking-tight text-stone-900 mb-2">
-                Livraison rapide
+                Retours gratuits
               </h2>
 
               <p className="text-stone-500 text-sm font-light leading-relaxed mb-5">
-                1 à 2 jours ouvrés
+                Jusqu’à 15 jours après réception
                 <br />
-                Chronopost
+                Étiquette prépayée
               </p>
 
-              <p className="text-2xl font-light tracking-tight">
-                14,90 €
+              <p className="mt-auto pt-5 text-2xl font-light tracking-tight">
+                Gratuit
               </p>
 
             </div>
@@ -178,20 +185,14 @@ function LivraisonClient() {
               delay: 0.08,
               duration: 0.35,
             }}
-            className="bg-emerald-50 border border-emerald-100 rounded-[30px] overflow-hidden"
+            className="h-full flex flex-col bg-emerald-50 border border-emerald-100 rounded-[30px] overflow-hidden"
           >
 
-            <div className="aspect-[4/3] overflow-hidden">
-
-              <img
-                src="https://images.unsplash.com/photo-1533130061792-64b345e4a833"
-                alt=""
-                className="w-full h-full object-cover"
-              />
-
+            <div aria-hidden="true" className="flex h-28 shrink-0 items-center justify-center bg-emerald-100/80">
+              <PackageCheck className="h-10 w-10 text-emerald-700" strokeWidth={1.25} />
             </div>
 
-            <div className="p-5">
+            <div className="flex flex-1 flex-col p-5">
 
               <p className="text-[10px] uppercase tracking-[0.22em] text-emerald-600 font-light mb-3">
                 Offerte
@@ -202,12 +203,12 @@ function LivraisonClient() {
               </h2>
 
               <p className="text-emerald-700 text-sm font-light leading-relaxed mb-5">
-                Dès 120 €
+                Dès {formatEuro(freeShippingThreshold, 0)}
                 <br />
                 dans les zones desservies
               </p>
 
-              <p className="text-2xl font-light tracking-tight text-emerald-800">
+              <p className="mt-auto pt-5 text-2xl font-light tracking-tight text-emerald-800">
                 Gratuit
               </p>
 
@@ -219,7 +220,7 @@ function LivraisonClient() {
 
         {/* INFORMATIONS */}
 
-        <div className="grid lg:grid-cols-2 gap-5 mb-12">
+        <div className="grid items-stretch lg:grid-cols-2 gap-5 mb-12">
 
           {/* LEFT */}
 
@@ -236,7 +237,7 @@ function LivraisonClient() {
               delay: 0.1,
               duration: 0.35,
             }}
-            className="bg-white/70 backdrop-blur-sm border border-stone-200/60 rounded-[30px] p-6 md:p-7"
+            className="h-full bg-white/70 backdrop-blur-sm border border-stone-200/60 rounded-[30px] p-6 md:p-7"
           >
 
             <h3 className="text-xl font-light tracking-tight text-stone-900 mb-6">
@@ -313,20 +314,8 @@ function LivraisonClient() {
               delay: 0.14,
               duration: 0.35,
             }}
-            className="bg-white/70 backdrop-blur-sm border border-stone-200/60 rounded-[30px] overflow-hidden"
+            className="h-full bg-white/70 backdrop-blur-sm border border-stone-200/60 rounded-[30px] p-6 md:p-7"
           >
-
-            <div className="aspect-[4/3] overflow-hidden">
-
-              <img
-                src="https://images.unsplash.com/photo-1563013544-824ae1b704d3"
-                alt=""
-                className="w-full h-full object-cover"
-              />
-
-            </div>
-
-            <div className="p-6 md:p-7">
 
               <h3 className="text-xl font-light tracking-tight text-stone-900 mb-6">
                 Retours & échanges
@@ -352,8 +341,6 @@ function LivraisonClient() {
                 </p>
 
               </div>
-
-            </div>
 
           </motion.div>
 
@@ -398,7 +385,7 @@ function LivraisonClient() {
 
           </div>
 
-          <div className="grid md:grid-cols-4 gap-4">
+          <div className="grid items-stretch md:grid-cols-4 gap-4">
 
             {[
               {
@@ -425,7 +412,7 @@ function LivraisonClient() {
 
               <div
                 key={step.number}
-                className="border border-stone-200 rounded-[24px] p-5"
+                className="h-full border border-stone-200 rounded-[24px] p-5"
               >
 
                 <p className="text-[10px] uppercase tracking-[0.22em] text-stone-400 font-light mb-5">
@@ -462,15 +449,15 @@ function LivraisonClient() {
           className="relative rounded-[36px] overflow-hidden"
         >
 
-          <img
-            src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1"
-            alt=""
-            className="w-full h-[280px] md:h-[340px] object-cover"
-          />
+          <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-br from-stone-700 via-stone-800 to-stone-950" />
+          <div aria-hidden="true" className="absolute -right-16 -top-24 h-80 w-80 rounded-full border border-white/10" />
+          <div aria-hidden="true" className="absolute -right-2 -top-10 h-52 w-52 rounded-full border border-white/10" />
 
-          <div className="absolute inset-0 bg-stone-900/55 flex items-center justify-center">
+          <div className="relative flex min-h-[280px] items-center justify-center md:min-h-[340px]">
 
             <div className="text-center px-6">
+
+              <MessageCircle aria-hidden="true" className="mx-auto mb-5 h-8 w-8 text-white/75" strokeWidth={1.25} />
 
               <h2 className="text-3xl md:text-4xl font-light text-white tracking-tight mb-5">
                 Une question ?
