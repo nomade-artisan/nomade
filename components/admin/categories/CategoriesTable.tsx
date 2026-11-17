@@ -42,7 +42,8 @@ export default function CategoriesTable({ categories }: Props) {
   return (
     <Card>
       <CardContent className="p-0">
-        <table className="w-full">
+        <div className="hidden overflow-x-auto md:block">
+        <table className="w-full min-w-[760px]">
           <thead>
             <tr className="border-b bg-muted/30">
               <th className="text-left p-4 text-sm">Collection</th>
@@ -77,6 +78,47 @@ export default function CategoriesTable({ categories }: Props) {
             ))}
           </tbody>
         </table>
+        </div>
+
+        <div className="divide-y md:hidden">
+          {categories.length === 0 ? (
+            <p className="p-8 text-center text-sm text-muted-foreground">Aucune catégorie</p>
+          ) : (
+            categories.map((cat) => (
+              <article key={cat.id} className="space-y-4 p-4 sm:p-5">
+                <div className="min-w-0">
+                  <h2 className="break-words font-medium">{cat.name}</h2>
+                  <p className="mt-1 break-all text-sm text-muted-foreground">{cat.slug}</p>
+                </div>
+                <dl className="space-y-3 text-sm">
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Collection</dt>
+                    <dd className="mt-1">{cat.collection?.name || "—"}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Description</dt>
+                    <dd className="mt-1 break-words">{cat.description || "—"}</dd>
+                  </div>
+                </dl>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button asChild variant="outline" size="sm" className="min-h-11 w-full">
+                    <Link href={`/admin/categories/${cat.id}`}>
+                      <Pencil className="mr-2 h-4 w-4" />Modifier
+                    </Link>
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="min-h-11 w-full"
+                    onClick={() => setDeleteId(cat.id)}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />Supprimer
+                  </Button>
+                </div>
+              </article>
+            ))
+          )}
+        </div>
       </CardContent>
 
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>

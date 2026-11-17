@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 
 export default function SettingsPage() {
   return (
-    <div className="space-y-8 p-8">
-      <h1 className="text-3xl font-bold">Paramètres</h1>
+    <div className="space-y-6 sm:space-y-8">
+      <h1 className="text-2xl font-bold sm:text-3xl">Paramètres</h1>
 
       <Card>
         <CardHeader>

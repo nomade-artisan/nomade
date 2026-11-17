@@ -47,6 +47,7 @@ export default function ProductInventory({
               min={0}
               step="0.01"
               value={product.price}
+              className="h-11 sm:h-9"
               onChange={(e) =>
                 setProduct((prev) => ({
                   ...prev,
@@ -65,6 +66,7 @@ export default function ProductInventory({
               type="number"
               min={0}
               value={product.stock}
+              className="h-11 sm:h-9"
               onChange={(e) =>
                 setProduct((prev) => ({
                   ...prev,
@@ -89,7 +91,7 @@ export default function ProductInventory({
                 status: event.target.value as ProductFormState["status"],
               }))
             }
-            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+            className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 sm:h-9"
           >
             <option value="draft">Brouillon</option>
             <option value="active">Actif</option>

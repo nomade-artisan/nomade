@@ -40,14 +40,14 @@ export default async function ProductsPage({ searchParams }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">Produits</h1>
           <p className="text-sm text-muted-foreground">
             {total} produit{total > 1 ? "s" : ""} au total
           </p>
         </div>
-        <Button asChild>
+        <Button asChild className="w-full sm:w-auto">
           <Link href="/admin/products/new">
             <Plus className="mr-2 h-4 w-4" />
             Nouveau produit

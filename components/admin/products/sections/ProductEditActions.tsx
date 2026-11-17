@@ -68,6 +68,7 @@ export default function ProductEditActions({
               <Button
                 type="button"
                 variant="destructive"
+                className="order-last min-h-11 w-full sm:order-none sm:w-auto"
                 disabled={isSubmitting}
               >
                 <Trash2 className="mr-2 h-4 w-4" />
@@ -105,16 +106,17 @@ export default function ProductEditActions({
           </AlertDialogContent>
         </AlertDialog>
 
-          <div className="flex gap-3">
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:gap-3">
             <Button
               type="button"
               variant="outline"
+              className="min-h-11 w-full sm:w-auto"
               onClick={() => router.back()}
               disabled={isSubmitting}
             >
               Annuler
             </Button>
-            <Button type="submit" disabled={isSubmitting} className="min-w-37.5">
+            <Button type="submit" disabled={isSubmitting} className="min-h-11 w-full sm:min-w-37.5 sm:w-auto">
               {isSubmitting ? "Enregistrement..." : "Enregistrer"}
             </Button>
           </div>

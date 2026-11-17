@@ -15,7 +15,7 @@ export default function ProductActions({
 }: ProductActionsProps) {
   return (
     <div className="sticky bottom-4 z-20 mt-8 rounded-2xl border border-border/80 bg-background/98 p-3 shadow-lg shadow-black/5 backdrop-blur supports-backdrop-filter:bg-background/90">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="hidden min-w-0 sm:block">
           <p className="text-sm font-medium text-foreground">Finaliser la fiche produit</p>
           <p className="text-xs text-muted-foreground">
@@ -23,11 +23,12 @@ export default function ProductActions({
           </p>
         </div>
 
-        <div className="ml-auto flex items-center gap-3">
+        <div className="flex w-full flex-col gap-2 sm:ml-auto sm:w-auto sm:flex-row sm:items-center sm:gap-3">
           <Button
             asChild
             type="button"
             variant="outline"
+            className="min-h-11 w-full sm:w-auto"
           >
             <Link href="/admin/products">
               <X className="mr-2 h-4 w-4" />
@@ -38,7 +39,7 @@ export default function ProductActions({
           <Button
             type="submit"
             disabled={isLoading}
-            className="min-w-42.5"
+            className="min-h-11 w-full sm:min-w-42.5 sm:w-auto"
           >
             <Save className="mr-2 h-4 w-4" />
 

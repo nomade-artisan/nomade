@@ -21,15 +21,15 @@ export default function CustomersPagination({ page, totalPages }: Props) {
   }
 
   return (
-    <div className="flex items-center justify-between border-t px-4 py-3">
+    <div className="flex flex-col gap-3 border-t px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
       <span className="text-sm text-muted-foreground">
         Page {page} sur {totalPages}
       </span>
       <div className="flex gap-2">
-        <Button variant="outline" size="sm" onClick={() => goToPage(page - 1)} disabled={page <= 1}>
+        <Button variant="outline" size="sm" aria-label="Page précédente" className="min-h-11 min-w-11" onClick={() => goToPage(page - 1)} disabled={page <= 1}>
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        <Button variant="outline" size="sm" onClick={() => goToPage(page + 1)} disabled={page >= totalPages}>
+        <Button variant="outline" size="sm" aria-label="Page suivante" className="min-h-11 min-w-11" onClick={() => goToPage(page + 1)} disabled={page >= totalPages}>
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>

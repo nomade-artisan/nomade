@@ -21,7 +21,7 @@ export default function OrdersPagination({ page, totalPages }: Props) {
   }
 
   return (
-    <div className="flex items-center justify-between border-t px-4 py-3">
+    <div className="flex flex-col gap-3 border-t px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
       <span className="text-sm text-muted-foreground">
         Page {page} sur {totalPages}
       </span>
@@ -29,6 +29,8 @@ export default function OrdersPagination({ page, totalPages }: Props) {
         <Button
           variant="outline"
           size="sm"
+          aria-label="Page précédente"
+          className="min-h-11 min-w-11"
           onClick={() => goToPage(page - 1)}
           disabled={page <= 1}
         >
@@ -37,6 +39,8 @@ export default function OrdersPagination({ page, totalPages }: Props) {
         <Button
           variant="outline"
           size="sm"
+          aria-label="Page suivante"
+          className="min-h-11 min-w-11"
           onClick={() => goToPage(page + 1)}
           disabled={page >= totalPages}
         >

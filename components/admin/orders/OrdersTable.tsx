@@ -36,20 +36,20 @@ export default function OrdersTable({ orders }: Props) {
   return (
     <Card>
       <CardHeader>
-        <form onSubmit={handleSearch} className="flex gap-4">
+        <form onSubmit={handleSearch} className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               name="search"
               placeholder="Rechercher un client..."
               defaultValue={currentParams.get("search") || ""}
-              className="pl-9"
+              className="h-11 pl-9 sm:h-9"
             />
           </div>
           <select
             name="status"
             defaultValue={currentParams.get("status") || "all"}
-            className="flex h-9 w-[180px] rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+            className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 sm:h-9 sm:w-[180px]"
           >
             <option value="all">Tous les statuts</option>
             <option value="pending">En attente</option>
@@ -59,12 +59,13 @@ export default function OrdersTable({ orders }: Props) {
             <option value="cancelled">Annulée</option>
             <option value="returned">Retournée</option>
           </select>
-          <Button type="submit">Filtrer</Button>
+          <Button type="submit" className="min-h-11 w-full sm:min-h-9 sm:w-auto">Filtrer</Button>
         </form>
       </CardHeader>
 
       <CardContent className="p-0">
-        <table className="w-full">
+        <div className="hidden overflow-x-auto md:block">
+        <table className="w-full min-w-[900px]">
           <thead>
             <tr className="border-b bg-muted/30">
               <th className="text-left p-4 text-sm font-medium">Commande</th>
@@ -130,6 +131,71 @@ export default function OrdersTable({ orders }: Props) {
             )}
           </tbody>
         </table>
+        </div>
+
+        <div className="divide-y md:hidden">
+          {orders.length === 0 ? (
+            <p className="p-8 text-center text-sm text-muted-foreground">
+              Aucune commande trouvée
+            </p>
+          ) : (
+            orders.map((order) => (
+              <article key={order.id} className="space-y-4 p-4 sm:p-5">
+                <div className="flex min-w-0 items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="break-all font-mono text-sm font-medium">
+                      #{order.order_number || order.id.substring(0, 8)}
+                    </p>
+                    <p className="mt-1 truncate text-sm text-muted-foreground">
+                      {order.customer_name}
+                    </p>
+                  </div>
+                  <span
+                    className={`shrink-0 rounded-full px-2 py-1 text-xs ${ORDER_STATUS_COLORS[order.status]}`}
+                  >
+                    {ORDER_STATUS_LABELS[order.status]}
+                  </span>
+                </div>
+
+                {order.refunded_at && (
+                  <span className="inline-flex rounded-full bg-rose-100 px-2 py-1 text-xs text-rose-800">
+                    Remboursée
+                  </span>
+                )}
+
+                <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Articles</dt>
+                    <dd className="mt-1">{order.items_count}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Date</dt>
+                    <dd className="mt-1">{new Date(order.created_at).toLocaleDateString("fr-FR")}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Total</dt>
+                    <dd className="mt-1 font-semibold">{order.total.toFixed(2)} €</dd>
+                  </div>
+                  <div className="min-w-0">
+                    <dt className="text-xs text-muted-foreground">Réduction</dt>
+                    <dd className="mt-1 truncate">
+                      {(order.discount_amount ?? 0) > 0
+                        ? `-${(order.discount_amount ?? 0).toFixed(2)} €${order.promo_code ? ` (${order.promo_code})` : ""}`
+                        : "—"}
+                    </dd>
+                  </div>
+                </dl>
+
+                <Button asChild variant="outline" size="sm" className="min-h-11 w-full">
+                  <Link href={`/admin/orders/${order.id}`}>
+                    <Eye className="mr-2 h-4 w-4" />
+                    Détail de la commande
+                  </Link>
+                </Button>
+              </article>
+            ))
+          )}
+        </div>
       </CardContent>
     </Card>
   );

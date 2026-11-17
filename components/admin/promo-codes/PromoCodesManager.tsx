@@ -193,8 +193,8 @@ export default function PromoCodesManager() {
           <CardTitle>Nouveau code promo</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleCreatePromo} className="grid gap-4 md:grid-cols-5">
-            <div className="md:col-span-2">
+          <form onSubmit={handleCreatePromo} className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+            <div className="xl:col-span-2">
               <label className="text-sm font-medium">Code</label>
               <Input
                 value={form.code}
@@ -216,7 +216,7 @@ export default function PromoCodesManager() {
                     discount_type: event.target.value as DiscountType,
                   }))
                 }
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 sm:h-9"
               >
                 <option value="fixed">Montant fixe</option>
                 <option value="percent">Pourcentage</option>
@@ -250,7 +250,7 @@ export default function PromoCodesManager() {
               />
             </div>
 
-            <div className="md:col-span-2">
+            <div className="xl:col-span-2">
               <label className="text-sm font-medium">Stripe promotion_code ID</label>
               <Input
                 value={form.stripe_promotion_code_id}
@@ -277,8 +277,8 @@ export default function PromoCodesManager() {
               />
             </div>
 
-            <div className="md:col-span-5 flex justify-end">
-              <Button type="submit" disabled={saving}>
+            <div className="flex justify-end sm:col-span-2 xl:col-span-5">
+              <Button type="submit" className="w-full sm:w-auto" disabled={saving}>
                 {saving ? "Creation..." : "Creer le code"}
               </Button>
             </div>
@@ -300,7 +300,7 @@ export default function PromoCodesManager() {
           ) : promoCodes.length === 0 ? (
             <p className="text-sm text-muted-foreground">Aucun code promo enregistre.</p>
           ) : (
-            <Table>
+            <Table className="min-w-[760px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Code</TableHead>

@@ -1,21 +1,16 @@
-﻿# Migrations de mise en production
+# Migrations de mise en production
 
-## État vérifié le 14 novembre 2026
+## État vérifié le 17 novembre 2026
 
-- Le projet de la boutique est `ioymapbrhuusvaitsoyu`; il répond après sa réactivation. Le build de production local passe, et des lectures en lecture seule ont confirmé des données dans `products`, `categories` et `collections`.
-- `20261113040241_prepare_checkout_and_refund_schema.sql` est appliquée et vérifiée. Les index sont valides, les colonnes de remboursement sont présentes, et `reserve_products_for_payment` est exécutable uniquement par `service_role`.
-- `20261114031427_restrict_public_prediction_reads.sql` est appliquée et vérifiée. RLS est activé sur `product_forecasts` et `product_predictions`; `anon` et `authenticated` n'ont plus le droit SELECT. Le client serveur `service_role` conserve l'accès.
-- `20261114024801_restrict_public_writes_and_storage.sql` reste dans ce dossier : ses restrictions générales des anciennes écritures anonymes doivent attendre le déploiement du nouveau code.
+- Le projet Vercel `nomade` utilise en Production le projet Supabase `hsfxhydtrntmublewdmq` (`supabase-nomade`, région `eu-north-1`). Cette URL a été confirmée par l’utilisateur dans les variables de Production de Vercel.
+- Le fichier local `supabase/.temp/project-ref` pointe encore vers `ioymapbrhuusvaitsoyu`. Une inspection en lecture seule y a trouvé des tables `wedding_*` et aucune table boutique comme `orders` ou `products`. Ne pas y appliquer les migrations NOMADE ni utiliser `supabase db push --linked` avant d’avoir vérifié le lien et les migrations propres à ce projet.
+- La migration `prepare_checkout_and_refund_schema` a été appliquée sur `hsfxhydtrntmublewdmq` le 17 novembre. Les colonnes `orders.stripe_refund_id` et `orders.refunded_at`, les index, la table de réservation et sa fonction sont présents. Aucun doublon bloquant n’a été trouvé avant l’application.
+- Supabase a enregistré cette opération sous la version `20261117141915`, tandis que le dépôt contient `20261113040241_prepare_checkout_and_refund_schema.sql`. Vérifier la liste des migrations et réconcilier ces versions avant le prochain `db push`.
+- Après la migration, le contrôle SQL a confirmé que RLS est activé sur `stripe_inventory_reservations`, que `anon` ne peut pas exécuter `reserve_products_for_payment` et que `service_role` le peut.
+- Vercel n’a signalé aucune nouvelle erreur sur `/admin/dashboard` dans la fenêtre de dix minutes suivant la migration. Recharger le tableau de bord pour confirmer le parcours en direct.
 
-Le projet `hsfxhydtrntmublewdmq` vu lors d'un audit antérieur est une autre base et ne doit pas être ciblé pour les migrations de la boutique.
+## Migrations restantes à examiner
 
-## Ordre restant
-
-1. Vérifier dans Vercel que `NEXT_PUBLIC_SUPABASE_URL` désigne `https://ioymapbrhuusvaitsoyu.supabase.co`.
-2. Déployer le nouveau code et vérifier en mode test le catalogue, le panier, le paiement, le webhook Stripe, les stocks, les remboursements et les routes contact/avis/newsletter.
-3. Après validation du nouveau code en ligne, déplacer le SQL de verrouillage de ce dossier dans `supabase/migrations`, refaire un dry-run et confirmer qu'il ne liste que cette migration, puis l'appliquer.
-4. Contrôler les lectures publiques du catalogue, les écritures via les API serveur et les opérations d'administration après le verrouillage.
-
-Le conseiller Supabase ne signale plus d'erreur RLS. Il signale encore un index unique redondant sur `product_daily_metrics` et un `search_path` non fixé sur `promo_codes_set_updated_at`. La fonction est actuellement `SECURITY INVOKER`; la migration de verrouillage fixe son `search_path` et retire le doublon d'index, en conservant celui utilisé par les upserts applicatifs.
-
-Les migrations locales n'affectent pas le distant par elles-mêmes. Vérifier la liste et le dry-run avant chaque `db push`; ne pas utiliser `--include-all` ou `--yes` pour contourner ce contrôle.
+- `20261114031427_restrict_public_prediction_reads.sql` cible `product_forecasts` et `product_predictions`, tables absentes du projet `hsfxhydtrntmublewdmq` lors de la vérification. Ne pas appliquer cette migration telle quelle à cette base.
+- `20261114024801_restrict_public_writes_and_storage.sql` reste dans ce dossier et n’a pas été appliquée. Elle modifie les politiques et les droits du catalogue, des avis, des événements analytiques, des contacts et du stockage. Vérifier les parcours concernés avant de l’appliquer.
+- Le conseiller Supabase signale aussi que `public.rls_auto_enable()` est une fonction `SECURITY DEFINER` dont l’exécution est accordée à `anon` et `authenticated`, ainsi qu’un `search_path` non fixé pour `promo_codes_set_updated_at`. La migration de verrouillage ci-dessus prévoit des corrections, mais elle touche aussi les politiques et le stockage ; traiter ces points dans une étape dédiée.

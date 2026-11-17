@@ -63,7 +63,7 @@ const modules = [
 
 export default function AdminHomePage() {
   return (
-    <div className="space-y-8 p-8">
+    <div className="space-y-6 sm:space-y-8">
       <div>
         <h1 className="text-3xl font-bold">Administration</h1>
         <p className="text-muted-foreground mt-2">
@@ -71,7 +71,7 @@ export default function AdminHomePage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 xl:grid-cols-3">
         {modules.map((mod) => {
           const Icon = mod.icon;
           return (
@@ -94,7 +94,7 @@ export default function AdminHomePage() {
         })}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Accès rapide</CardTitle>

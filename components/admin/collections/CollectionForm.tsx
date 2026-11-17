@@ -205,11 +205,11 @@ export default function CollectionForm({ initialData }: Props) {
           </div>
 
           {/* Boutons */}
-          <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={() => router.back()}>
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+            <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => router.back()}>
               Annuler
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" className="w-full sm:w-auto" disabled={isLoading}>
               {isLoading ? "Enregistrement..." : "Enregistrer"}
             </Button>
           </div>

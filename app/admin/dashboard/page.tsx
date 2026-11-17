@@ -17,8 +17,8 @@ export default async function DashboardPage() {
   ]);
 
   return (
-    <div className="space-y-8 p-8">
-      <h1 className="text-3xl font-bold">Tableau de bord</h1>
+    <div className="space-y-6 sm:space-y-8">
+      <h1 className="text-2xl font-bold sm:text-3xl">Tableau de bord</h1>
 
       <Alert variant="default" className="border-amber-500 bg-amber-50">
         <AlertTriangle className="h-4 w-4 text-amber-600" />
