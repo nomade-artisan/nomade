@@ -191,7 +191,7 @@ export async function getDailySales(): Promise<SalesDataPoint[]> {
   const firstDate = addCalendarDays(today, -29);
   const { start } = getDateRangeUtc(firstDate);
   const { end } = getDateRangeUtc(today);
-  const orders = await readAllPages<{ id: string; total: number | null; created_at: string }>((from, to) =>
+  const orders = await readAllPages<{ total: number | null; created_at: string }>((from, to) =>
     supabaseAdmin
       .from("orders")
       .select("total, created_at")
