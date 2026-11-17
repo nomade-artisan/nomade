@@ -176,10 +176,11 @@ export default function ProductDetails({
 
         <div className="h-px bg-border" />
 
-        <div className="flex gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row">
 
           <Input
             placeholder="Ex : Compartiment ordinateur 16 pouces"
+            className="h-11 sm:h-9"
             value={detail}
             onChange={(e) =>
               setDetail(e.target.value)
@@ -194,6 +195,7 @@ export default function ProductDetails({
 
           <Button
             type="button"
+            className="min-h-11 w-full sm:w-auto"
             onClick={addDetail}
           >
             <Plus className="mr-2 h-4 w-4" />
@@ -228,6 +230,7 @@ export default function ProductDetails({
                   type="button"
                   size="icon"
                   variant="ghost"
+                  className="h-11 w-11 shrink-0"
                   onClick={() => setPendingDetailIndex(item.index)}
                 >
                   <Trash2 className="h-4 w-4 text-red-500" />

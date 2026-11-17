@@ -91,7 +91,7 @@ function SuccessClient() {
 
       ) : (
 
-        <div className="max-w-4xl mx-auto px-6 md:px-10 py-12 md:py-16">
+        <div className="site-container max-w-4xl py-10 sm:py-12 md:py-16">
 
           {/* HERO */}
 

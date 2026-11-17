@@ -120,9 +120,9 @@ function BoutiqueClient({
 
   return (
     <div className="bg-white text-stone-800 pt-20">
-      <div className="max-w-7xl mx-auto px-5 md:px-8 py-12 md:py-14">
-        <div className="text-center mb-10">
-          <h1 className="text-4xl md:text-6xl font-light tracking-tight text-stone-900 mb-3">
+      <div className="site-container max-w-7xl py-8 sm:py-10 md:py-12">
+        <div className="mb-8 text-center sm:mb-10">
+          <h1 className="public-page-title mb-3 text-stone-900">
             Collections
           </h1>
           <p className="text-stone-400 font-light text-base md:text-lg tracking-wide max-w-sm mx-auto">

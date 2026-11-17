@@ -11,14 +11,14 @@ export default function MetricsCards({ metrics }: { metrics: GlobalMetrics }) {
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
       {cards.map((c) => (
-        <Card key={c.title}>
+        <Card key={c.title} className="min-w-0">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">{c.title}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-light">{c.value}</p>
+            <p className="break-words text-2xl font-light sm:text-3xl">{c.value}</p>
           </CardContent>
         </Card>
       ))}

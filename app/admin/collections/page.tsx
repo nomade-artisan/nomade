@@ -11,9 +11,9 @@ export default async function CollectionsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold">Collections</h1>
-        <Button asChild>
+        <Button asChild className="w-full sm:w-auto">
           <Link href="/admin/collections/new">
             <Plus className="mr-2 h-4 w-4" />
             Nouvelle collection

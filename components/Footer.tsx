@@ -60,13 +60,13 @@ function Footer() {
 
   return (
     <footer className="bg-white border-t border-stone-100">
-      <div className="max-w-7xl mx-auto px-6 md:px-10 py-16 md:py-20">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-10 md:gap-12">
+      <div className="site-container max-w-7xl py-12 sm:py-16 lg:py-20">
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 sm:gap-10 lg:grid-cols-3 xl:grid-cols-5 xl:gap-12">
           {/* Marque */}
-          <div className="sm:col-span-2 md:col-span-1">
+          <div className="sm:col-span-2 lg:col-span-1">
             <Link
               href="/"
-              className="text-2xl font-extralight tracking-[-0.02em]"
+              className="text-xl font-extralight tracking-[-0.02em] sm:text-2xl"
             >
               SCOLTA by Nomade
             </Link>
@@ -142,14 +142,14 @@ function Footer() {
           </div>
 
           {/* Newsletter */}
-          <div className="sm:col-span-2 md:col-span-1">
+          <div className="sm:col-span-2 lg:col-span-2 xl:col-span-1">
             <h3 className="text-xs tracking-[0.3em] uppercase text-stone-400 mb-5 font-light">
               Restez nomade
             </h3>
             <p className="text-stone-500 text-xs font-light mb-4 leading-relaxed">
               Recevez nos actualités et offres exclusives.
             </p>
-            <form onSubmit={handleNewsletter} className="flex gap-2 max-w-sm">
+            <form onSubmit={handleNewsletter} className="flex w-full max-w-sm gap-2">
               <input
                 type="email"
                 placeholder="Votre email"

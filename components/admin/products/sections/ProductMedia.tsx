@@ -146,10 +146,11 @@ export default function ProductMedia({
           onChange={handleFiles}
         />
 
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
           <Button
             type="button"
             variant="outline"
+            className="min-h-11 w-full sm:w-auto"
             onClick={() => inputRef.current?.click()}
             disabled={isProcessing}
           >
@@ -162,7 +163,7 @@ export default function ProductMedia({
           </Button>
 
           {compressionStats && (
-            <p className="text-sm text-muted-foreground">{compressionStats}</p>
+            <p className="break-words text-sm text-muted-foreground">{compressionStats}</p>
           )}
         </div>
 
@@ -190,7 +191,7 @@ export default function ProductMedia({
                 <div className="space-y-2 p-3">
                   <Button
                     type="button"
-                    className="w-full"
+                    className="min-h-11 w-full"
                     variant={image.isCover ? "default" : "outline"}
                     onClick={() => setCover(image.id)}
                   >
@@ -203,7 +204,7 @@ export default function ProductMedia({
                   <Button
                     type="button"
                     variant="destructive"
-                    className="w-full"
+                    className="min-h-11 w-full"
                     onClick={() => setPendingImageId(image.id)}
                   >
                     <Trash2 className="mr-2 h-4 w-4" />

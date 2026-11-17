@@ -19,7 +19,7 @@ function HistoireClient() {
       {/* =========================================================
           HERO
       ========================================================= */}
-      <section className="relative min-h-screen overflow-hidden">
+      <section className="relative min-h-[78svh] overflow-hidden sm:min-h-screen">
         <div className="absolute inset-0">
           <Image
             src={histoireImage("histoire-hero.webp")}
@@ -33,8 +33,8 @@ function HistoireClient() {
 
         <div className="absolute inset-0 bg-black/55" />
 
-        <div className="relative z-10 min-h-screen flex items-end">
-          <div className="max-w-7xl mx-auto px-6 md:px-10 w-full pb-24 md:pb-32">
+        <div className="relative z-10 flex min-h-[78svh] items-end sm:min-h-screen">
+          <div className="site-container max-w-7xl pb-16 sm:pb-20 md:pb-28">
             <motion.div
               initial={{ opacity: 0, y: 35 }}
               animate={{ opacity: 1, y: 0 }}
@@ -45,13 +45,13 @@ function HistoireClient() {
                 Maison NOMADE
               </p>
 
-              <h1 className="text-white text-5xl md:text-7xl xl:text-8xl font-extralight leading-[0.95] tracking-[-0.04em] mb-10">
+              <h1 className="public-page-title mb-6 text-white sm:mb-8">
                 Une maison.
                 <br />
                 Des marques.
               </h1>
 
-              <p className="text-white/70 text-lg md:text-2xl font-light leading-relaxed max-w-2xl">
+              <p className="max-w-2xl text-base font-light leading-relaxed text-white/75 sm:text-lg">
                 La Maison NOMADE développe des marques autour du cuir, de
                 l'artisanat et des objets du quotidien. SCOLTA est l'une
                 d'entre elles.
@@ -64,9 +64,9 @@ function HistoireClient() {
       {/* =========================================================
           INTRO
       ========================================================= */}
-      <section className="py-24 md:py-40 bg-white">
-        <div className="max-w-6xl mx-auto px-6 md:px-10">
-          <div className="grid lg:grid-cols-2 gap-20 items-start">
+      <section className="bg-white py-16 md:py-28">
+        <div className="site-container max-w-6xl">
+          <div className="grid items-start gap-10 lg:grid-cols-2 lg:gap-14">
             <motion.div
               initial={{ opacity: 0, y: 35 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -77,7 +77,7 @@ function HistoireClient() {
                 La Maison NOMADE
               </p>
 
-              <h2 className="text-4xl md:text-6xl font-extralight leading-tight tracking-[-0.03em]">
+              <h2 className="public-section-title">
                 Construire
                 <br />
                 une maison
@@ -93,7 +93,7 @@ function HistoireClient() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 1 }}
-              className="space-y-8 text-stone-600 text-lg md:text-xl font-light leading-relaxed"
+              className="space-y-6 text-base font-light leading-relaxed text-stone-600 sm:space-y-8 sm:text-lg"
             >
               <p>
                 NOMADE est une maison qui développe des marques et des
@@ -121,9 +121,9 @@ function HistoireClient() {
       {/* =========================================================
           SCOLTA
       ========================================================= */}
-      <section className="py-24 md:py-40 bg-[#f8f5f1]">
-        <div className="max-w-6xl mx-auto px-6 md:px-10">
-          <div className="grid lg:grid-cols-2 gap-20 items-center">
+      <section className="bg-[#f8f5f1] py-16 md:py-28">
+        <div className="site-container max-w-6xl">
+          <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-14">
             <motion.div
               initial={{ opacity: 0, y: 35 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -135,7 +135,7 @@ function HistoireClient() {
                 Une marque de la Maison NOMADE
               </p>
 
-              <h2 className="text-4xl md:text-6xl font-extralight leading-tight tracking-[-0.03em]">
+              <h2 className="public-section-title">
                 SCOLTA
                 <br />
                 commence ici.
@@ -147,7 +147,7 @@ function HistoireClient() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 1 }}
-              className="order-1 lg:order-2 space-y-8 text-stone-600 text-lg md:text-xl font-light leading-relaxed"
+              className="order-1 space-y-6 text-base font-light leading-relaxed text-stone-600 sm:space-y-8 sm:text-lg lg:order-2"
             >
               <p>
                 SCOLTA est une marque développée par la Maison NOMADE. Elle
@@ -174,7 +174,7 @@ function HistoireClient() {
       {/* =========================================================
           IMAGE ATELIER
       ========================================================= */}
-      <section className="relative h-[75vh] overflow-hidden">
+      <section className="relative h-[55vh] min-h-[22rem] overflow-hidden sm:h-[65vh]">
         <Image
           src={histoireImage("histoire-atelier.webp")}
           alt=""
@@ -193,7 +193,7 @@ function HistoireClient() {
             transition={{ duration: 1 }}
             className="text-center text-white"
           >
-            <p className="text-3xl md:text-6xl xl:text-7xl font-extralight leading-[1.1] tracking-[-0.03em]">
+            <p className="text-2xl font-extralight leading-tight tracking-[-0.03em] sm:text-4xl lg:text-5xl">
               « Chaque détail
               <br />
               compte. »
@@ -205,9 +205,9 @@ function HistoireClient() {
       {/* =========================================================
           MATIÈRES
       ========================================================= */}
-      <section className="py-24 md:py-40">
-        <div className="max-w-6xl mx-auto px-6 md:px-10">
-          <div className="grid lg:grid-cols-2 gap-20">
+      <section className="py-16 md:py-28">
+        <div className="site-container max-w-6xl">
+          <div className="grid gap-10 lg:grid-cols-2 lg:gap-14">
             <motion.div
               initial={{ opacity: 0, y: 35 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -218,7 +218,7 @@ function HistoireClient() {
                 Les matières
               </p>
 
-              <h2 className="text-4xl md:text-6xl font-extralight leading-tight tracking-[-0.03em]">
+              <h2 className="public-section-title">
                 Choisir
                 <br />
                 ce qui
@@ -234,7 +234,7 @@ function HistoireClient() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 1 }}
-              className="space-y-8 text-stone-600 text-lg md:text-xl font-light leading-relaxed"
+              className="space-y-6 text-base font-light leading-relaxed text-stone-600 sm:space-y-8 sm:text-lg"
             >
               <p>
                 Le cuir occupe une place importante dans l'univers de SCOLTA.
@@ -262,8 +262,8 @@ function HistoireClient() {
       {/* =========================================================
           VALEURS
       ========================================================= */}
-      <section className="py-24 md:py-36 bg-white">
-        <div className="max-w-7xl mx-auto px-6 md:px-10">
+      <section className="bg-white py-16 md:py-24">
+        <div className="site-container max-w-7xl">
           <motion.div
             initial={{ opacity: 0, y: 35 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -275,14 +275,14 @@ function HistoireClient() {
               Notre manière de travailler
             </p>
 
-            <h2 className="text-4xl md:text-6xl font-extralight leading-tight tracking-[-0.03em]">
+            <h2 className="public-section-title">
               Faire les choses
               <br />
               avec attention.
             </h2>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
             {[
               {
                 title: "Le temps",
@@ -303,13 +303,13 @@ function HistoireClient() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.12, duration: 0.8 }}
-                className="bg-[#f8f5f1] rounded-[2rem] p-10 md:p-12 border border-stone-200/70 hover:-translate-y-1 hover:shadow-md transition-all duration-300"
+                className="rounded-[1.5rem] border border-stone-200/70 bg-[#f8f5f1] p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-md sm:rounded-[2rem] sm:p-8 lg:p-10"
               >
-                <div className="text-stone-300 text-5xl font-extralight mb-10">
+                <div className="mb-6 text-4xl font-extralight text-stone-300 sm:mb-8">
                   0{index + 1}
                 </div>
 
-                <h3 className="text-3xl font-extralight mb-6 tracking-[-0.03em]">
+                <h3 className="mb-4 text-2xl font-extralight tracking-[-0.03em] sm:mb-6 sm:text-3xl">
                   {item.title}
                 </h3>
 
@@ -325,8 +325,8 @@ function HistoireClient() {
       {/* =========================================================
           VISION
       ========================================================= */}
-      <section className="py-32 md:py-44 bg-stone-950 text-white overflow-hidden">
-        <div className="max-w-6xl mx-auto px-6 md:px-10">
+      <section className="overflow-hidden bg-stone-950 py-20 text-white sm:py-24 md:py-32">
+        <div className="site-container max-w-6xl">
           <motion.div
             initial={{ opacity: 0, y: 35 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -338,7 +338,7 @@ function HistoireClient() {
               Notre vision
             </p>
 
-            <blockquote className="text-4xl md:text-7xl font-extralight italic leading-[1.15] tracking-[-0.04em] text-white/90">
+            <blockquote className="public-section-title mx-auto max-w-4xl italic leading-[1.2] tracking-[-0.035em] text-white/90">
               « Faire des pièces
               <br />
               que l'on aura
@@ -352,8 +352,8 @@ function HistoireClient() {
       {/* =========================================================
           CONCLUSION
       ========================================================= */}
-      <section className="py-24 md:py-40">
-        <div className="max-w-4xl mx-auto px-6 md:px-10 text-center">
+      <section className="py-16 md:py-28">
+        <div className="site-container max-w-4xl text-center">
           <motion.div
             initial={{ opacity: 0, y: 35 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -364,7 +364,7 @@ function HistoireClient() {
               Le début
             </p>
 
-            <h2 className="text-4xl md:text-6xl font-extralight leading-tight tracking-[-0.03em] mb-10">
+            <h2 className="public-section-title mb-7 sm:mb-9">
               Nous commençons ici.
             </h2>
 

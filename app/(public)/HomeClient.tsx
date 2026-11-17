@@ -161,8 +161,7 @@ function CollectionCard({
       viewport={{ once: true, margin: "-100px" }}
       transition={{ duration: 0.7, delay: index * 0.1 }}
       className={`
-        group relative grid grid-cols-1 lg:grid-cols-2 items-center gap-6 md:gap-10 lg:gap-14 xl:gap-20
-        py-8 md:py-12 lg:py-14
+        group relative grid grid-cols-1 items-center gap-4 py-6 sm:gap-6 sm:py-8 lg:grid-cols-2 lg:gap-12 lg:py-10
         ${index % 2 === 1 ? "lg:[&>*:first-child]:order-2" : ""}
       `}
     >
@@ -171,7 +170,7 @@ function CollectionCard({
         href={`/boutique/collection/${cat.slug}`}
         className="block w-full overflow-hidden"
       >
-        <div className="relative mx-auto w-full max-w-[700px] aspect-[4/5] bg-stone-100 overflow-hidden rounded-[1.5rem] shadow-[0_18px_50px_-24px_rgba(0,0,0,0.35)]">
+        <div className="relative mx-auto aspect-[4/5] w-full max-w-[600px] overflow-hidden rounded-2xl bg-stone-100 shadow-[0_18px_50px_-24px_rgba(0,0,0,0.35)] sm:rounded-3xl">
           {cat.video ? (
             <video
               src={cat.video}
@@ -200,7 +199,7 @@ function CollectionCard({
               Collection
             </p>
 
-            <h3 className="text-2xl font-light tracking-wide leading-tight">
+            <h3 className="text-xl font-light leading-tight tracking-wide sm:text-2xl">
               {cat.name}
             </h3>
           </div>
@@ -505,7 +504,7 @@ export default function HomeClient({
       ========================================================= */}
       <section
         ref={heroSectionRef}
-        className="relative min-h-[90vh] overflow-hidden"
+        className="relative min-h-[74svh] overflow-hidden sm:min-h-[82svh] lg:min-h-[90vh]"
       >
         <motion.div
           style={{ y: heroY }}
@@ -554,46 +553,46 @@ export default function HomeClient({
 
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60" />
 
-        <div className="relative min-h-[90vh] flex flex-col justify-center items-center px-6 pt-24 pb-10 md:pt-28 md:pb-14 text-center">
+        <div className="relative flex min-h-[74svh] flex-col items-center justify-center px-4 pb-10 pt-24 text-center sm:min-h-[82svh] sm:px-6 sm:pb-14 sm:pt-28 lg:min-h-[90vh]">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, ease: "easeOut" }}
-            className="max-w-4xl"
+            className="w-full max-w-4xl"
           >
-            <p className="text-white/50 text-xs tracking-[0.35em] uppercase mb-6 font-light">
+            <p className="mb-4 text-[10px] font-light uppercase tracking-[0.24em] text-white/60 sm:mb-6 sm:text-xs sm:tracking-[0.35em]">
               Fabriqué en France · Cuir · Toile
             </p>
 
             <div className="mb-7">
-              <p className="text-white/65 text-[11px] sm:text-xs tracking-[0.45em] uppercase font-light mb-3">
+              <p className="mb-3 text-[10px] font-light uppercase tracking-[0.3em] text-white/65 sm:text-xs sm:tracking-[0.4em]">
                 By Nomade
               </p>
 
-              <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-extralight tracking-[-0.02em] text-white leading-[0.85]">
+              <h1 className="home-brand-title text-white">
                 SCOLTA
               </h1>
             </div>
 
-            <p className="text-white/90 text-2xl sm:text-3xl md:text-4xl font-light tracking-wide max-w-2xl mx-auto mb-4">
+            <p className="mx-auto mb-3 max-w-2xl text-xl font-light tracking-wide text-white/90 sm:text-2xl md:text-3xl">
               Un sac pour partir.
             </p>
 
-            <p className="text-white/50 text-base sm:text-lg font-light max-w-md mx-auto mb-10">
+            <p className="mx-auto mb-7 max-w-md text-sm font-light text-white/70 sm:mb-10 sm:text-base">
               La première collection de SCOLTA.
             </p>
 
-            <div className="flex flex-wrap justify-center gap-4">
+            <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
               <Link
                 href="/boutique"
-                className="bg-white/90 backdrop-blur-sm text-stone-900 px-10 py-4 rounded-full text-sm tracking-[0.2em] font-light hover:bg-white transition-all"
+                className="inline-flex min-h-11 items-center justify-center rounded-full bg-white/90 px-7 py-3 text-xs font-light tracking-[0.16em] text-stone-900 backdrop-blur-sm transition-all hover:bg-white sm:px-9 sm:py-3.5 sm:text-sm sm:tracking-[0.2em]"
               >
                 Découvrir
               </Link>
 
               <Link
                 href="/boutique?filter=nouveautes"
-                className="border border-white/30 text-white px-10 py-4 rounded-full text-sm tracking-[0.2em] font-light hover:bg-white/10 transition-all"
+                className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/30 px-7 py-3 text-xs font-light tracking-[0.16em] text-white transition-all hover:bg-white/10 sm:px-9 sm:py-3.5 sm:text-sm sm:tracking-[0.2em]"
               >
                 Nouveautés
               </Link>
@@ -605,9 +604,9 @@ export default function HomeClient({
       {/* =========================================================
           INTRO
       ========================================================= */}
-      <section className="py-24 md:py-36 bg-stone-50">
-        <div className="max-w-6xl mx-auto px-6 md:px-10">
-          <div className="grid md:grid-cols-2 gap-16 md:gap-24 items-center">
+      <section className="bg-stone-50 py-16 md:py-24">
+        <div className="site-container max-w-6xl">
+          <div className="grid items-center gap-10 md:grid-cols-2 md:gap-14">
 
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -619,26 +618,26 @@ export default function HomeClient({
                 Notre approche
               </p>
 
-              <h2 className="text-3xl md:text-5xl font-light leading-tight tracking-wide mb-8">
+              <h2 className="public-section-title mb-6">
                 Des pièces faites pour être portées au quotidien
               </h2>
 
-              <p className="text-stone-500 text-lg leading-relaxed font-light max-w-xl">
+              <p className="max-w-xl text-base font-light leading-relaxed text-stone-500 sm:text-lg">
                 Nous travaillons des formes simples, des matières que nous
                 aimons et des détails qui ont leur utilité.
               </p>
 
-              <div className="mt-10 flex flex-wrap gap-4">
+              <div className="mt-7 flex flex-wrap gap-3 sm:mt-9 sm:gap-4">
                 <Link
                   href="/boutique"
-                  className="bg-stone-900 text-white px-8 py-4 rounded-full text-sm tracking-wider font-light hover:bg-stone-800 transition-all"
+                  className="inline-flex min-h-11 items-center justify-center rounded-full bg-stone-900 px-6 py-3 text-xs font-light tracking-wider text-white transition-all hover:bg-stone-800 sm:px-8 sm:text-sm"
                 >
                   Découvrir SCOLTA
                 </Link>
 
                 <Link
                   href="/histoire"
-                  className="border border-stone-300 text-stone-700 px-8 py-4 rounded-full text-sm tracking-wider font-light hover:border-stone-900 hover:text-stone-900 transition-all"
+                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-stone-300 px-6 py-3 text-xs font-light tracking-wider text-stone-700 transition-all hover:border-stone-900 hover:text-stone-900 sm:px-8 sm:text-sm"
                 >
                   La Maison NOMADE
                 </Link>
@@ -668,14 +667,14 @@ export default function HomeClient({
       {/* =========================================================
           COLLECTIONS
       ========================================================= */}
-      <section className="mx-auto max-w-[1600px] px-5 sm:px-8 lg:px-12 xl:px-20">
+      <section className="site-container max-w-7xl">
 
-        <div className="py-16 md:py-20 text-center max-w-3xl mx-auto">
+        <div className="mx-auto max-w-3xl py-12 text-center sm:py-16">
           <p className="text-stone-400 text-xs tracking-[0.3em] uppercase mb-4 font-light">
             Collections
           </p>
 
-          <h2 className="text-3xl md:text-5xl font-light tracking-wide leading-tight text-stone-900">
+          <h2 className="public-section-title text-stone-900">
             Les collections
           </h2>
 
@@ -693,7 +692,7 @@ export default function HomeClient({
           />
         ))}
 
-        <div className="pt-8 pb-14 md:pb-20 text-center">
+        <div className="pb-12 pt-6 text-center sm:pb-16">
           <Link
             href="/boutique"
             className="inline-flex items-center gap-3 px-7 py-3 text-xs uppercase tracking-[0.25em] text-stone-700 hover:text-stone-900 transition-colors"
@@ -711,9 +710,9 @@ export default function HomeClient({
       <section
         id="new-products"
         data-section
-        className="py-24 md:py-36 bg-stone-50"
+        className="bg-stone-50 py-16 md:py-24"
       >
-        <div className="max-w-7xl mx-auto px-6 md:px-10">
+        <div className="site-container max-w-7xl">
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -723,19 +722,19 @@ export default function HomeClient({
                 : {}
             }
             transition={{ duration: 0.6 }}
-            className="text-center mb-14"
+            className="mb-10 text-center sm:mb-12"
           >
             <p className="text-stone-400 text-xs tracking-[0.3em] uppercase mb-4 font-light">
               Nouveautés
             </p>
 
-            <h2 className="text-3xl md:text-4xl font-light tracking-wide leading-tight max-w-2xl mx-auto">
+            <h2 className="public-section-title mx-auto max-w-2xl">
               Les nouveautés
             </h2>
           </motion.div>
 
           {newProducts.length > 0 ? (
-            <div className="flex flex-wrap justify-center gap-8">
+            <div className="flex flex-wrap justify-center gap-x-3 gap-y-8 sm:gap-x-8">
               {newProducts.map((product, index) => (
                 <motion.div
                   key={product.id}
@@ -749,7 +748,7 @@ export default function HomeClient({
                     delay: index * 0.1,
                     duration: 0.5,
                   }}
-                  className="w-full sm:w-[calc(50%-16px)] lg:w-[calc(25%-24px)] max-w-[280px]"
+                  className="w-[calc(50%-0.375rem)] max-w-[280px] sm:w-[calc(50%-1rem)] lg:w-[calc(25%-1.5rem)]"
                 >
                   <ProductCard
                     product={product}
@@ -779,7 +778,7 @@ export default function HomeClient({
       {/* =========================================================
           ATELIER
       ========================================================= */}
-      <section className="relative h-[70vh] overflow-hidden">
+      <section className="relative h-[58vh] min-h-96 overflow-hidden sm:h-[65vh] lg:h-[70vh]">
 
         <video
           ref={atelierVideoRef}
@@ -804,7 +803,7 @@ export default function HomeClient({
 
         <div className="absolute inset-0 bg-black/30" />
 
-        <div className="relative z-10 flex items-center justify-center h-full text-center text-white px-6">
+        <div className="relative z-10 flex h-full items-center justify-center px-4 text-center text-white sm:px-6">
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -815,11 +814,11 @@ export default function HomeClient({
               L'atelier
             </p>
 
-            <h2 className="text-3xl md:text-5xl font-light mb-6 tracking-wide">
+            <h2 className="public-section-title mb-5 text-white">
               Chaque détail compte
             </h2>
 
-            <p className="text-white/80 text-lg max-w-2xl mx-auto font-light">
+            <p className="mx-auto max-w-2xl text-base font-light text-white/80 sm:text-lg">
               Coupe, assemblage, couture, finition : chaque étape demande du
               temps et de l'attention.
             </p>
@@ -845,26 +844,26 @@ export default function HomeClient({
       <section
         id="values"
         data-section
-        className="py-24 md:py-36 bg-white"
+        className="bg-white py-16 md:py-24"
       >
-        <div className="max-w-6xl mx-auto px-6 md:px-10">
+        <div className="site-container max-w-6xl">
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-20"
+            className="mb-12 text-center sm:mb-14"
           >
             <p className="text-stone-400 text-xs tracking-[0.3em] uppercase mb-4 font-light">
               Notre façon de faire
             </p>
 
-            <h2 className="text-3xl md:text-4xl font-light tracking-wide leading-tight">
+            <h2 className="public-section-title">
               Ce qui compte pour nous
             </h2>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-14 md:gap-16">
+          <div className="grid gap-10 md:grid-cols-3 md:gap-12">
 
             {values.map((value, index) => (
               <motion.div
@@ -875,7 +874,7 @@ export default function HomeClient({
                 transition={{ delay: index * 0.2 }}
                 className="text-center"
               >
-                <div className="relative rounded-2xl overflow-hidden aspect-square mb-8 shadow-sm hover:shadow-lg transition-shadow">
+                <div className="relative mb-6 aspect-square overflow-hidden rounded-2xl shadow-sm transition-shadow hover:shadow-lg sm:mb-8">
                   <Image
                     src={value.img}
                     alt=""
@@ -885,7 +884,7 @@ export default function HomeClient({
                   />
                 </div>
 
-                <h3 className="text-2xl font-light mb-4 tracking-wide">
+                <h3 className="mb-3 text-xl font-light tracking-wide sm:mb-4 sm:text-2xl">
                   {value.title}
                 </h3>
 
@@ -905,9 +904,9 @@ export default function HomeClient({
       <section
         id="best-sellers"
         data-section
-        className="py-24 md:py-36 bg-stone-50"
+        className="bg-stone-50 py-16 md:py-24"
       >
-        <div className="max-w-7xl mx-auto px-6 md:px-10">
+        <div className="site-container max-w-7xl">
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -917,13 +916,13 @@ export default function HomeClient({
                 : {}
             }
             transition={{ duration: 0.6 }}
-            className="text-center mb-14"
+            className="mb-10 text-center sm:mb-12"
           >
             <p className="text-stone-400 text-xs tracking-[0.3em] uppercase mb-4 font-light">
               La sélection SCOLTA
             </p>
 
-            <h2 className="text-3xl md:text-4xl font-light tracking-wide leading-tight max-w-2xl mx-auto">
+            <h2 className="public-section-title mx-auto max-w-2xl">
               Les premiers modèles
             </h2>
 
@@ -933,7 +932,7 @@ export default function HomeClient({
           </motion.div>
 
           {bestProducts.length > 0 ? (
-            <div className="flex flex-wrap justify-center gap-8">
+            <div className="flex flex-wrap justify-center gap-x-3 gap-y-8 sm:gap-x-8">
               {bestProducts.map((product, index) => (
                 <motion.div
                   key={product.id}
@@ -947,7 +946,7 @@ export default function HomeClient({
                     delay: index * 0.1,
                     duration: 0.5,
                   }}
-                  className="w-full sm:w-[calc(50%-16px)] lg:w-[calc(25%-24px)] max-w-[280px]"
+                  className="w-[calc(50%-0.375rem)] max-w-[280px] sm:w-[calc(50%-1rem)] lg:w-[calc(25%-1.5rem)]"
                 >
                   <ProductCard
                     product={product}
@@ -977,7 +976,7 @@ export default function HomeClient({
       {/* =========================================================
           FIN
       ========================================================= */}
-      <section className="relative py-28 md:py-40 overflow-hidden">
+      <section className="relative overflow-hidden py-20 sm:py-24 lg:py-32">
 
         <Image
           src={homeImage("hommage.webp")}
@@ -990,7 +989,7 @@ export default function HomeClient({
         <div className="absolute inset-0 bg-stone-900/70" />
 
         <div className="relative z-10 text-white text-center">
-          <div className="max-w-3xl mx-auto px-6">
+          <div className="mx-auto max-w-3xl px-4 sm:px-6">
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -1001,20 +1000,20 @@ export default function HomeClient({
                 Le début
               </p>
 
-              <h2 className="text-4xl md:text-6xl font-light mb-8 leading-tight tracking-wide">
+              <h2 className="public-page-title mb-6 text-white sm:mb-8">
                 Découvrez
                 <br />
                 SCOLTA
               </h2>
 
-              <p className="text-white/60 text-lg md:text-xl leading-relaxed font-light mb-12 max-w-2xl mx-auto">
+              <p className="mx-auto mb-8 max-w-2xl text-base font-light leading-relaxed text-white/70 sm:mb-10 sm:text-lg">
                 Les premiers modèles de la marque, développée par la Maison
                 NOMADE.
               </p>
 
               <Link
                 href="/boutique"
-                className="inline-block bg-white text-stone-900 px-10 py-4 rounded-full text-sm tracking-wider font-light hover:bg-stone-100 transition-colors"
+                className="inline-flex min-h-11 items-center justify-center rounded-full bg-white px-7 py-3 text-xs font-light tracking-wider text-stone-900 transition-colors hover:bg-stone-100 sm:px-9 sm:py-3.5 sm:text-sm"
               >
                 Découvrir SCOLTA
               </Link>

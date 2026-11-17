@@ -42,7 +42,8 @@ export default function CollectionsTable({ collections }: Props) {
   return (
     <Card>
       <CardContent className="p-0">
-        <table className="w-full">
+        <div className="hidden overflow-x-auto md:block">
+        <table className="w-full min-w-[680px]">
           <thead>
             <tr className="border-b bg-muted/30">
               <th className="p-4 text-left text-sm">Nom</th>
@@ -71,6 +72,38 @@ export default function CollectionsTable({ collections }: Props) {
             ))}
           </tbody>
         </table>
+        </div>
+
+        <div className="divide-y md:hidden">
+          {collections.length === 0 ? (
+            <p className="p-8 text-center text-sm text-muted-foreground">Aucune collection</p>
+          ) : (
+            collections.map((collection) => (
+              <article key={collection.id} className="space-y-4 p-4 sm:p-5">
+                <div className="min-w-0">
+                  <h2 className="break-words font-medium">{collection.name}</h2>
+                  <p className="mt-1 break-all text-sm text-muted-foreground">{collection.slug}</p>
+                </div>
+                <p className="break-words text-sm">{collection.description || "—"}</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button asChild variant="outline" size="sm" className="min-h-11 w-full">
+                    <Link href={`/admin/collections/${collection.id}`}>
+                      <Pencil className="mr-2 h-4 w-4" />Modifier
+                    </Link>
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="min-h-11 w-full"
+                    onClick={() => setDeleteId(collection.id)}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />Supprimer
+                  </Button>
+                </div>
+              </article>
+            ))
+          )}
+        </div>
       </CardContent>
 
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>

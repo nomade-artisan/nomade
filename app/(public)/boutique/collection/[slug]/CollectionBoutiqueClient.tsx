@@ -228,12 +228,12 @@ export default function CollectionBoutiqueClient({
         <div className="absolute inset-0 bg-linear-to-t from-black/55 via-black/10 to-transparent" />
         <div className="absolute bottom-4 left-5 right-5 md:bottom-6 md:left-8 md:right-8 text-white">
           <p className="text-[10px] uppercase tracking-[0.25em] text-white/75 font-light">Collection</p>
-          <h1 className="mt-1 text-2xl md:text-4xl font-light tracking-wide">{collectionName}</h1>
+          <h1 className="public-page-title mt-1 text-white">{collectionName}</h1>
           <p className="mt-1 text-xs md:text-sm text-white/80 font-light max-w-3xl">{subtitle}</p>
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-5 md:px-8 py-8 md:py-10">
+      <div className="site-container max-w-7xl py-6 sm:py-8 md:py-10">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mb-6">
           <button
             type="button"

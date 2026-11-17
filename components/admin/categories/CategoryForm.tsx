@@ -89,7 +89,7 @@ export default function CategoryForm({ initialData, collections }: Props) {
             <select
               value={form.collectionId?.toString() || ""}
               onChange={(e) => setForm({ ...form, collectionId: Number(e.target.value) || null })}
-              className="mt-2 flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="mt-2 flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 sm:h-9"
             >
               <option value="">Choisir une collection</option>
               {collections.map((collection) => (
@@ -123,11 +123,11 @@ export default function CategoryForm({ initialData, collections }: Props) {
               rows={3}
             />
           </div>
-          <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={() => router.back()}>
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+            <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => router.back()}>
               Annuler
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" className="w-full sm:w-auto" disabled={isLoading}>
               {isLoading ? "Enregistrement..." : "Enregistrer"}
             </Button>
           </div>

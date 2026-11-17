@@ -64,18 +64,18 @@ function ContactClient() {
 
   return (
     <div className="min-h-screen bg-white pt-20">
-      <div className="max-w-7xl mx-auto px-6 md:px-10 py-16 md:py-24">
+      <div className="site-container max-w-7xl py-12 sm:py-16 md:py-20">
         {/* En‑tête */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          className="text-center mb-20 md:mb-28"
+          className="mb-12 text-center sm:mb-16 md:mb-20"
         >
           <p className="text-[10px] uppercase tracking-[0.35em] text-stone-400 font-light mb-3">
             Contact
           </p>
-          <h1 className="text-5xl md:text-7xl font-light tracking-tight text-stone-900 leading-[1.05]">
+          <h1 className="public-page-title text-stone-900">
             Échangeons
           </h1>
           <div className="w-12 h-px bg-stone-300 mx-auto mt-6" />
@@ -85,7 +85,7 @@ function ContactClient() {
         </motion.div>
 
         {/* Grille principale */}
-        <div className="grid lg:grid-cols-5 gap-12 lg:gap-16">
+        <div className="grid gap-10 lg:grid-cols-5 lg:gap-12">
           {/* Formulaire (3/5) */}
           <motion.div
             initial={{ opacity: 0, y: 12 }}
@@ -93,7 +93,7 @@ function ContactClient() {
             transition={{ delay: 0.1, duration: 0.6 }}
             className="lg:col-span-3"
           >
-            <form onSubmit={handleSubmit} className="space-y-10">
+            <form onSubmit={handleSubmit} className="space-y-8 sm:space-y-10">
               <div>
                 <label
                   htmlFor="name"
@@ -109,7 +109,7 @@ function ContactClient() {
                     setFormData({ ...formData, name: e.target.value })
                   }
                   placeholder="Votre nom"
-                  className="w-full bg-transparent border-b border-stone-200 py-3.5 text-sm font-light text-stone-700 placeholder-stone-300 focus:outline-none focus:border-stone-400 transition-colors"
+                  className="w-full bg-transparent border-b border-stone-200 py-3.5 text-base font-light text-stone-700 placeholder-stone-300 transition-colors focus:border-stone-400 focus:outline-none sm:text-sm"
                 />
               </div>
 
@@ -128,7 +128,7 @@ function ContactClient() {
                     setFormData({ ...formData, email: e.target.value })
                   }
                   placeholder="vous@exemple.fr"
-                  className="w-full bg-transparent border-b border-stone-200 py-3.5 text-sm font-light text-stone-700 placeholder-stone-300 focus:outline-none focus:border-stone-400 transition-colors"
+                  className="w-full bg-transparent border-b border-stone-200 py-3.5 text-base font-light text-stone-700 placeholder-stone-300 transition-colors focus:border-stone-400 focus:outline-none sm:text-sm"
                 />
               </div>
 
@@ -147,7 +147,7 @@ function ContactClient() {
                     setFormData({ ...formData, message: e.target.value })
                   }
                   placeholder="Votre message..."
-                  className="w-full bg-transparent border-b border-stone-200 py-3.5 text-sm font-light text-stone-700 placeholder-stone-300 focus:outline-none focus:border-stone-400 transition-colors resize-none"
+                  className="w-full resize-none border-b border-stone-200 bg-transparent py-3.5 text-base font-light text-stone-700 placeholder-stone-300 transition-colors focus:border-stone-400 focus:outline-none sm:text-sm"
                 />
               </div>
 
@@ -165,7 +165,7 @@ function ContactClient() {
                 <button
                   type="submit"
                   disabled={loading || submitted}
-                  className={`px-10 py-3.5 rounded-full text-[11px] uppercase tracking-[0.25em] font-light transition-all duration-300 ${
+                  className={`min-h-11 w-full rounded-full px-8 py-3.5 text-[11px] font-light uppercase tracking-[0.2em] transition-all duration-300 sm:w-auto sm:px-10 sm:tracking-[0.25em] ${
                     submitted
                       ? "bg-emerald-700 text-white"
                       : loading
@@ -187,7 +187,7 @@ function ContactClient() {
             className="lg:col-span-2 space-y-10"
           >
             {/* Image */}
-            <div className="relative rounded-2xl overflow-hidden aspect-[3/4] bg-stone-100 shadow-sm">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-stone-100 shadow-sm lg:aspect-[3/4]">
               <Image
                 src={contactImage("contact.webp")}
                 alt=""

@@ -71,7 +71,7 @@ export default function ProductsTable({
     <Card>
       <CardHeader>
         <form onSubmit={handleSearch} className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_10rem_12rem_auto_auto] sm:gap-4">
             {/* Recherche */}
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -79,7 +79,7 @@ export default function ProductsTable({
                 name="search"
                 placeholder="Rechercher un produit..."
                 defaultValue={currentSearch}
-                className="pl-9"
+                className="h-11 pl-9 sm:h-9"
               />
             </div>
 
@@ -87,7 +87,7 @@ export default function ProductsTable({
             <select
               name="status"
               defaultValue={currentStatus}
-              className="flex h-9 w-[160px] rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+              className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 sm:h-9"
             >
               <option value="all">Tous les statuts</option>
               <option value="active">Actif</option>
@@ -99,7 +99,7 @@ export default function ProductsTable({
             <select
               name="category"
               defaultValue={currentCategory}
-              className="flex h-9 w-[180px] rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+              className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 sm:h-9"
             >
               <option value="all">Toutes les catégories</option>
               {categories.map((cat) => (
@@ -109,13 +109,13 @@ export default function ProductsTable({
               ))}
             </select>
 
-            <Button type="submit">
+            <Button type="submit" className="min-h-11 w-full sm:min-h-9 sm:w-auto">
               <Search className="mr-2 h-4 w-4" />
               Filtrer
             </Button>
 
             {hasFilters && (
-              <Button type="button" variant="ghost" onClick={clearFilters}>
+              <Button type="button" variant="ghost" onClick={clearFilters} className="min-h-11 w-full sm:min-h-9 sm:w-auto">
                 <X className="mr-2 h-4 w-4" />
                 Réinitialiser
               </Button>
@@ -129,7 +129,8 @@ export default function ProductsTable({
           {products.length} résultat{products.length > 1 ? "s" : ""}
         </div>
 
-        <table className="w-full">
+        <div className="hidden overflow-x-auto md:block">
+        <table className="w-full min-w-[850px]">
           <thead>
             <tr className="border-b bg-muted/30">
               <SortableHeader
@@ -230,6 +231,61 @@ export default function ProductsTable({
             )}
           </tbody>
         </table>
+        </div>
+
+        <div className="divide-y md:hidden">
+          {products.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground">
+              <p className="font-medium">Aucun produit trouvé</p>
+              <p className="mt-1 text-sm">Essayez de modifier vos filtres de recherche</p>
+            </div>
+          ) : (
+            products.map((product) => (
+              <article key={product.id} className="space-y-4 p-4 sm:p-5">
+                <div className="flex min-w-0 items-start gap-3">
+                  {product.cover_image && (
+                    <img
+                      src={product.cover_image}
+                      alt=""
+                      className="h-14 w-14 shrink-0 rounded-md object-cover"
+                    />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <h2 className="break-words font-medium">{product.name}</h2>
+                    <p className="mt-1 truncate text-sm text-muted-foreground">
+                      {product.category_name || "—"}
+                    </p>
+                  </div>
+                  <ProductStatusBadge status={product.status} />
+                </div>
+
+                <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Prix</dt>
+                    <dd className="mt-1 font-semibold">{product.price.toFixed(2)} €</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Stock</dt>
+                    <dd className={`mt-1 font-medium ${product.stock === 0 ? "text-red-500" : product.stock < 10 ? "text-orange-500" : ""}`}>
+                      {product.stock}
+                    </dd>
+                  </div>
+                  <div className="col-span-2">
+                    <dt className="text-xs text-muted-foreground">Ajouté le</dt>
+                    <dd className="mt-1">{new Date(product.created_at).toLocaleDateString("fr-FR")}</dd>
+                  </div>
+                </dl>
+
+                <Button asChild variant="outline" size="sm" className="min-h-11 w-full">
+                  <Link href={`/admin/products/${product.id}`}>
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Modifier le produit
+                  </Link>
+                </Button>
+              </article>
+            ))
+          )}
+        </div>
       </CardContent>
     </Card>
   );

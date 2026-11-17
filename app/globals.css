@@ -19,6 +19,45 @@ body {
   font-family: "Inter", system-ui, sans-serif;
 }
 
+.site-container {
+  width: 100%;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 40rem) {
+  .site-container {
+    padding-inline: 1.5rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  .site-container {
+    padding-inline: 2rem;
+  }
+}
+
+.public-page-title {
+  font-size: clamp(2rem, 3.6vw, 2.75rem);
+  font-weight: 300;
+  letter-spacing: -0.035em;
+  line-height: 1.08;
+}
+
+.public-section-title {
+  font-size: clamp(1.5rem, 2.7vw, 2.5rem);
+  font-weight: 300;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+.home-brand-title {
+  font-size: clamp(3.25rem, 8vw, 6.5rem);
+  font-weight: 200;
+  letter-spacing: -0.02em;
+  line-height: 0.92;
+}
+
 @layer base {
   body {
     @apply font-light bg-background text-foreground;

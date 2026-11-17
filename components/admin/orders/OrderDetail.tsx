@@ -278,7 +278,8 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
             <CardTitle>Articles</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <table className="w-full">
+            <div className="overflow-x-auto">
+            <table className="w-full min-w-[480px]">
               <thead>
                 <tr className="border-b bg-muted/30">
                   <th className="text-left p-4 text-sm">Produit</th>
@@ -302,6 +303,7 @@ export default function OrderDetail({ order }: { order: OrderWithRelations }) {
                 ))}
               </tbody>
             </table>
+            </div>
           </CardContent>
         </Card>
 

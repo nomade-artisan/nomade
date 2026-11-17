@@ -25,7 +25,7 @@ export default function CustomerDetail({ customer }: Props) {
           </div>
           <div>
             <span className="text-muted-foreground">Email</span>
-            <p>{customer.email}</p>
+            <p className="break-all">{customer.email}</p>
           </div>
           {customer.phone && (
             <div>
@@ -63,7 +63,8 @@ export default function CustomerDetail({ customer }: Props) {
           <CardTitle>Commandes</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <table className="w-full">
+          <div className="hidden overflow-x-auto md:block">
+          <table className="w-full min-w-[640px]">
             <thead>
               <tr className="border-b bg-muted/30">
                 <th className="text-left p-4 text-sm">Commande</th>
@@ -107,6 +108,44 @@ export default function CustomerDetail({ customer }: Props) {
               )}
             </tbody>
           </table>
+          </div>
+
+          <div className="divide-y md:hidden">
+            {customer.orders.length === 0 ? (
+              <p className="p-8 text-center text-sm text-muted-foreground">Aucune commande</p>
+            ) : (
+              customer.orders.map((order) => (
+                <article key={order.id} className="space-y-4 p-4">
+                  <div className="flex min-w-0 items-start justify-between gap-3">
+                    <p className="break-all font-mono text-sm font-medium">
+                      {order.order_number || order.id.substring(0, 8)}
+                    </p>
+                    <span className={`shrink-0 rounded-full px-2 py-1 text-xs ${ORDER_STATUS_COLORS[order.status as keyof typeof ORDER_STATUS_COLORS]}`}>
+                      {ORDER_STATUS_LABELS[order.status as keyof typeof ORDER_STATUS_LABELS]}
+                    </span>
+                  </div>
+
+                  <dl className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <dt className="text-xs text-muted-foreground">Total</dt>
+                      <dd className="mt-1 font-semibold">{order.total.toFixed(2)} €</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-muted-foreground">Date</dt>
+                      <dd className="mt-1">{new Date(order.created_at).toLocaleDateString("fr-FR")}</dd>
+                    </div>
+                  </dl>
+
+                  <Button asChild variant="outline" size="sm" className="min-h-11 w-full">
+                    <Link href={`/admin/orders/${order.id}`}>
+                      <Eye className="mr-2 h-4 w-4" />
+                      Voir la commande
+                    </Link>
+                  </Button>
+                </article>
+              ))
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>

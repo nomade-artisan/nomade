@@ -33,8 +33,8 @@ export default function ProductsPagination({
   }
 
   return (
-    <div className="flex items-center justify-between border-t bg-muted/20 rounded-b-lg px-6 py-4">
-      <div className="flex items-center gap-4">
+    <div className="flex flex-col gap-3 rounded-b-lg border-t bg-muted/20 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+      <div className="flex flex-wrap items-center gap-3 sm:gap-4">
         <span className="text-sm text-muted-foreground">
           {total} produit{total > 1 ? "s" : ""}
         </span>
@@ -43,19 +43,22 @@ export default function ProductsPagination({
           <select
             value={String(pageSize)}
             onChange={(event) => handlePageSizeChange(event.target.value)}
-            className="flex h-9 w-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+            className="flex h-11 w-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 sm:h-9"
           >
             <option value="10">10</option>
             <option value="20">20</option>
             <option value="50">50</option>
           </select>
         </div>
+        <span className="text-sm text-muted-foreground">Page {page} sur {totalPages}</span>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex max-w-full flex-wrap items-center gap-2">
         <Button
           variant="outline"
           size="sm"
+          aria-label="Page précédente"
+          className="min-h-11 min-w-11"
           onClick={() => goToPage(page - 1)}
           disabled={page <= 1}
         >
@@ -64,7 +67,7 @@ export default function ProductsPagination({
 
         {generatePageNumbers(page, totalPages).map((p, i) =>
           p === "..." ? (
-            <span key={`dots-${i}`} className="px-2 text-muted-foreground">
+            <span key={`dots-${i}`} className="hidden px-2 text-muted-foreground sm:inline">
               ...
             </span>
           ) : (
@@ -72,8 +75,9 @@ export default function ProductsPagination({
               key={p}
               variant={p === page ? "default" : "outline"}
               size="sm"
+              aria-label={`Aller à la page ${p}`}
               onClick={() => goToPage(p as number)}
-              className="min-w-[40px]"
+              className="hidden min-w-[40px] sm:inline-flex"
             >
               {p}
             </Button>
@@ -83,6 +87,8 @@ export default function ProductsPagination({
         <Button
           variant="outline"
           size="sm"
+          aria-label="Page suivante"
+          className="min-h-11 min-w-11"
           onClick={() => goToPage(page + 1)}
           disabled={page >= totalPages}
         >

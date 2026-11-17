@@ -57,7 +57,7 @@ export default function AdminLoginForm({ nextPath }: AdminLoginFormProps) {
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             placeholder="Mot de passe"
-            className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+            className="min-h-11 w-full rounded-md border px-3 py-2 text-base outline-none focus:ring-2 focus:ring-ring sm:text-sm"
             required
           />
 
@@ -66,7 +66,7 @@ export default function AdminLoginForm({ nextPath }: AdminLoginFormProps) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-md bg-foreground text-background py-2 text-sm disabled:opacity-60"
+            className="min-h-11 w-full rounded-md bg-foreground py-2 text-sm text-background disabled:opacity-60"
           >
             {loading ? "Connexion..." : "Se connecter"}
           </button>

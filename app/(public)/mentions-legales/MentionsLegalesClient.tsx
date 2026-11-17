@@ -7,7 +7,7 @@ function MentionsLegalesClient() {
 
   return (
     <div className="bg-stone-50 min-h-screen pt-16">
-      <div className="max-w-5xl mx-auto px-6 md:px-10 py-8 md:py-12">
+      <div className="site-container max-w-5xl py-6 sm:py-8 md:py-10">
 
       {/* HERO */}
 
@@ -34,7 +34,7 @@ function MentionsLegalesClient() {
               Informations légales
             </p>
 
-            <h1 className="text-3xl md:text-5xl font-light tracking-tight leading-[0.95]">
+            <h1 className="public-page-title">
               Mentions légales
             </h1>
 
