@@ -77,7 +77,16 @@ function useCookieConsent() {
 
 export default function CookieConsent() {
   const pathname = usePathname();
-  const { consent, showBanner, mounted, forcedOpen, consentError, acceptAll, acceptEssential } = useCookieConsent();
+  const {
+    consent,
+    showBanner,
+    setShowBanner,
+    mounted,
+    forcedOpen,
+    consentError,
+    acceptAll,
+    acceptEssential,
+  } = useCookieConsent();
 
   if (
     !mounted ||
