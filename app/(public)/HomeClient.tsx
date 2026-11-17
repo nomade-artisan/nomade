@@ -627,7 +627,7 @@ export default function HomeClient({
                 aimons et des détails qui ont leur utilité.
               </p>
 
-              <div className="mt-7 flex flex-wrap gap-3 sm:mt-9 sm:gap-4">
+              <div className="mt-7 flex flex-wrap justify-center gap-3 sm:mt-9 sm:justify-start sm:gap-4">
                 <Link
                   href="/boutique"
                   className="inline-flex min-h-11 items-center justify-center rounded-full bg-stone-900 px-6 py-3 text-xs font-light tracking-wider text-white transition-all hover:bg-stone-800 sm:px-8 sm:text-sm"

@@ -27,6 +27,17 @@ export function proxy(req: NextRequest) {
     return new NextResponse("HTTPS requis", { status: 400 });
   }
 
+  // Vercel Cron authenticates this one endpoint with CRON_SECRET. Keep the
+  // HTTPS check above, and let every other request use the admin session.
+  const isMetricsCron =
+    pathname === "/api/analytics/build-metrics" &&
+    Boolean(process.env.CRON_SECRET) &&
+    req.headers.get("authorization") === `Bearer ${process.env.CRON_SECRET}`;
+
+  if (isMetricsCron) {
+    return NextResponse.next();
+  }
+
   if (!getAdminSessionSecret()) {
     return new NextResponse("ADMIN_SESSION_SECRET ou ADMIN_PASSWORD non configuré", {
       status: 503,
