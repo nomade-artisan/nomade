@@ -90,14 +90,14 @@ function Navbar() {
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${bgClass}`}
       >
-        <div className="max-w-7xl mx-auto px-6 md:px-10">
-          <div className="h-20 flex items-center justify-between">
+        <div className="site-container max-w-7xl">
+          <div className="flex h-16 items-center justify-between sm:h-20">
             {/* Logo */}
             <Link
               href="/"
               className={`uppercase tracking-[0.3em] font-light transition-colors duration-300 ${textColor} flex flex-col leading-none`}
             >
-              <span className="text-[18px] md:text-[22px] tracking-[0.35em]">
+              <span className="text-base tracking-[0.3em] sm:text-[22px] sm:tracking-[0.35em]">
                 SCOLTA
               </span>
               <span className="text-[8px] md:text-[9px] tracking-[0.25em] opacity-75 mt-1">
@@ -130,11 +130,11 @@ function Navbar() {
             </nav>
 
             {/* Right side */}
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3 sm:gap-5">
               {/* Panier */}
               <Link
                 href="/cart"
-                className={`relative transition-colors duration-300 ${cartColor}`}
+                className={`relative flex h-11 w-11 items-center justify-center transition-colors duration-300 ${cartColor}`}
                 aria-label="Panier"
               >
                 <svg
@@ -162,7 +162,7 @@ function Navbar() {
               {/* Burger mobile */}
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
-                className="md:hidden relative w-8 h-8 flex items-center justify-center"
+                className="relative flex h-11 w-11 items-center justify-center md:hidden"
                 aria-label={menuOpen ? "Fermer le menu" : "Ouvrir le menu"}
                 aria-expanded={menuOpen}
               >
@@ -202,9 +202,9 @@ function Navbar() {
             className="fixed inset-0 bg-black/10 backdrop-blur-sm z-40 md:hidden"
             onClick={() => setMenuOpen(false)}
           />
-          <div className="fixed top-20 right-4 left-auto z-50 md:hidden">
-            <div className="w-[280px] rounded-2xl bg-white/95 backdrop-blur-xl border border-stone-200/70 shadow-xl overflow-hidden">
-              <div className="px-6 py-6">
+          <div className="fixed left-3 right-3 top-16 z-50 sm:left-auto sm:right-6 sm:top-20 md:hidden">
+            <div className="ml-auto w-full max-w-sm overflow-hidden rounded-2xl border border-stone-200/70 bg-white/95 shadow-xl backdrop-blur-xl">
+              <div className="px-4 py-4 sm:px-6 sm:py-6">
                 <nav className="flex flex-col gap-1">
                   {links.map((link) => {
                     const active = pathname === link.to;
@@ -213,7 +213,7 @@ function Navbar() {
                         key={link.to}
                         href={link.to}
                         onClick={() => setMenuOpen(false)}
-                        className={`flex items-center justify-between py-3.5 px-2 rounded-xl transition-all duration-200 ${
+                        className={`flex min-h-12 items-center justify-between rounded-xl px-3 py-3 transition-all duration-200 ${
                           active
                             ? "bg-stone-100 text-stone-900"
                             : "text-stone-600 hover:bg-stone-50 hover:text-stone-900"

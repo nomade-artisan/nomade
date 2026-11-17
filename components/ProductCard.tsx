@@ -51,7 +51,7 @@ function ProductCard({
 
   return (
     <Link href={productHref} className="group block">
-      <div className="relative overflow-hidden rounded-none bg-stone-100 aspect-3/4 mb-3 shadow-sm group-hover:shadow-md transition-shadow duration-500">
+      <div className="relative mb-3 aspect-[3/4] overflow-hidden rounded-2xl bg-stone-100 shadow-sm transition-shadow duration-500 group-hover:shadow-md sm:rounded-3xl">
         {/* Image */}
         {imageUrl ? (
           <Image
@@ -91,12 +91,12 @@ function ProductCard({
 
       {/* Infos produit */}
       <div className="space-y-0.5">
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="font-light text-base tracking-wide text-stone-800 group-hover:text-stone-900 transition-colors duration-300">
+        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
+          <h3 className="line-clamp-2 min-h-11 min-w-0 text-sm font-light tracking-wide text-stone-800 transition-colors duration-300 group-hover:text-stone-900 sm:text-base">
             {product.name}
           </h3>
           {showPrice && (
-            <span className="text-stone-500 font-light text-sm whitespace-nowrap">
+            <span className="whitespace-nowrap pt-0.5 text-xs font-light text-stone-500 sm:text-sm">
               {price.toFixed(2)} €
             </span>
           )}
@@ -107,7 +107,7 @@ function ProductCard({
 
         {/* Indicateur "En stock" (très discret) */}
         {stock !== undefined && stock > 3 && (
-          <p className="text-[9px] uppercase tracking-[0.2em] text-stone-400/70 font-light pt-0.5">
+          <p className="pt-0.5 text-[10px] font-light uppercase tracking-[0.16em] text-stone-400/70">
             Disponible
           </p>
         )}

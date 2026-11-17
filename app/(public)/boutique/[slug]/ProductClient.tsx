@@ -106,7 +106,7 @@ function ProductClient({
 
   return (
     <div className="bg-stone-50 pt-20 min-h-screen">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-10 py-8 md:py-16">
+      <div className="site-container max-w-6xl py-6 sm:py-8 md:py-12">
         <Breadcrumb productName={product.name} />
 
         <div className="grid md:grid-cols-2 gap-10 lg:gap-20 items-start">
@@ -135,7 +135,7 @@ function ProductClient({
           <RelatedProducts products={relatedProducts} />
         )}
 
-        <section className="mt-24 md:mt-32 max-w-4xl mx-auto">
+        <section className="mx-auto mt-16 max-w-4xl sm:mt-20 md:mt-24">
           <div className="text-center mb-10">
             <div className="w-10 h-px bg-stone-300 mx-auto mb-6" />
             <h2 className="text-2xl md:text-3xl font-light tracking-tight">
@@ -289,7 +289,7 @@ function ProductInfo({
       </div>
 
       <div>
-        <h1 className="text-3xl md:text-4xl font-light tracking-tight leading-tight mb-5">
+        <h1 className="public-page-title mb-4">
           {product.name}
         </h1>
         <div className="flex items-end gap-4">
@@ -409,7 +409,7 @@ const DeliveryInfo = memo(function DeliveryInfo() {
   ];
 
   return (
-    <div className="grid grid-cols-3 gap-4 md:gap-5 pt-8 border-t border-stone-200/70">
+      <div className="grid grid-cols-1 gap-3 border-t border-stone-200/70 pt-6 sm:grid-cols-3 sm:gap-4 sm:pt-8">
       {items.map((item) => {
         const Icon = item.icon;
         return (
@@ -493,8 +493,8 @@ function Tabs({
 
 function RelatedProducts({ products }: { products: Product[] }) {
   return (
-    <section className="mt-24 md:mt-32">
-      <div className="text-center mb-12 md:mb-14">
+    <section className="mt-16 sm:mt-20 md:mt-24">
+      <div className="mb-9 text-center sm:mb-12 md:mb-14">
         <div className="w-10 h-px bg-stone-300 mx-auto mb-6" />
         <h2 className="text-2xl md:text-3xl font-light tracking-tight">
           Vous pourriez aussi aimer

@@ -27,7 +27,7 @@ function LivraisonClient() {
   return (
     <div className="bg-stone-50 min-h-screen pt-[64px]">
 
-      <div className="max-w-6xl mx-auto px-6 md:px-10 py-8 md:py-12">
+      <div className="site-container max-w-6xl py-6 sm:py-8 md:py-10">
 
         {/* HERO */}
 
@@ -46,7 +46,7 @@ function LivraisonClient() {
           className="mb-12 md:mb-16"
         >
 
-          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between lg:gap-8">
 
             <div>
 
@@ -54,7 +54,7 @@ function LivraisonClient() {
                 Livraison & retours
               </p>
 
-              <h1 className="text-3xl md:text-5xl font-light tracking-tight leading-[0.95]">
+              <h1 className="public-page-title">
                 Recevoir.
                 <br />
                 Essayer.
@@ -76,7 +76,7 @@ function LivraisonClient() {
 
         {/* DELIVERY CARDS */}
 
-        <div className="grid items-stretch md:grid-cols-3 gap-4 mb-12">
+        <div className="mb-10 grid items-stretch gap-3 sm:mb-12 sm:gap-4 md:grid-cols-3">
 
           {/* STANDARD */}
 
@@ -220,7 +220,7 @@ function LivraisonClient() {
 
         {/* INFORMATIONS */}
 
-        <div className="grid items-stretch lg:grid-cols-2 gap-5 mb-12">
+        <div className="mb-10 grid items-stretch gap-4 sm:mb-12 sm:gap-5 lg:grid-cols-2">
 
           {/* LEFT */}
 
@@ -385,7 +385,7 @@ function LivraisonClient() {
 
           </div>
 
-          <div className="grid items-stretch md:grid-cols-4 gap-4">
+          <div className="grid items-stretch gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
 
             {[
               {
@@ -459,7 +459,7 @@ function LivraisonClient() {
 
               <MessageCircle aria-hidden="true" className="mx-auto mb-5 h-8 w-8 text-white/75" strokeWidth={1.25} />
 
-              <h2 className="text-3xl md:text-4xl font-light text-white tracking-tight mb-5">
+              <h2 className="public-section-title mb-5 text-white">
                 Une question ?
               </h2>
 

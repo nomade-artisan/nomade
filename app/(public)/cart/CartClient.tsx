@@ -190,7 +190,7 @@ function CartClient() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="text-3xl md:text-5xl font-light tracking-tight mb-4"
+            className="public-page-title mb-4"
           >
             Panier vide
           </motion.h1>
@@ -228,7 +228,7 @@ function CartClient() {
   return (
     <div className="bg-stone-50 min-h-screen pt-20">
 
-      <div className="max-w-7xl mx-auto px-6 md:px-10 py-10 md:py-14">
+      <div className="site-container max-w-7xl py-8 sm:py-10 md:py-12">
 
         {/* HEADER */}
 
@@ -239,7 +239,7 @@ function CartClient() {
           className="mb-10"
         >
 
-          <h1 className="text-3xl md:text-5xl font-light tracking-tight mb-2">
+          <h1 className="public-page-title mb-2">
             Panier
           </h1>
 
@@ -270,11 +270,11 @@ function CartClient() {
                   className="bg-white/75 backdrop-blur-sm border border-stone-200/60 rounded-2xl p-4 md:p-5"
                 >
 
-                  <div className="flex gap-4 md:gap-5">
+                  <div className="flex min-w-0 gap-3 sm:gap-5">
 
                     {/* IMAGE */}
 
-                    <div className="w-20 h-20 md:w-24 md:h-24 rounded-xl overflow-hidden bg-stone-100 flex-shrink-0">
+                    <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl bg-stone-100 sm:h-20 sm:w-20 md:h-24 md:w-24">
 
                       <img
                         src={item.image}
@@ -288,20 +288,20 @@ function CartClient() {
 
                     <div className="flex-1 min-w-0">
 
-                      <div className="flex items-start justify-between gap-4">
+                      <div className="flex min-w-0 items-start justify-between gap-2 sm:gap-4">
 
-                        <div>
+                        <div className="min-w-0 flex-1">
 
                           <Link
                             href={getProductRoute(item as { slug?: string | null; id?: number | string | null })}
-                            className="text-base md:text-lg font-light hover:text-stone-600 transition-colors"
+                            className="break-words text-sm font-light transition-colors hover:text-stone-600 sm:text-base md:text-lg"
                           >
                             {item.name}
                           </Link>
 
                           {/* QUANTITY */}
 
-                          <div className="flex items-center gap-3 mt-5">
+                          <div className="mt-4 flex items-center gap-2 sm:gap-3">
 
                             <button
                               onClick={() =>
@@ -311,7 +311,7 @@ function CartClient() {
                                 )
                               }
                               disabled={item.quantity <= 1}
-                              className="w-7 h-7 rounded-full border border-stone-200 flex items-center justify-center text-stone-400 hover:border-stone-400 hover:text-stone-700 transition-colors disabled:opacity-30"
+                              className="flex h-10 w-10 items-center justify-center rounded-full border border-stone-200 text-stone-500 transition-colors hover:border-stone-400 hover:text-stone-700 disabled:opacity-30 sm:h-11 sm:w-11"
                             >
                               −
                             </button>
@@ -331,7 +331,7 @@ function CartClient() {
                                 item.quantity >=
                                 (item.stock || 10)
                               }
-                              className="w-7 h-7 rounded-full border border-stone-200 flex items-center justify-center text-stone-400 hover:border-stone-400 hover:text-stone-700 transition-colors disabled:opacity-30"
+                              className="flex h-10 w-10 items-center justify-center rounded-full border border-stone-200 text-stone-500 transition-colors hover:border-stone-400 hover:text-stone-700 disabled:opacity-30 sm:h-11 sm:w-11"
                             >
                               +
                             </button>
@@ -342,7 +342,7 @@ function CartClient() {
 
                         {/* PRICE */}
 
-                        <div className="text-right">
+                        <div className="shrink-0 text-right">
 
                           <p className="text-base md:text-lg font-light">
                             {(
@@ -375,7 +375,7 @@ function CartClient() {
 
                         removeFromCart(item.id);
                       }}
-                        className="text-xs text-stone-400 hover:text-red-500 transition-colors font-light mt-5"
+                        className="mt-3 inline-flex min-h-11 items-center text-xs font-light text-stone-500 transition-colors hover:text-red-500 sm:mt-5"
                       >
                         Supprimer
                       </button>
@@ -407,12 +407,12 @@ function CartClient() {
             initial={{ opacity: 0, x: 8 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.08, duration: 0.35 }}
-            className="lg:w-[350px]"
+            className="w-full lg:w-[350px]"
           >
 
-            <div className="bg-white/80 backdrop-blur-sm border border-stone-200/60 rounded-3xl p-6 md:p-7 sticky top-24">
+            <div className="rounded-2xl border border-stone-200/60 bg-white/80 p-4 backdrop-blur-sm sm:rounded-3xl sm:p-6 md:p-7 lg:sticky lg:top-24">
 
-              <h2 className="text-lg font-light mb-8">
+              <h2 className="mb-6 text-lg font-light sm:mb-8">
                 Récapitulatif
               </h2>
 
