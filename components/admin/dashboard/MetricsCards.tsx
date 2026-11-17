@@ -6,7 +6,7 @@ export default function MetricsCards({ metrics }: { metrics: GlobalMetrics }) {
   const cards = [
     { title: "Chiffre d'affaires", value: `${metrics.totalRevenue.toFixed(0)} €` },
     { title: "Commandes", value: metrics.totalOrders },
-    { title: "Conversion", value: `${metrics.conversionRate} %` },
+    { title: "Conversion mesurée", value: `${metrics.conversionRate} %` },
     { title: "Panier moyen", value: `${metrics.averageOrderValue} €` },
   ];
 

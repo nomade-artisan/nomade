@@ -31,9 +31,9 @@ export async function sendOrderConfirmedEmail({
     .map(
       (item) => `
         <tr>
-          <td style="padding:12px 8px 12px 0;border-top:1px solid #eeeae6;color:#292524;font-size:14px;line-height:1.5;">${escapeHtml(item.name)}</td>
-          <td align="center" style="padding:12px 8px;border-top:1px solid #eeeae6;color:#57534e;font-size:14px;white-space:nowrap;">${item.quantity}</td>
-          <td align="right" style="padding:12px 0 12px 8px;border-top:1px solid #eeeae6;color:#292524;font-size:14px;font-weight:600;white-space:nowrap;">${formatEuro(item.price * item.quantity)}</td>
+          <td class="email-item-cell" style="padding:12px 8px 12px 0;border-top:1px solid #eeeae6;color:#292524;font-size:14px;line-height:1.5;">${escapeHtml(item.name)}</td>
+          <td class="email-item-cell" align="center" style="padding:12px 8px;border-top:1px solid #eeeae6;color:#57534e;font-size:14px;white-space:nowrap;">${item.quantity}</td>
+          <td class="email-item-cell" align="right" style="padding:12px 0 12px 8px;border-top:1px solid #eeeae6;color:#292524;font-size:14px;font-weight:600;white-space:nowrap;">${formatEuro(item.price * item.quantity)}</td>
         </tr>
       `
     )
@@ -47,13 +47,13 @@ export async function sendOrderConfirmedEmail({
       "Merci d’avoir choisi Nomade. Votre paiement a bien été reçu et votre commande est confirmée. Notre équipe prend le relais ; nous vous informerons par email de chaque étape importante.",
     mainHtml: `
       <div style="margin:22px 0 8px;">
-        <h2 style="margin:0 0 8px;color:#292524;font-size:17px;line-height:1.4;">Les articles de votre commande</h2>
-        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+        <h2 class="email-order-title" style="margin:0 0 8px;color:#292524;font-size:17px;line-height:1.4;">Les articles de votre commande</h2>
+        <table class="email-order-table" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
           <thead>
             <tr>
-              <th scope="col" align="left" style="padding:8px 8px 8px 0;color:#78716c;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Article</th>
-              <th scope="col" align="center" style="padding:8px;color:#78716c;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Qté</th>
-              <th scope="col" align="right" style="padding:8px 0 8px 8px;color:#78716c;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Montant</th>
+              <th class="email-item-cell" scope="col" align="left" style="padding:8px 8px 8px 0;color:#78716c;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Article</th>
+              <th class="email-item-cell" scope="col" align="center" style="padding:8px;color:#78716c;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Qté</th>
+              <th class="email-item-cell" scope="col" align="right" style="padding:8px 0 8px 8px;color:#78716c;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Montant</th>
             </tr>
           </thead>
           <tbody>${itemRows}</tbody>

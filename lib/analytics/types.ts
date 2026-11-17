@@ -35,3 +35,13 @@ export interface SalesDataPoint {
   date: string; // YYYY-MM-DD
   sales: number;
 }
+
+export interface StockCoverage {
+  product_id: number;
+  product_name: string;
+  current_stock: number;
+  units_sold_30d: number;
+  observed_days: number;
+  average_daily_units: number;
+  estimated_stock_days: number | null;
+}

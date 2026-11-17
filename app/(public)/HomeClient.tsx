@@ -229,7 +229,7 @@ function CollectionCard({
         >
           Découvrir
           <span className="transition-transform duration-300 group-hover/link:translate-x-1">
-            →
+            
           </span>
         </Link>
       </div>
@@ -247,7 +247,7 @@ function CollectionCard({
           className="mt-5 inline-flex items-center gap-2 border-b border-stone-300 pb-1 text-xs uppercase tracking-[0.35em] text-stone-700"
         >
           Découvrir la collection
-          <span>→</span>
+          <span></span>
         </Link>
       </div>
     </motion.section>
@@ -699,7 +699,7 @@ export default function HomeClient({
             className="inline-flex items-center gap-3 px-7 py-3 text-xs uppercase tracking-[0.25em] text-stone-700 hover:text-stone-900 transition-colors"
           >
             Voir toutes les collections
-            <span>→</span>
+            <span></span>
           </Link>
         </div>
 

@@ -394,21 +394,31 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // Analytics : 1 événement par produit pour pouvoir agréger proprement par produit.
-      const purchaseAnalyticsRows = productIds.map((productId, index) => ({
-        event_type: "purchase_completed",
-        session_id: session.id,
-        product_id: String(productId),
-        metadata: {
-          amount: totalAmount,
-          shipping: shippingAmount,
-          discount: discountAmount,
-          product_index: index,
-          quantity: Number(quantities[index] ?? 1),
-        },
-      }));
+      // L'événement d'attribution n'est enregistré que si la session a accepté
+      // les statistiques. Les ventes opérationnelles sont déjà disponibles via orders/order_items.
+      const rawAnalyticsSessionId = session.metadata?.analytics_session_id;
+      const analyticsSessionId =
+        typeof rawAnalyticsSessionId === "string" &&
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(rawAnalyticsSessionId)
+          ? rawAnalyticsSessionId
+          : null;
 
-      if (purchaseAnalyticsRows.length > 0) {
+      if (analyticsSessionId && productIds.length > 0) {
+        const purchaseAnalyticsRows = productIds.map((productId, index) => ({
+          event_type: "purchase_completed",
+          session_id: session.id,
+          product_id: String(productId),
+          metadata: {
+            amount: totalAmount,
+            shipping: shippingAmount,
+            discount: discountAmount,
+            product_index: index,
+            quantity: Number(quantities[index] ?? 1),
+            analytics_session_id: analyticsSessionId,
+            order_id: String(order.id),
+          },
+        }));
+
         const { data: existingPurchaseEvents, error: purchaseLookupError } = await supabaseAdmin
           .from("analytics_events")
           .select("id")

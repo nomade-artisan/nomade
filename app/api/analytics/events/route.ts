@@ -28,6 +28,7 @@ const METADATA_KEYS = new Set([
   "seconds",
   "quantity",
   "product_index",
+  "tracking_version",
 ]);
 
 function safeId(value: unknown): string | null {
@@ -57,6 +58,10 @@ export async function POST(request: NextRequest) {
   });
   if (rateLimitError) return rateLimitError;
 
+  if (request.cookies.get("analytics_consent")?.value !== "accepted") {
+    return NextResponse.json({ error: "Consentement aux statistiques requis" }, { status: 403 });
+  }
+
   const contentLength = Number(request.headers.get("content-length") || 0);
   if (contentLength > 8192) {
     return NextResponse.json({ error: "Requête trop volumineuse" }, { status: 413 });
@@ -70,6 +75,10 @@ export async function POST(request: NextRequest) {
     }
     body = JSON.parse(rawBody);
   } catch {
+    return NextResponse.json({ error: "Requête invalide" }, { status: 400 });
+  }
+
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
     return NextResponse.json({ error: "Requête invalide" }, { status: 400 });
   }
 

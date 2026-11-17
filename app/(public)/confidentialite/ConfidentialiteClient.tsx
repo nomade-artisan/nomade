@@ -210,7 +210,7 @@ function ConfidentialiteClient() {
                 </p>
 
                 <p className="text-stone-500 font-light leading-relaxed">
-                  Les statistiques de navigation sont pseudonymisees et collectees uniquement apres consentement.
+                  Les statistiques de navigation sont pseudonymisées et collectées uniquement après consentement. Si vous acceptez les statistiques, un identifiant de session pseudonyme peut aussi être transmis au paiement afin de mesurer le parcours jusqu'à l'achat, sans inclure votre nom ni votre adresse email dans les événements d'analyse.
                 </p>
 
               </div>
@@ -296,7 +296,7 @@ function ConfidentialiteClient() {
               />
 
               <Line
-                left="Données anonymisées"
+                left="Données statistiques pseudonymisées"
                 right="26 mois"
               />
 
@@ -317,7 +317,7 @@ function ConfidentialiteClient() {
           >
 
             <p>
-              Le site utilise uniquement les cookies necessaires a son fonctionnement. Les outils de mesure d'audience ne s'activent qu'apres votre consentement.
+              Les outils de mesure d'audience ne s'activent qu'après votre consentement. Votre choix est conservé dans le stockage local du navigateur et peut être modifié à tout moment via « Préférences de confidentialité » en bas de page.
             </p>
 
             <div className="space-y-4 mt-6">

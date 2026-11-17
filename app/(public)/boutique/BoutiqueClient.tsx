@@ -278,7 +278,7 @@ function BoutiqueClient({
                         className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-stone-500 hover:text-stone-800 transition-colors"
                       >
                         Voir la suite
-                        <span>→</span>
+                        <span></span>
                       </Link>
                     </div>
                   )}
