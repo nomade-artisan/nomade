@@ -50,7 +50,7 @@ const homeAsset = (filename: string, useNestedPath = true) =>
 const homeImage = (filename: string) => homeAsset(filename, true);
 
 const DEFAULT_COLLECTION_DESCRIPTION =
-  "Des pièces pensées pour être portées au quotidien, avec des matières choisies et une attention particulière aux finitions.";
+  "Des modèles SCOLTA conçus et assemblés à Alès, avec des formes simples et des matières choisies pour leur résistance.";
 
 function normalizeCollectionDescription(description: string | null): string {
   const value = (description || "").replace(/\s+/g, " ").trim();
@@ -480,18 +480,18 @@ export default function HomeClient({
 
   const values = [
     {
-      title: "Fabriqué à la main",
-      text: "Chaque pièce est fabriquée avec soin, de la coupe du cuir jusqu'aux dernières finitions.",
+      title: "Résistance",
+      text: "Nous choisissons les matières pour leur tenue à l'usage.",
       img: homeImage("valeur-artisanat.webp"),
     },
     {
-      title: "Des matières choisies avec soin",
-      text: "Nous sélectionnons nos cuirs et nos toiles pour leur toucher, leur tenue et leur capacité à bien vieillir.",
+      title: "Composition précisée",
+      text: "Le cuir, la toile et les composants varient selon les sacs. Chaque fiche produit détaille la composition du modèle.",
       img: homeImage("valeur-durer.webp"),
     },
     {
-      title: "Pensé pour être utilisé",
-      text: "Une belle pièce doit aussi être pratique. Nous cherchons le bon équilibre entre forme, confort et fonctionnalité.",
+      title: "Simplicité",
+      text: "Un sac n'a pas besoin d'être compliqué ou futuriste pour faire son travail.",
       img: homeImage("valeur-essentiel.webp"),
     },
   ];
@@ -615,16 +615,16 @@ export default function HomeClient({
               transition={{ duration: 0.8 }}
             >
               <p className="text-stone-400 text-xs tracking-[0.3em] uppercase mb-6 font-light">
-                Notre approche
+                Pourquoi NOMADE
               </p>
 
               <h2 className="public-section-title mb-6">
-                Des pièces faites pour être portées au quotidien
+                Être là pour notre famille.
               </h2>
 
               <p className="max-w-xl text-base font-light leading-relaxed text-stone-500 sm:text-lg">
-                Nous travaillons des formes simples, des matières que nous
-                aimons et des détails qui ont leur utilité.
+                Nous avons voulu entreprendre et gagner en autonomie. À Alès,
+                le projet commence avec SCOLTA.
               </p>
 
               <div className="mt-7 flex flex-wrap justify-center gap-3 sm:mt-9 sm:justify-start sm:gap-4">
@@ -811,16 +811,15 @@ export default function HomeClient({
             viewport={{ once: true }}
           >
             <p className="text-white/60 text-xs tracking-[0.3em] uppercase mb-6 font-light">
-              L'atelier
+              À Alès
             </p>
 
             <h2 className="public-section-title mb-5 text-white">
-              Chaque détail compte
+              De la coupe à l'assemblage
             </h2>
 
             <p className="mx-auto max-w-2xl text-base font-light text-white/80 sm:text-lg">
-              Coupe, assemblage, couture, finition : chaque étape demande du
-              temps et de l'attention.
+              Une même personne conçoit et réalise chaque modèle SCOLTA.
             </p>
 
             {youtubeChannelUrl && (

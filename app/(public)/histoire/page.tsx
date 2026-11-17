@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   },
   title: "Notre Histoire",
   description:
-    "L'histoire de Nomade, la maison qui donne naissance a la marque SCOLTA.",
+    "NOMADE est née à Alès d'une envie d'entreprendre et de garder du temps pour la famille. Découvrez SCOLTA et sa fabrication, de la coupe à l'assemblage.",
 };
 
 export default function HistoirePage() {
