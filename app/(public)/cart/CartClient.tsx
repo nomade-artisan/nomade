@@ -5,7 +5,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/components/CartContext";
-import { trackEvent } from "@/lib/analytics/tracking";
+import { getAnalyticsSessionId, trackEvent } from "@/lib/analytics/tracking";
 import { getProductRoute } from "@/lib/products/routing";
 import { toast } from "sonner";
 
@@ -31,6 +31,7 @@ function CartClient() {
 
   const handleStripeCheckout = async () => {
     setCheckoutLoading(true);
+    const analyticsSessionId = getAnalyticsSessionId();
     await trackEvent("checkout_started", {
       metadata: {
         cart_items: cart.length,
@@ -45,6 +46,7 @@ function CartClient() {
       },
       body: JSON.stringify({
         promoCode: promoApplied ? promoCode.trim() : undefined,
+        analyticsSessionId,
         items: [
           // Tous les produits
           ...cart.map((item) => ({
@@ -652,7 +654,7 @@ function CartClient() {
             Continuer la sélection
 
             <span className="group-hover:translate-x-1 transition-transform">
-              →
+              
             </span>
 
           </Link>

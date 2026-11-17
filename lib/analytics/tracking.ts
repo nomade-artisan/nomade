@@ -7,10 +7,47 @@ interface AnalyticsEvent {
   metadata?: Record<string, unknown>;
 }
 
+type ConsentChoice = "accepted" | "essential";
+let consentSyncPromise: Promise<boolean> | null = null;
+let consentRequestQueue: Promise<boolean> = Promise.resolve(true);
+
 function hasConsent() {
   if (typeof window === "undefined") return false;
 
   return localStorage.getItem("analytics-consent") === "accepted";
+}
+
+export function getAnalyticsSessionId(): string | null {
+  return hasConsent() ? getSessionId() : null;
+}
+
+export function updateAnalyticsConsent(consent: ConsentChoice): Promise<boolean> {
+  const request = consentRequestQueue
+    .catch(() => false)
+    .then(() =>
+      fetch("/api/analytics/consent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ consent }),
+      }).then((response) => response.ok)
+    )
+    .catch(() => false);
+
+  consentRequestQueue = request;
+  consentSyncPromise = consent === "accepted" ? request : null;
+  return request;
+}
+
+async function ensureServerConsent(): Promise<boolean> {
+  if (!hasConsent()) return false;
+
+  if (!consentSyncPromise) {
+    consentSyncPromise = updateAnalyticsConsent("accepted");
+  }
+
+  const synced = await consentSyncPromise;
+  if (!synced) consentSyncPromise = null;
+  return synced;
 }
 
 export async function trackEvent(
@@ -22,6 +59,8 @@ export async function trackEvent(
   }
 
   try {
+    if (!(await ensureServerConsent()) || !hasConsent()) return;
+
     const payload = {
       event_type: eventType,
       visitor_id: getVisitorId(),

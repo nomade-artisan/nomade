@@ -43,7 +43,7 @@ export default function PredictionsTable({ predictions }: { predictions: Product
                         : "bg-gray-100 text-gray-800"
                     }`}
                   >
-                    {p.trend_direction === "up" ? "↗" : p.trend_direction === "down" ? "↘" : "→"}
+                    {p.trend_direction === "up" ? "↗" : p.trend_direction === "down" ? "↘" : ""}
                   </span>
                 </td>
                 <td className="p-2">

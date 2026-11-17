@@ -9,6 +9,13 @@ export default function AnalyticsTracker() {
 
   useEffect(() => {
     trackTrafficSource();
+    const handleConsentUpdate = (event: Event) => {
+      const choice = (event as CustomEvent<{ type?: string }>).detail?.type;
+      if (choice === "accepted") trackTrafficSource();
+    };
+
+    window.addEventListener("consent-updated", handleConsentUpdate);
+    return () => window.removeEventListener("consent-updated", handleConsentUpdate);
   }, []);
 
   return null;

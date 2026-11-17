@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
 
   try {
     
-    let body: { items?: unknown; promoCode?: unknown };
+    let body: { items?: unknown; promoCode?: unknown; analyticsSessionId?: unknown };
     try {
       const contentLength = Number(req.headers.get("content-length") || 0);
       if (contentLength > 65536) {
@@ -33,7 +33,13 @@ export async function POST(req: NextRequest) {
     } catch {
       return NextResponse.json({ error: "RequÃªte invalide." }, { status: 400 });
     }
-    const { items, promoCode } = body;
+    const { items, promoCode, analyticsSessionId: rawAnalyticsSessionId } = body;
+    const analyticsSessionId =
+      req.cookies.get("analytics_consent")?.value === "accepted" &&
+      typeof rawAnalyticsSessionId === "string" &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(rawAnalyticsSessionId)
+        ? rawAnalyticsSessionId
+        : "";
 
     if (!Array.isArray(items) || items.length === 0 || items.length > 50) {
       return NextResponse.json(
@@ -286,6 +292,7 @@ export async function POST(req: NextRequest) {
     promo_discount: promoDiscount.toFixed(2),
     subtotal: subtotal.toFixed(2),
     shipping: shipping.toFixed(2),
+    analytics_session_id: analyticsSessionId,
   },
 });
 

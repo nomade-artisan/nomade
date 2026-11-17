@@ -129,6 +129,15 @@ function Footer() {
                   </Link>
                 </li>
               ))}
+              <li>
+                <button
+                  type="button"
+                  onClick={() => window.dispatchEvent(new Event("open-cookie-settings"))}
+                  className="text-left text-stone-600 hover:text-stone-900 text-sm font-light transition-colors duration-200 hover:underline underline-offset-4"
+                >
+                  Préférences de confidentialité
+                </button>
+              </li>
             </ul>
           </div>
 

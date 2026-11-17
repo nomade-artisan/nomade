@@ -63,7 +63,7 @@ export default function ProductMedia({
       // Stats de compression
       const stats = getCompressionStats(imageFiles, processedFiles);
       setCompressionStats(
-        `${files.length} image(s) compressée(s) : ${stats.originalSize} → ${stats.compressedSize} (${stats.savedPercent}% économisé)`
+        `${files.length} image(s) compressée(s) : ${stats.originalSize}  ${stats.compressedSize} (${stats.savedPercent}% économisé)`
       );
 
       // Créer les previews
